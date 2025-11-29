@@ -1,16 +1,19 @@
-import Header from "../components/Header";
+// 1. On importe les composants depuis leurs dossiers
+import Header from "../components/layout/Header";
+import Footer from "../components/layout/Footer"; // <--- C'est ici qu'on l'importe
+import ProductGrid from "../components/products/ProductGrid";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-white">
-      {/* Ici, on affiche le Header que tu viens de créer */}
+    <main className="min-h-screen bg-white flex flex-col">
+      {/* Haut de page */}
       <Header />
       
-      {/* Une petite zone temporaire pour montrer que le reste est vide */}
-      <div className="flex flex-col items-center justify-center py-20 text-gray-500">
-        <h2 className="text-2xl font-serif text-[#5d6e64] mb-4">Le site est en construction</h2>
-        <p className="text-sm uppercase tracking-widest">Contenu à venir...</p>
-      </div>
+      {/* Contenu principal */}
+      <ProductGrid />
+      
+      {/* Bas de page */}
+      <Footer /> {/* <--- C'est ici qu'on l'affiche */}
     </main>
   );
 }
