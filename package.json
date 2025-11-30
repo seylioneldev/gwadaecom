@@ -14,11 +14,13 @@
     "test:report": "playwright show-report"
   },
   "dependencies": {
+    "@stripe/stripe-js": "^8.5.3",
     "firebase": "^12.6.0",
     "lucide-react": "^0.555.0",
     "next": "16.0.5",
     "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "react-dom": "19.2.0",
+    "stripe": "^20.0.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",

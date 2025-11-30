@@ -21,6 +21,7 @@ import Link from 'next/link';
 import { User, LogIn, UserPlus, ArrowLeft, ArrowRight, CreditCard } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import StripePaymentForm from '@/components/StripePaymentForm';
 
 export default function CheckoutPage() {
   const { cart, getTotalPrice } = useCart();
@@ -29,6 +30,7 @@ export default function CheckoutPage() {
 
   // État du mode de checkout
   const [checkoutMode, setCheckoutMode] = useState(null); // null | 'guest' | 'login' | 'signup'
+  const [showPayment, setShowPayment] = useState(false); // Afficher le formulaire de paiement
 
   // État du formulaire invité
   const [guestForm, setGuestForm] = useState({
@@ -128,7 +130,7 @@ export default function CheckoutPage() {
   };
 
   /**
-   * TRAITEMENT DU FORMULAIRE INVITÉ (sans paiement pour l'instant)
+   * TRAITEMENT DU FORMULAIRE INVITÉ - Passer à l'étape paiement
    */
   const handleGuestCheckout = async (e) => {
     e.preventDefault();
@@ -140,10 +142,29 @@ export default function CheckoutPage() {
       return;
     }
 
-    // Pour l'instant, on redirige vers une page de confirmation temporaire
-    // TODO: Intégrer Stripe pour le paiement
-    alert('Fonctionnalité de paiement à venir ! Votre commande sera enregistrée.');
-    console.log('Commande invité:', guestForm);
+    // Passer à l'étape de paiement
+    setShowPayment(true);
+  };
+
+  /**
+   * GESTION DU PAIEMENT RÉUSSI
+   */
+  const handlePaymentSuccess = async (paymentIntent) => {
+    console.log('Paiement réussi !', paymentIntent);
+
+    // TODO: Enregistrer la commande dans Firestore
+    // TODO: Envoyer email de confirmation
+
+    // Rediriger vers la page de confirmation
+    router.push(`/order-confirmation?payment_intent=${paymentIntent.id}`);
+  };
+
+  /**
+   * GESTION DES ERREURS DE PAIEMENT
+   */
+  const handlePaymentError = (error) => {
+    console.error('Erreur de paiement:', error);
+    setError(error.message || 'Erreur lors du paiement');
   };
 
   // Si panier vide, ne rien afficher
@@ -378,7 +399,7 @@ export default function CheckoutPage() {
               )}
 
               {/* FORMULAIRE INVITÉ */}
-              {checkoutMode === 'guest' && (
+              {checkoutMode === 'guest' && !showPayment && (
                 <div className="bg-white rounded-lg shadow-md p-8">
                   <h2 className="text-2xl font-serif text-gray-800 mb-6">Informations de livraison</h2>
 
@@ -512,6 +533,41 @@ export default function CheckoutPage() {
                       </button>
                     )}
                   </form>
+                </div>
+              )}
+
+              {/* FORMULAIRE DE PAIEMENT STRIPE */}
+              {showPayment && (
+                <div className="space-y-6">
+                  {/* Récapitulatif des informations */}
+                  <div className="bg-white rounded-lg shadow-md p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-serif text-gray-800">Informations de livraison</h3>
+                      <button
+                        onClick={() => setShowPayment(false)}
+                        className="text-sm text-[#5d6e64] hover:underline"
+                      >
+                        Modifier
+                      </button>
+                    </div>
+                    <div className="text-sm text-gray-600 space-y-1">
+                      <p className="font-medium text-gray-800">{guestForm.firstName} {guestForm.lastName}</p>
+                      <p>{guestForm.email}</p>
+                      <p>{guestForm.address}</p>
+                      <p>{guestForm.postalCode} {guestForm.city}</p>
+                      <p>{guestForm.country}</p>
+                      {guestForm.phone && <p>{guestForm.phone}</p>}
+                    </div>
+                  </div>
+
+                  {/* Formulaire de paiement Stripe */}
+                  <StripePaymentForm
+                    amount={getTotalPrice() * 100} // Convertir en centimes
+                    customerEmail={guestForm.email}
+                    orderId={`ORDER-${Date.now()}`}
+                    onSuccess={handlePaymentSuccess}
+                    onError={handlePaymentError}
+                  />
                 </div>
               )}
 
