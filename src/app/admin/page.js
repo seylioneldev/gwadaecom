@@ -14,7 +14,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Package, FolderTree, Settings, ShoppingBag, BarChart3, FileText } from 'lucide-react';
+import { Package, FolderTree, Settings, ShoppingBag, BarChart3, FileText, TrendingUp, Users, Truck, ShoppingCart, FileCheck } from 'lucide-react';
 import { useProducts } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
 
@@ -81,8 +81,8 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Titre des actions */}
-        <h2 className="text-2xl font-serif text-gray-800 mb-6">Actions Rapides</h2>
+        {/* Titre des actions - Gestion du site */}
+        <h2 className="text-2xl font-serif text-gray-800 mb-6">Gestion du Site</h2>
 
         {/* Grille des fonctionnalités */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -165,6 +165,78 @@ export default function AdminDashboard() {
               📄 CMS_README.md
             </div>
           </div>
+
+        </div>
+
+        {/* SECTION COMMERCIAL */}
+        <h2 className="text-2xl font-serif text-gray-800 mb-6 mt-16 pt-8 border-t">Commercial & Gestion</h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+          {/* Carte : Statistiques */}
+          <Link href="/admin/commercial/statistics" className="group">
+            <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-xl transition border-2 border-transparent hover:border-[#5d6e64]">
+              <div className="w-16 h-16 bg-indigo-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-indigo-200 transition">
+                <TrendingUp className="text-indigo-600" size={32} />
+              </div>
+              <h3 className="text-xl font-serif text-gray-800 mb-2">Statistiques</h3>
+              <p className="text-sm text-gray-500">
+                Visualisez les ventes, revenus et performances de votre boutique
+              </p>
+            </div>
+          </Link>
+
+          {/* Carte : Commandes */}
+          <Link href="/admin/commercial/orders" className="group">
+            <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-xl transition border-2 border-transparent hover:border-[#5d6e64]">
+              <div className="w-16 h-16 bg-orange-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-orange-200 transition">
+                <ShoppingCart className="text-orange-600" size={32} />
+              </div>
+              <h3 className="text-xl font-serif text-gray-800 mb-2">Commandes</h3>
+              <p className="text-sm text-gray-500">
+                Gérez les commandes clients, statuts de livraison et suivi
+              </p>
+            </div>
+          </Link>
+
+          {/* Carte : Partenaires */}
+          <Link href="/admin/commercial/partners" className="group">
+            <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-xl transition border-2 border-transparent hover:border-[#5d6e64]">
+              <div className="w-16 h-16 bg-pink-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-pink-200 transition">
+                <Users className="text-pink-600" size={32} />
+              </div>
+              <h3 className="text-xl font-serif text-gray-800 mb-2">Partenaires</h3>
+              <p className="text-sm text-gray-500">
+                Gérez vos partenaires commerciaux et collaborations
+              </p>
+            </div>
+          </Link>
+
+          {/* Carte : Fournisseurs */}
+          <Link href="/admin/commercial/suppliers" className="group">
+            <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-xl transition border-2 border-transparent hover:border-[#5d6e64]">
+              <div className="w-16 h-16 bg-teal-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-teal-200 transition">
+                <Truck className="text-teal-600" size={32} />
+              </div>
+              <h3 className="text-xl font-serif text-gray-800 mb-2">Fournisseurs</h3>
+              <p className="text-sm text-gray-500">
+                Gérez vos fournisseurs, contacts et approvisionnements
+              </p>
+            </div>
+          </Link>
+
+          {/* Carte : Facturation */}
+          <Link href="/admin/commercial/invoicing" className="group">
+            <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-xl transition border-2 border-transparent hover:border-[#5d6e64]">
+              <div className="w-16 h-16 bg-cyan-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-cyan-200 transition">
+                <FileCheck className="text-cyan-600" size={32} />
+              </div>
+              <h3 className="text-xl font-serif text-gray-800 mb-2">Facturation</h3>
+              <p className="text-sm text-gray-500">
+                Générez et gérez les factures, devis et paiements
+              </p>
+            </div>
+          </Link>
 
         </div>
 
