@@ -76,62 +76,22 @@ export default function AdminFloatingButton() {
 }
 
 /**
- * ============================================
  * GUIDE D'UTILISATION
- * ============================================
+ * ===================
  *
- * 1. INTÉGRATION DANS LA PAGE D'ACCUEIL :
+ * Ce bouton est déjà intégré dans src/app/page.js
  *
- *    Dans src/app/page.js, ajoutez :
+ * VISIBILITÉ :
+ * - Visible en mode développement (NODE_ENV === 'development')
+ * - Visible si l'utilisateur est connecté comme admin (isAdmin === true)
  *
- *    ```jsx
- *    import AdminFloatingButton from '@/components/AdminFloatingButton';
+ * PERSONNALISATION :
+ * - Couleur : bg-[#5d6e64] et hover:bg-[#4a5850]
+ * - Position : bottom-6 right-6
+ * - Taille : w-14 h-14
  *
- *    export default function HomePage() {
- *      return (
- *        <>
- *          {/* Votre contenu de page */}
- *          <AdminFloatingButton />
- *        </>
- *      );
- *    }
- *    ```
- *
- * 2. CONFIGURATION DE LA VISIBILITÉ :
- *
- *    Par défaut, le bouton s'affiche en mode développement.
- *
- *    Pour l'activer en production, ajoutez dans .env.local :
- *    ```
- *    NEXT_PUBLIC_SHOW_ADMIN_BUTTON=true
- *    ```
- *
- * 3. SÉCURITÉ AVEC FIREBASE AUTH :
- *
- *    Pour une vraie sécurité, remplacez la logique useEffect par :
- *
- *    ```jsx
- *    import { useAuth } from '@/hooks/useAuth'; // Votre hook d'authentification
- *
- *    const { user } = useAuth();
- *    const isAdmin = user?.email === 'votre-email@admin.com';
- *    setIsVisible(isAdmin);
- *    ```
- *
- * 4. PERSONNALISATION :
- *
- *    - Couleur : Modifiez bg-[#5d6e64] et hover:bg-[#4a5850]
- *    - Position : Modifiez bottom-6 right-6
- *    - Taille : Modifiez w-14 h-14
- *    - Icône : Remplacez <Settings /> par une autre icône Lucide
- *
- * 5. MASQUER EN PRODUCTION :
- *
- *    Si vous voulez masquer complètement le bouton en production :
- *
- *    ```jsx
- *    if (process.env.NODE_ENV === 'production') return null;
- *    ```
- *
- * ============================================
+ * SÉCURITÉ :
+ * - Utilise Firebase Auth via useAuth()
+ * - Seuls les emails dans ADMIN_EMAILS peuvent se connecter
+ * - Voir AuthContext.jsx pour la configuration
  */
