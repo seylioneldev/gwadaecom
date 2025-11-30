@@ -1,27 +1,35 @@
+/**
+ * PAGE : Catégorie Dynamique
+ * ===========================
+ *
+ * Affiche tous les produits d'une catégorie spécifique.
+ * Récupère les données depuis Firestore.
+ *
+ * 📄 FICHIER MODIFIÉ : src/app/category/[slug]/page.js
+ * DATE : 2025-11-30
+ *
+ * CHANGEMENT : Remplace import des données statiques par le hook useProductsByCategory
+ */
+
+"use client";
+
 import Header from "../../../components/layout/Header";
 import Footer from "../../../components/layout/Footer";
 import Link from 'next/link';
 import { ChevronRight } from "lucide-react";
+import { useParams } from 'next/navigation';
+import { useProductsByCategory } from '@/hooks/useProducts'; // Nouveau : récupère depuis Firestore
 
-// ==========================================================
-// 1. IMPORTATION DES DONNÉES CENTRALISÉES
-// On remplace la liste 'mockProducts' par l'import de notre fichier data.
-// Chemin : on remonte de 3 niveaux (../../../) pour atteindre src/data
-// ==========================================================
-import { products } from '../../../data/products';
-
-export default async function CategoryPage({ params }) {
+export default function CategoryPage() {
   // Récupère le nom de la catégorie depuis l'URL (ex: "kitchen")
-  const { slug } = await params;
-  
-  // Met la première lettre en majuscule pour l'affichage (ex: kitchen -> Kitchen)
-  const categoryName = slug.charAt(0).toUpperCase() + slug.slice(1);
+  const params = useParams();
+  const slug = params?.slug;
 
-  // 2. FILTRAGE DES DONNÉES
-  // On utilise la liste importée 'products' pour filtrer.
-  const filteredProducts = products.filter(p => 
-    p.category.toLowerCase() === slug.toLowerCase()
-  );
+  // Récupération des produits de cette catégorie depuis Firestore
+  const { products: filteredProducts, loading, error } = useProductsByCategory(slug);
+
+  // Met la première lettre en majuscule pour l'affichage (ex: kitchen -> Kitchen)
+  const categoryName = slug ? slug.charAt(0).toUpperCase() + slug.slice(1) : '';
 
   return (
     <main className="min-h-screen bg-white">
@@ -33,42 +41,67 @@ export default async function CategoryPage({ params }) {
           <Link href="/">Home</Link> <ChevronRight size={10} />
           <span className="text-gray-800 font-medium">{categoryName}</span>
         </div>
-        
+
         <h1 className="font-serif text-4xl text-gray-800 tracking-wider border-b border-gray-200 pb-4">
-          {categoryName} ({filteredProducts.length} items)
+          {categoryName} {!loading && `(${filteredProducts.length} items)`}
         </h1>
       </div>
 
-      {/* Grille des produits filtrés */}
-      <div className="max-w-7xl mx-auto px-6 py-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-12">
-          {filteredProducts.map(product => (
-            <Link href={`/products/${product.id}`} key={product.id} className="group cursor-pointer block">
-              
-              <div className={`${product.image || 'bg-gray-100'} aspect-[4/5] w-full relative overflow-hidden flex items-center justify-center text-gray-400`}>
-                 {/* Si pas d'image, on affiche le nom */}
-                 {!product.image?.startsWith('bg-') && !product.image?.startsWith('http') && (
-                    <span className="text-xs uppercase tracking-widest">No Image</span>
-                 )}
-              </div>
-
-              <div className="text-center mt-4 space-y-1">
-                <h3 className="font-serif text-lg text-gray-700 group-hover:text-[#5d6e64] transition">
-                  {product.name}
-                </h3>
-                <p className="text-xs text-gray-500 tracking-wider">${product.price}</p>
-              </div>
-            </Link>
-          ))}
+      {/* Message de chargement */}
+      {loading && (
+        <div className="max-w-7xl mx-auto px-6 py-20 text-center">
+          <p className="text-gray-500 text-sm tracking-wider">Chargement des produits...</p>
         </div>
-        
-        {/* Message si aucun produit n'est trouvé dans cette catégorie */}
-        {filteredProducts.length === 0 && (
-          <div className="text-center py-20 text-gray-500 text-sm italic">
-            Aucun produit trouvé dans la catégorie "{categoryName}".
+      )}
+
+      {/* Message d'erreur */}
+      {error && (
+        <div className="max-w-7xl mx-auto px-6 py-20 text-center">
+          <p className="text-red-500 text-sm">Erreur : {error}</p>
+        </div>
+      )}
+
+      {/* Grille des produits filtrés */}
+      {!loading && !error && (
+        <div className="max-w-7xl mx-auto px-6 py-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-12">
+            {filteredProducts.map(product => (
+              <Link href={`/products/${product.id}`} key={product.id} className="group cursor-pointer block">
+
+                <div className="aspect-[4/5] w-full relative overflow-hidden">
+                   {/* Si c'est une URL d'image */}
+                   {(product.imageUrl?.startsWith('http') || product.image?.startsWith('http')) ? (
+                     <img
+                       src={product.imageUrl || product.image}
+                       alt={product.name}
+                       className="w-full h-full object-cover"
+                     />
+                   ) : (
+                     /* Si c'est une couleur Tailwind */
+                     <div className={`w-full h-full ${product.imageUrl || product.image || 'bg-gray-100'} flex items-center justify-center text-gray-400`}>
+                       <span className="text-xs uppercase tracking-widest">No Image</span>
+                     </div>
+                   )}
+                </div>
+
+                <div className="text-center mt-4 space-y-1">
+                  <h3 className="font-serif text-lg text-gray-700 group-hover:text-[#5d6e64] transition">
+                    {product.name}
+                  </h3>
+                  <p className="text-xs text-gray-500 tracking-wider">${product.price}</p>
+                </div>
+              </Link>
+            ))}
           </div>
-        )}
-      </div>
+
+          {/* Message si aucun produit n'est trouvé dans cette catégorie */}
+          {filteredProducts.length === 0 && (
+            <div className="text-center py-20 text-gray-500 text-sm italic">
+              Aucun produit trouvé dans la catégorie "{categoryName}".
+            </div>
+          )}
+        </div>
+      )}
 
       <Footer />
     </main>

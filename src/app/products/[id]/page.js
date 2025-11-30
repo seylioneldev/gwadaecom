@@ -1,4 +1,17 @@
-"use client"; // Indispensable pour l'interactivité (panier, quantité)
+/**
+ * PAGE : Fiche Produit Dynamique
+ * ===============================
+ *
+ * Affiche les détails d'un produit spécifique.
+ * Récupère les données depuis Firestore.
+ *
+ * 📄 FICHIER MODIFIÉ : src/app/products/[id]/page.js
+ * DATE : 2025-11-30
+ *
+ * CHANGEMENT : Remplace import des données statiques par le hook useProduct
+ */
+
+"use client";
 
 import Header from "../../../components/layout/Header";
 import Footer from "../../../components/layout/Footer";
@@ -6,38 +19,57 @@ import { ChevronRight, Minus, Plus } from "lucide-react";
 import Link from 'next/link';
 import { useState } from 'react';
 import { useCart } from '../../../context/CartContext';
-import { useParams } from 'next/navigation'; // <--- 1. NOUVEL IMPORT
+import { useParams } from 'next/navigation';
+import { useProduct } from '@/hooks/useProducts'; // Nouveau : récupère depuis Firestore
 
-// ==========================================================
-// 1. IMPORTATION DES DONNÉES CENTRALISÉES
-// ==========================================================
-import { products } from '../../../data/products';
-
-export default function ProductPage() { // <--- 2. ON ENLÈVE { params } D'ICI
+export default function ProductPage() {
   // Récupération des outils du panier
   const { addItem, totalItems } = useCart();
-  
+
   // État local pour gérer la quantité choisie par l'utilisateur
   const [quantity, setQuantity] = useState(1);
 
-  // 3. RÉCUPÉRATION DE L'ID (VERSION NEXT.JS 15 CLIENT)
-  // On utilise le hook useParams() au lieu des props
+  // Récupération de l'ID depuis l'URL
   const params = useParams();
-  const id = params?.id; 
-  
-  // Sécurité : si l'ID n'est pas encore chargé, on ne fait rien
-  if (!id) return null;
+  const id = params?.id;
 
-  const productId = parseInt(id);
+  // Récupération du produit depuis Firestore
+  const { product, loading, error } = useProduct(id);
 
-  // 4. RECHERCHE DU PRODUIT DANS LA LISTE IMPORTÉE
-  const product = products.find((p) => p.id === productId) || {
-    name: `Produit Inconnu`,
-    price: "0.00",
-    description: "Ce produit est introuvable.",
-    category: "Inconnu",
-    image: "bg-gray-200"
-  };
+  // Affichage du chargement
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-white flex items-center justify-center">
+        <p className="text-gray-500 text-sm tracking-wider">Chargement du produit...</p>
+      </main>
+    );
+  }
+
+  // Affichage des erreurs
+  if (error) {
+    return (
+      <main className="min-h-screen bg-white flex items-center justify-center">
+        <p className="text-red-500 text-sm">Erreur : {error}</p>
+      </main>
+    );
+  }
+
+  // Si le produit n'existe pas
+  if (!product) {
+    return (
+      <main className="min-h-screen bg-white">
+        <Header />
+        <div className="max-w-7xl mx-auto px-6 py-20 text-center">
+          <h1 className="text-2xl font-serif text-gray-800 mb-4">Produit introuvable</h1>
+          <p className="text-gray-500 mb-8">Ce produit n'existe pas ou a été supprimé.</p>
+          <Link href="/" className="text-[#5d6e64] underline text-sm tracking-wider">
+            Retour à l'accueil
+          </Link>
+        </div>
+        <Footer />
+      </main>
+    );
+  }
 
   // Fonction déclenchée au clic sur "Add to Cart"
   const handleAddToCart = () => {
@@ -60,9 +92,20 @@ export default function ProductPage() { // <--- 2. ON ENLÈVE { params } D'ICI
       <div className="max-w-7xl mx-auto px-6 py-10 grid grid-cols-1 md:grid-cols-2 gap-12 mb-20">
         
         {/* COLONNE GAUCHE : Image */}
-        <div className={`${product.image || 'bg-gray-100'} aspect-[4/5] w-full relative flex items-center justify-center text-gray-400`}>
-            {/* Si pas de vraie image (juste une couleur de fond), on affiche le texte */}
-            {!product.image?.startsWith('http') && <span className="uppercase tracking-widest text-xs">Photo : {product.name}</span>}
+        <div className="aspect-[4/5] w-full relative overflow-hidden">
+            {/* Si c'est une URL d'image */}
+            {(product.imageUrl?.startsWith('http') || product.image?.startsWith('http')) ? (
+              <img
+                src={product.imageUrl || product.image}
+                alt={product.name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              /* Si c'est une couleur Tailwind */
+              <div className={`w-full h-full ${product.imageUrl || product.image || 'bg-gray-100'} flex items-center justify-center text-gray-400`}>
+                <span className="uppercase tracking-widest text-xs">Photo : {product.name}</span>
+              </div>
+            )}
         </div>
 
         {/* COLONNE DROITE : Détails et Actions */}
