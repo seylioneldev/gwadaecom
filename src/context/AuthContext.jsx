@@ -3,9 +3,9 @@
  * ======================================
  *
  * Gère l'authentification des utilisateurs avec Firebase Auth.
- * Permet de savoir si l'utilisateur est connecté et s'il est admin.
+ * Système hybride : ADMIN_EMAILS (fallback) + Firestore role (flexible)
  *
- * 🆕 NOUVEAU FICHIER CRÉÉ : src/context/AuthContext.jsx
+ * 🆕 FICHIER MODIFIÉ : src/context/AuthContext.jsx
  * DATE : 2025-11-30
  *
  * UTILISATION :
@@ -16,13 +16,14 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect } from 'react';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
   createUserWithEmailAndPassword
 } from 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 // Créer le contexte
 const AuthContext = createContext({});
@@ -37,44 +38,83 @@ export const useAuth = () => {
 };
 
 /**
- * LISTE DES EMAILS ADMIN
- * =======================
+ * LISTE DES EMAILS ADMIN (FALLBACK)
+ * ==================================
  *
- * IMPORTANT : Remplacez cet email par le vôtre !
- * Seuls les emails dans cette liste auront accès à l'admin.
- *
- * Option 1 : Liste en dur (simple mais nécessite redéploiement)
- * Option 2 : Stocké dans Firestore (plus flexible)
- * Option 3 : Variable d'environnement (recommandé)
+ * Ces emails auront TOUJOURS accès admin, même si Firestore est vide.
+ * Utile pour le premier démarrage et comme sécurité de secours.
  */
 const ADMIN_EMAILS = [
-  'votre-email@admin.com', // 👈 REMPLACEZ PAR VOTRE EMAIL
-  // Ajoutez d'autres emails admin ici si besoin
+  'admin@gwadecom.com', // 👈 Email admin principal
+  // Ajoutez d'autres emails admin de secours ici
 ];
-
-// Alternative : Utiliser une variable d'environnement
-// const ADMIN_EMAILS = process.env.NEXT_PUBLIC_ADMIN_EMAILS?.split(',') || [];
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userRole, setUserRole] = useState(null);
+
+  /**
+   * VÉRIFIER LE RÔLE DANS FIRESTORE
+   * =================================
+   * Méthode hybride :
+   * 1. Vérifier si l'email est dans ADMIN_EMAILS (fallback)
+   * 2. Sinon, vérifier le rôle dans Firestore
+   */
+  const checkUserRole = async (currentUser) => {
+    if (!currentUser) {
+      setIsAdmin(false);
+      setUserRole(null);
+      return;
+    }
+
+    // 1. Vérifier d'abord dans ADMIN_EMAILS (fallback)
+    const isInAdminList = ADMIN_EMAILS.includes(currentUser.email);
+
+    if (isInAdminList) {
+      setIsAdmin(true);
+      setUserRole('admin');
+      return;
+    }
+
+    // 2. Vérifier le rôle dans Firestore
+    try {
+      const userRef = doc(db, 'users', currentUser.uid);
+      const userDoc = await getDoc(userRef);
+
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        const role = userData.role || 'client';
+
+        setUserRole(role);
+        setIsAdmin(role === 'admin');
+      } else {
+        // Si l'utilisateur n'existe pas dans Firestore, c'est un client par défaut
+        setUserRole('client');
+        setIsAdmin(false);
+
+        // Créer le document utilisateur dans Firestore
+        await setDoc(userRef, {
+          email: currentUser.email,
+          role: 'client',
+          createdAt: new Date()
+        });
+      }
+    } catch (error) {
+      console.error('Erreur lors de la vérification du rôle:', error);
+      setUserRole('client');
+      setIsAdmin(false);
+    }
+  };
 
   /**
    * ÉCOUTER LES CHANGEMENTS D'AUTHENTIFICATION
    */
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
-
-      // Vérifier si l'utilisateur est admin
-      if (currentUser) {
-        const userIsAdmin = ADMIN_EMAILS.includes(currentUser.email);
-        setIsAdmin(userIsAdmin);
-      } else {
-        setIsAdmin(false);
-      }
-
+      await checkUserRole(currentUser);
       setLoading(false);
     });
 
@@ -87,16 +127,36 @@ export const AuthProvider = ({ children }) => {
   const signIn = async (email, password) => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-
-      // Vérifier si c'est un admin
-      if (!ADMIN_EMAILS.includes(email)) {
-        await firebaseSignOut(auth);
-        throw new Error('Accès refusé : vous n\'êtes pas administrateur');
-      }
-
+      await checkUserRole(userCredential.user);
       return userCredential.user;
     } catch (error) {
       console.error('Erreur de connexion:', error);
+      throw error;
+    }
+  };
+
+  /**
+   * INSCRIPTION (NOUVEAU COMPTE CLIENT)
+   */
+  const signUp = async (email, password, displayName = '') => {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Créer le profil utilisateur dans Firestore
+      await setDoc(doc(db, 'users', user.uid), {
+        email: user.email,
+        displayName: displayName,
+        role: 'client', // Par défaut : client
+        createdAt: new Date()
+      });
+
+      setUserRole('client');
+      setIsAdmin(false);
+
+      return user;
+    } catch (error) {
+      console.error('Erreur d\'inscription:', error);
       throw error;
     }
   };
@@ -109,6 +169,7 @@ export const AuthProvider = ({ children }) => {
       await firebaseSignOut(auth);
       setUser(null);
       setIsAdmin(false);
+      setUserRole(null);
     } catch (error) {
       console.error('Erreur de déconnexion:', error);
       throw error;
@@ -120,15 +181,22 @@ export const AuthProvider = ({ children }) => {
    */
   const createAdminAccount = async (email, password) => {
     try {
-      // Vérifier que l'email est dans la liste des admins
-      if (!ADMIN_EMAILS.includes(email)) {
-        throw new Error('Cet email n\'est pas autorisé comme admin');
-      }
-
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      return userCredential.user;
+      const user = userCredential.user;
+
+      // Créer le profil admin dans Firestore
+      await setDoc(doc(db, 'users', user.uid), {
+        email: user.email,
+        role: 'admin',
+        createdAt: new Date()
+      });
+
+      setUserRole('admin');
+      setIsAdmin(true);
+
+      return user;
     } catch (error) {
-      console.error('Erreur de création de compte:', error);
+      console.error('Erreur de création de compte admin:', error);
       throw error;
     }
   };
@@ -137,7 +205,9 @@ export const AuthProvider = ({ children }) => {
     user,
     loading,
     isAdmin,
+    userRole,
     signIn,
+    signUp,
     signOut,
     createAdminAccount,
   };
@@ -154,75 +224,28 @@ export const AuthProvider = ({ children }) => {
  * GUIDE D'UTILISATION
  * ============================================
  *
- * 1. CONFIGURATION DANS layout.js :
+ * SYSTÈME HYBRIDE :
+ * 1. ADMIN_EMAILS (ligne 50) : Admins permanents (fallback)
+ * 2. Firestore role : Admins flexibles (sans modification de code)
  *
- *    ```jsx
- *    import { AuthProvider } from '@/context/AuthContext';
+ * CRÉER UN ADMIN :
  *
- *    export default function RootLayout({ children }) {
- *      return (
- *        <html>
- *          <body>
- *            <AuthProvider>
- *              <CartProvider>
- *                {children}
- *              </CartProvider>
- *            </AuthProvider>
- *          </body>
- *        </html>
- *      );
- *    }
- *    ```
+ * Méthode 1 : Via ADMIN_EMAILS (permanent)
+ *   - Modifiez la ligne 50
+ *   - Redéployez l'application
  *
- * 2. UTILISATION DANS UN COMPOSANT :
+ * Méthode 2 : Via Firestore (flexible, recommandé)
+ *   - Firebase Console → Firestore
+ *   - Collection : users
+ *   - Document : [uid de l'utilisateur]
+ *   - Champ : role = "admin"
  *
- *    ```jsx
- *    import { useAuth } from '@/context/AuthContext';
+ * Méthode 3 : Via la page admin (plus tard)
+ *   - /admin/users → Changer le rôle d'un utilisateur
  *
- *    export default function MonComposant() {
- *      const { user, isAdmin, signOut } = useAuth();
- *
- *      if (!isAdmin) {
- *        return <p>Accès refusé</p>;
- *      }
- *
- *      return (
- *        <div>
- *          <p>Bienvenue {user.email}</p>
- *          <button onClick={signOut}>Déconnexion</button>
- *        </div>
- *      );
- *    }
- *    ```
- *
- * 3. CRÉER VOTRE PREMIER COMPTE ADMIN :
- *
- *    Créez une page temporaire /admin/setup pour créer le compte :
- *
- *    ```jsx
- *    const { createAdminAccount } = useAuth();
- *
- *    const handleCreate = async () => {
- *      await createAdminAccount('votre-email@admin.com', 'votre-mot-de-passe');
- *    };
- *    ```
- *
- *    Supprimez cette page après création du compte !
- *
- * 4. CONFIGURER LES EMAILS ADMIN :
- *
- *    Option A : Modifier directement dans ce fichier (ligne 42)
- *    Option B : Utiliser une variable d'environnement dans .env.local :
- *
- *    ```
- *    NEXT_PUBLIC_ADMIN_EMAILS=admin@example.com,admin2@example.com
- *    ```
- *
- * 5. ACTIVER FIREBASE AUTH :
- *
- *    Dans la console Firebase :
- *    - Allez dans Authentication > Sign-in method
- *    - Activez "Email/Password"
+ * CRÉER UN CLIENT :
+ *   - L'utilisateur s'inscrit sur /mon-compte
+ *   - Rôle par défaut : "client"
  *
  * ============================================
  */

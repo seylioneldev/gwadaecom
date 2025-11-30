@@ -3,9 +3,9 @@
  * ====================================
  *
  * Bouton d'accès rapide au dashboard admin.
- * Visible uniquement pour le propriétaire du site (mode dev ou connecté).
+ * Visible uniquement pour les administrateurs authentifiés.
  *
- * 🆕 NOUVEAU FICHIER CRÉÉ : src/components/AdminFloatingButton.jsx
+ * 🆕 FICHIER MODIFIÉ : src/components/AdminFloatingButton.jsx
  * DATE : 2025-11-30
  *
  * UTILISATION :
@@ -29,16 +29,12 @@ export default function AdminFloatingButton() {
    * CONDITION D'AFFICHAGE DU BOUTON ADMIN
    * ========================================
    *
-   * Le bouton s'affiche si :
+   * Le bouton s'affiche UNIQUEMENT si :
    * - L'utilisateur est connecté ET admin (isAdmin === true)
-   * - OU en mode développement (pour faciliter le développement)
    */
 
-  const isDev = process.env.NODE_ENV === 'development';
-  const isVisible = isAdmin || isDev;
-
-  // Ne rien afficher si le bouton n'est pas visible ou en chargement
-  if (!isVisible || loading) return null;
+  // Ne rien afficher si pas admin ou en chargement
+  if (!isAdmin || loading) return null;
 
   return (
     <>
@@ -62,13 +58,6 @@ export default function AdminFloatingButton() {
           <div className="bg-[#5d6e64] text-white w-14 h-14 rounded-full shadow-lg hover:shadow-xl hover:bg-[#4a5850] transition-all duration-200 flex items-center justify-center">
             <Settings size={24} className="group-hover:rotate-90 transition-transform duration-300" />
           </div>
-
-          {/* Badge "Dev Mode" (optionnel) */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
-              DEV
-            </div>
-          )}
         </div>
       </Link>
     </>
@@ -82,8 +71,8 @@ export default function AdminFloatingButton() {
  * Ce bouton est déjà intégré dans src/app/page.js
  *
  * VISIBILITÉ :
- * - Visible en mode développement (NODE_ENV === 'development')
- * - Visible si l'utilisateur est connecté comme admin (isAdmin === true)
+ * - Visible UNIQUEMENT si l'utilisateur est connecté comme admin (isAdmin === true)
+ * - Pour se connecter comme admin : /mon-compte
  *
  * PERSONNALISATION :
  * - Couleur : bg-[#5d6e64] et hover:bg-[#4a5850]
@@ -92,6 +81,6 @@ export default function AdminFloatingButton() {
  *
  * SÉCURITÉ :
  * - Utilise Firebase Auth via useAuth()
- * - Seuls les emails dans ADMIN_EMAILS peuvent se connecter
- * - Voir AuthContext.jsx pour la configuration
+ * - Vérifie le rôle dans Firestore (users collection)
+ * - Fallback sur ADMIN_EMAILS dans AuthContext.jsx
  */

@@ -218,7 +218,10 @@ export default function Header() {
             </button>
 
             {/* Compte Utilisateur */}
-            <User size={22} strokeWidth={1.5} className="cursor-pointer hover:opacity-80 transition" />
+            <Link href="/mon-compte" className="flex flex-col items-center cursor-pointer hover:opacity-80 transition relative bg-transparent border-none p-0 text-white">
+              <User size={22} strokeWidth={1.5} />
+              <span className="text-[10px] italic mt-1 font-serif">compte</span>
+            </Link>
           </div>
         </div>
 

@@ -14,22 +14,47 @@
 "use client";
 
 import Link from 'next/link';
-import { Package, FolderTree, Settings, ShoppingBag, BarChart3, FileText, TrendingUp, Users, Truck, ShoppingCart, FileCheck } from 'lucide-react';
+import { Package, FolderTree, Settings, ShoppingBag, BarChart3, FileText, TrendingUp, Users, Truck, ShoppingCart, FileCheck, Shield, LogOut } from 'lucide-react';
 import { useProducts } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
 
 export default function AdminDashboard() {
   // Récupération des statistiques
   const { products, loading: productsLoading } = useProducts();
   const { categories, loading: categoriesLoading } = useCategories();
+  const { user, signOut } = useAuth();
+  const router = useRouter();
+
+  // Gestion de la déconnexion
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      router.push('/');
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion:', error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* En-tête */}
       <div className="bg-[#5d6e64] text-white py-8 px-8">
-        <div className="max-w-7xl mx-auto">
-          <h1 className="text-4xl font-serif mb-2">Tableau de Bord Admin</h1>
-          <p className="text-sm text-white/80">Gérez votre boutique en ligne facilement</p>
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-serif mb-2">Tableau de Bord Admin</h1>
+            <p className="text-sm text-white/80">Gérez votre boutique en ligne facilement</p>
+          </div>
+
+          {/* Bouton de déconnexion */}
+          <button
+            onClick={handleSignOut}
+            className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded transition text-sm border border-white/20"
+          >
+            <LogOut size={18} />
+            Déconnexion
+          </button>
         </div>
       </div>
 
@@ -234,6 +259,19 @@ export default function AdminDashboard() {
               <h3 className="text-xl font-serif text-gray-800 mb-2">Facturation</h3>
               <p className="text-sm text-gray-500">
                 Générez et gérez les factures, devis et paiements
+              </p>
+            </div>
+          </Link>
+
+          {/* Carte : Utilisateurs */}
+          <Link href="/admin/users" className="group">
+            <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-xl transition border-2 border-transparent hover:border-[#5d6e64]">
+              <div className="w-16 h-16 bg-emerald-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-emerald-200 transition">
+                <Shield className="text-emerald-600" size={32} />
+              </div>
+              <h3 className="text-xl font-serif text-gray-800 mb-2">Utilisateurs</h3>
+              <p className="text-sm text-gray-500">
+                Gérez les comptes utilisateurs et les rôles (admin/client)
               </p>
             </div>
           </Link>
