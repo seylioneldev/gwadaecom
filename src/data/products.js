@@ -7,7 +7,7 @@ export const products = [
   { 
     id: 1, 
     name: "Vintage French Jar", 
-    price: "45.00", 
+    price: "450.00", 
     image: "bg-[#E5E5E5]", 
     category: "Kitchen", 
     description: "Un bocal en verre vintage authentique, parfait pour la décoration ou le rangement.",
