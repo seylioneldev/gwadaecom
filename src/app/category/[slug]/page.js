@@ -25,11 +25,14 @@ export default function CategoryPage() {
   const params = useParams();
   const slug = params?.slug;
 
-  // Récupération des produits de cette catégorie depuis Firestore
-  const { products: filteredProducts, loading, error } = useProductsByCategory(slug);
+  // Décoder l'URL (remplacer %20 par des espaces, etc.)
+  const decodedSlug = slug ? decodeURIComponent(slug) : '';
 
-  // Met la première lettre en majuscule pour l'affichage (ex: kitchen -> Kitchen)
-  const categoryName = slug ? slug.charAt(0).toUpperCase() + slug.slice(1) : '';
+  // Récupération des produits de cette catégorie depuis Firestore
+  const { products: filteredProducts, loading, error } = useProductsByCategory(decodedSlug);
+
+  // Met la première lettre en majuscule pour l'affichage (ex: "bijou en argent" -> "Bijou en argent")
+  const categoryName = decodedSlug ? decodedSlug.charAt(0).toUpperCase() + decodedSlug.slice(1) : '';
 
   return (
     <main className="min-h-screen bg-white">
