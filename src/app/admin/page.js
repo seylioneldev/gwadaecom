@@ -1,354 +1,205 @@
 /**
- * PAGE ADMIN - Back-Office de gestion des produits
- * ================================================
+ * PAGE ADMIN : Tableau de Bord Principal
+ * ========================================
  *
- * Cette page permet à l'administrateur de :
- * 1. Se connecter avec Firebase Authentication
- * 2. Ajouter de nouveaux produits à la base de données Firestore
+ * Page d'accueil de l'interface d'administration.
+ * Présente toutes les fonctionnalités du CMS avec des boutons de navigation.
  *
- * FICHIER MODIFIÉ : src/app/admin/page.js
+ * 📄 FICHIER MODIFIÉ : src/app/admin/page.js
  * DATE : 2025-11-30
  *
- * STRUCTURE :
- * - Zone de login (si non connecté)
- * - Tableau de bord avec formulaire d'ajout de produit (si connecté)
+ * CHANGEMENT : Transformé en dashboard avec navigation vers toutes les fonctionnalités
  */
 
 "use client";
 
-// ============================================
-// IMPORTS
-// ============================================
-import { useState, useEffect } from 'react';
-import { auth, db } from '../../lib/firebase'; // Firebase : auth pour login, db pour Firestore
-import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
-import { collection, addDoc } from 'firebase/firestore'; // Pour ajouter des documents à Firestore
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Package, FolderTree, Settings, ShoppingBag, BarChart3, FileText } from 'lucide-react';
+import { useProducts } from '@/hooks/useProducts';
+import { useCategories } from '@/hooks/useCategories';
 
-// ============================================
-// COMPOSANT PRINCIPAL
-// ============================================
-export default function AdminPage() {
+export default function AdminDashboard() {
+  // Récupération des statistiques
+  const { products, loading: productsLoading } = useProducts();
+  const { categories, loading: categoriesLoading } = useCategories();
 
-  // ----------------------------------------
-  // ÉTATS POUR L'AUTHENTIFICATION
-  // ----------------------------------------
-  const [email, setEmail] = useState(""); // Email de l'admin
-  const [password, setPassword] = useState(""); // Mot de passe de l'admin
-  const [user, setUser] = useState(null); // Utilisateur connecté (null si non connecté)
-  const [error, setError] = useState(""); // Messages d'erreur
-  const router = useRouter();
-
-  // ----------------------------------------
-  // ÉTATS POUR LE FORMULAIRE DE PRODUIT
-  // ----------------------------------------
-  const [productName, setProductName] = useState(""); // Nom du produit
-  const [price, setPrice] = useState(""); // Prix du produit (en texte, sera converti en nombre)
-  const [category, setCategory] = useState("Kitchen"); // Catégorie par défaut
-  const [description, setDescription] = useState(""); // Description du produit
-  const [imageUrl, setImageUrl] = useState(""); // URL de l'image ou couleur Tailwind (ex: bg-[#E5E5E5])
-  const [isSubmitting, setIsSubmitting] = useState(false); // Indique si le formulaire est en cours d'envoi
-  const [successMessage, setSuccessMessage] = useState(""); // Message de succès après ajout
-
-  // ----------------------------------------
-  // SURVEILLANCE DE L'ÉTAT DE CONNEXION
-  // ----------------------------------------
-  // useEffect s'exécute une fois au chargement du composant
-  // onAuthStateChanged surveille en temps réel si l'utilisateur est connecté
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser); // Met à jour l'état avec l'utilisateur connecté (ou null)
-    });
-    return () => unsubscribe(); // Nettoyage : arrête la surveillance quand le composant est démonté
-  }, []);
-
-  // ----------------------------------------
-  // FONCTION : CONNEXION DE L'ADMIN
-  // ----------------------------------------
-  /**
-   * Gère la connexion de l'administrateur
-   * @param {Event} e - L'événement du formulaire
-   */
-  const handleLogin = async (e) => {
-    e.preventDefault(); // Empêche le rechargement de la page
-    setError(""); // Réinitialise les erreurs
-    try {
-      // Tente de connecter l'utilisateur avec Firebase Auth
-      await signInWithEmailAndPassword(auth, email, password);
-      // Si succès, onAuthStateChanged mettra à jour l'état 'user' automatiquement
-    } catch (err) {
-      setError("Email ou mot de passe incorrect.");
-    }
-  };
-
-  // ----------------------------------------
-  // FONCTION : DÉCONNEXION DE L'ADMIN
-  // ----------------------------------------
-  /**
-   * Déconnecte l'administrateur
-   */
-  const handleLogout = async () => {
-    await signOut(auth); // Déconnexion Firebase
-    // onAuthStateChanged mettra automatiquement 'user' à null
-  };
-
-  // ----------------------------------------
-  // FONCTION : AJOUT D'UN PRODUIT À FIRESTORE
-  // ----------------------------------------
-  /**
-   * Ajoute un nouveau produit à la collection "products" dans Firestore
-   * @param {Event} e - L'événement du formulaire
-   *
-   * ÉTAPES :
-   * 1. Valide que le prix est un nombre positif
-   * 2. Crée un nouveau document dans la collection "products"
-   * 3. Réinitialise le formulaire
-   * 4. Affiche un message de succès
-   */
-  const handleAddProduct = async (e) => {
-    e.preventDefault(); // Empêche le rechargement de la page
-    setError(""); // Réinitialise les messages d'erreur
-    setSuccessMessage(""); // Réinitialise les messages de succès
-    setIsSubmitting(true); // Active l'état de chargement
-
-    try {
-      // ---- VALIDATION DU PRIX ----
-      const priceNum = parseFloat(price); // Convertit le texte en nombre décimal
-      if (isNaN(priceNum) || priceNum <= 0) {
-        setError("Le prix doit être un nombre positif.");
-        setIsSubmitting(false);
-        return; // Arrête l'exécution si le prix est invalide
-      }
-
-      // ---- AJOUT DU PRODUIT À FIRESTORE ----
-      /**
-       * addDoc() ajoute un nouveau document à la collection "products"
-       * Le document contiendra :
-       * - name : nom du produit
-       * - price : prix en nombre (avec décimales)
-       * - category : catégorie choisie
-       * - description : description du produit
-       * - imageUrl : URL ou couleur Tailwind
-       * - createdAt : date de création (pour trier les produits plus tard)
-       */
-      await addDoc(collection(db, "products"), {
-        name: productName,
-        price: priceNum,
-        category: category,
-        description: description,
-        imageUrl: imageUrl,
-        createdAt: new Date() // Timestamp de création
-      });
-
-      // ---- RÉINITIALISATION DU FORMULAIRE ----
-      // Vide tous les champs après l'ajout réussi
-      setProductName("");
-      setPrice("");
-      setCategory("Kitchen"); // Remet la catégorie par défaut
-      setDescription("");
-      setImageUrl("");
-      setSuccessMessage("Produit ajouté avec succès !");
-
-      // ---- MESSAGE DE SUCCÈS TEMPORAIRE ----
-      // Efface le message de succès après 3 secondes
-      setTimeout(() => setSuccessMessage(""), 3000);
-
-    } catch (err) {
-      // En cas d'erreur (problème de connexion, permissions, etc.)
-      setError("Erreur lors de l'ajout du produit : " + err.message);
-    } finally {
-      setIsSubmitting(false); // Désactive l'état de chargement
-    }
-  };
-
-  // ============================================
-  // RENDU CONDITIONNEL : SI L'ADMIN EST CONNECTÉ
-  // ============================================
-  /**
-   * Si 'user' n'est pas null, l'admin est connecté
-   * Affiche le tableau de bord avec le formulaire d'ajout de produit
-   */
-  if (user) {
-    return (
-      <div className="min-h-screen bg-gray-50 p-10">
-        <div className="max-w-4xl mx-auto bg-white shadow-md rounded-lg p-8">
-
-          {/* ---- EN-TÊTE DU BACK-OFFICE ---- */}
-          <div className="flex justify-between items-center mb-8 border-b pb-4">
-            <h1 className="text-2xl font-serif text-gray-800">Back-Office</h1>
-            <div className="flex items-center gap-4">
-                {/* Affiche l'email de l'utilisateur connecté */}
-                <span className="text-sm text-gray-500">{user.email}</span>
-                {/* Bouton de déconnexion */}
-                <button onClick={handleLogout} className="text-red-500 hover:text-red-700 text-sm underline">
-                    Se déconnecter
-                </button>
-            </div>
-          </div>
-
-          {/* ---- MESSAGES DE SUCCÈS ET D'ERREUR ---- */}
-          {/* Affiche uniquement si successMessage contient du texte */}
-          {successMessage && (
-            <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6 text-sm">
-              {successMessage}
-            </div>
-          )}
-          {/* Affiche uniquement si error contient du texte */}
-          {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6 text-sm">
-              {error}
-            </div>
-          )}
-
-          {/* ---- FORMULAIRE D'AJOUT DE PRODUIT ---- */}
-          <form onSubmit={handleAddProduct} className="space-y-6">
-            <h2 className="text-xl font-serif text-gray-800 mb-6">Ajouter un nouveau produit</h2>
-
-            {/* CHAMP : Nom du produit */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nom du produit *
-              </label>
-              <input
-                type="text"
-                required // Champ obligatoire
-                value={productName}
-                onChange={(e) => setProductName(e.target.value)} // Met à jour l'état à chaque frappe
-                className="w-full border border-gray-300 p-3 rounded focus:outline-none focus:border-[#5d6e64]"
-                placeholder="Ex: Panier artisanal"
-              />
-            </div>
-
-            {/* CHAMP : Prix */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Prix (€) *
-              </label>
-              <input
-                type="number"
-                step="0.01" // Permet les décimales (ex: 29.99)
-                required
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                className="w-full border border-gray-300 p-3 rounded focus:outline-none focus:border-[#5d6e64]"
-                placeholder="Ex: 29.99"
-              />
-            </div>
-
-            {/* CHAMP : Catégorie (liste déroulante) */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Catégorie *
-              </label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full border border-gray-300 p-3 rounded focus:outline-none focus:border-[#5d6e64] bg-white"
-              >
-                {/* MODIFICATION FUTURE : Si vous voulez ajouter une catégorie, ajoutez une ligne <option> ici */}
-                <option value="Kitchen">Kitchen</option>
-                <option value="Baskets">Baskets</option>
-                <option value="Decoration">Decoration</option>
-                <option value="Accessories">Accessories</option>
-              </select>
-            </div>
-
-            {/* CHAMP : Description (zone de texte multiligne) */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description *
-              </label>
-              <textarea
-                required
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows="4"
-                className="w-full border border-gray-300 p-3 rounded focus:outline-none focus:border-[#5d6e64] resize-none"
-                placeholder="Décrivez le produit..."
-              />
-            </div>
-
-            {/* CHAMP : Image (URL ou couleur Tailwind) */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Image (URL ou couleur Tailwind)
-              </label>
-              <input
-                type="text"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                className="w-full border border-gray-300 p-3 rounded focus:outline-none focus:border-[#5d6e64]"
-                placeholder="Ex: bg-[#E5E5E5] ou https://..."
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Pour l'instant, utilisez une couleur (ex: bg-[#E5E5E5]) ou une URL d'image
-              </p>
-              {/* NOTE : Plus tard, vous pourrez ajouter l'upload d'images avec Firebase Storage */}
-            </div>
-
-            {/* BOUTON : Soumettre le formulaire */}
-            <button
-              type="submit"
-              disabled={isSubmitting} // Désactive le bouton pendant l'envoi
-              className={`w-full py-3 rounded text-white font-bold uppercase tracking-widest text-sm transition ${
-                isSubmitting
-                  ? 'bg-gray-400 cursor-not-allowed' // Style si en cours d'envoi
-                  : 'bg-[#5d6e64] hover:bg-[#4a5850]' // Style normal
-              }`}
-            >
-              {/* Texte du bouton change selon l'état */}
-              {isSubmitting ? 'Ajout en cours...' : 'Ajouter le produit'}
-            </button>
-          </form>
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* En-tête */}
+      <div className="bg-[#5d6e64] text-white py-8 px-8">
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-4xl font-serif mb-2">Tableau de Bord Admin</h1>
+          <p className="text-sm text-white/80">Gérez votre boutique en ligne facilement</p>
         </div>
       </div>
-    );
-  }
 
-  // ============================================
-  // RENDU CONDITIONNEL : SI L'ADMIN N'EST PAS CONNECTÉ
-  // ============================================
-  /**
-   * Si 'user' est null, l'admin n'est pas connecté
-   * Affiche le formulaire de connexion
-   */
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f0f0f0] px-4">
-      <div className="max-w-md w-full bg-white shadow-xl rounded-lg p-8">
-        <h1 className="text-3xl font-serif text-center text-[#5d6e64] mb-8">Admin Login</h1>
+      <div className="max-w-7xl mx-auto px-8 py-10">
 
-        {/* Affiche les erreurs de connexion si elles existent */}
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-sm text-center">
-            {error}
+        {/* Statistiques */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+          {/* Stat 1 : Produits */}
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-wider text-gray-500 mb-1">Produits</p>
+                <p className="text-3xl font-bold text-gray-800">
+                  {productsLoading ? '...' : products.length}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                <Package className="text-blue-600" size={24} />
+              </div>
+            </div>
           </div>
-        )}
 
-        {/* FORMULAIRE DE CONNEXION */}
-        <form onSubmit={handleLogin} className="space-y-6">
-          {/* Champ Email */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input
-              type="email" required
-              className="w-full border border-gray-300 p-3 rounded focus:outline-none focus:border-[#5d6e64]"
-              value={email} onChange={(e) => setEmail(e.target.value)}
-            />
+          {/* Stat 2 : Catégories */}
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-wider text-gray-500 mb-1">Catégories</p>
+                <p className="text-3xl font-bold text-gray-800">
+                  {categoriesLoading ? '...' : categories.length}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                <FolderTree className="text-green-600" size={24} />
+              </div>
+            </div>
           </div>
-          {/* Champ Mot de passe */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
-            <input
-              type="password" required
-              className="w-full border border-gray-300 p-3 rounded focus:outline-none focus:border-[#5d6e64]"
-              value={password} onChange={(e) => setPassword(e.target.value)}
-            />
+
+          {/* Stat 3 : Status */}
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-wider text-gray-500 mb-1">Status</p>
+                <p className="text-lg font-semibold text-green-600">En ligne</p>
+              </div>
+              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                <BarChart3 className="text-purple-600" size={24} />
+              </div>
+            </div>
           </div>
-          {/* Bouton de connexion */}
-          <button type="submit" className="w-full bg-[#5d6e64] text-white py-3 rounded hover:bg-[#4a5850] transition uppercase tracking-widest text-sm font-bold">
-            Se Connecter
-          </button>
-        </form>
+        </div>
+
+        {/* Titre des actions */}
+        <h2 className="text-2xl font-serif text-gray-800 mb-6">Actions Rapides</h2>
+
+        {/* Grille des fonctionnalités */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+          {/* Carte 1 : Ajouter un Produit */}
+          <Link href="/admin/add-product" className="group">
+            <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-xl transition border-2 border-transparent hover:border-[#5d6e64]">
+              <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-blue-200 transition">
+                <ShoppingBag className="text-blue-600" size={32} />
+              </div>
+              <h3 className="text-xl font-serif text-gray-800 mb-2">Ajouter un Produit</h3>
+              <p className="text-sm text-gray-500">
+                Créez un nouveau produit avec nom, prix, catégorie et image
+              </p>
+            </div>
+          </Link>
+
+          {/* Carte 2 : Gérer les Produits */}
+          <Link href="/admin/products" className="group">
+            <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-xl transition border-2 border-transparent hover:border-[#5d6e64]">
+              <div className="w-16 h-16 bg-green-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-green-200 transition">
+                <Package className="text-green-600" size={32} />
+              </div>
+              <h3 className="text-xl font-serif text-gray-800 mb-2">Gérer les Produits</h3>
+              <p className="text-sm text-gray-500">
+                Modifier, supprimer ou rechercher vos produits existants
+              </p>
+            </div>
+          </Link>
+
+          {/* Carte 3 : Gérer les Catégories */}
+          <Link href="/admin/categories" className="group">
+            <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-xl transition border-2 border-transparent hover:border-[#5d6e64]">
+              <div className="w-16 h-16 bg-yellow-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-yellow-200 transition">
+                <FolderTree className="text-yellow-600" size={32} />
+              </div>
+              <h3 className="text-xl font-serif text-gray-800 mb-2">Gérer les Catégories</h3>
+              <p className="text-sm text-gray-500">
+                Organisez le menu de navigation et l'ordre des catégories
+              </p>
+            </div>
+          </Link>
+
+          {/* Carte 4 : Paramètres du Site */}
+          <Link href="/admin/settings" className="group">
+            <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-xl transition border-2 border-transparent hover:border-[#5d6e64]">
+              <div className="w-16 h-16 bg-purple-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-purple-200 transition">
+                <Settings className="text-purple-600" size={32} />
+              </div>
+              <h3 className="text-xl font-serif text-gray-800 mb-2">Paramètres du Site</h3>
+              <p className="text-sm text-gray-500">
+                Configurez les informations générales, réseaux sociaux et boutique
+              </p>
+            </div>
+          </Link>
+
+          {/* Carte 5 : Documentation */}
+          <Link href="/" target="_blank" className="group">
+            <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-xl transition border-2 border-transparent hover:border-gray-300">
+              <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-gray-200 transition">
+                <FileText className="text-gray-600" size={32} />
+              </div>
+              <h3 className="text-xl font-serif text-gray-800 mb-2">Voir le Site</h3>
+              <p className="text-sm text-gray-500">
+                Prévisualisez votre boutique en ligne telle qu'elle apparaît aux visiteurs
+              </p>
+            </div>
+          </Link>
+
+          {/* Carte 6 : Documentation CMS */}
+          <div className="bg-gradient-to-br from-[#5d6e64] to-[#4a5850] p-8 rounded-lg shadow-md text-white">
+            <div className="w-16 h-16 bg-white/20 rounded-lg flex items-center justify-center mb-4">
+              <FileText className="text-white" size={32} />
+            </div>
+            <h3 className="text-xl font-serif mb-2">Documentation</h3>
+            <p className="text-sm text-white/80 mb-4">
+              Consultez le fichier CMS_README.md pour apprendre à utiliser et transférer ce CMS
+            </p>
+            <div className="text-xs bg-white/10 px-3 py-2 rounded">
+              📄 CMS_README.md
+            </div>
+          </div>
+
+        </div>
+
+        {/* Aide rapide */}
+        <div className="mt-10 bg-blue-50 border border-blue-200 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-blue-900 mb-3 flex items-center gap-2">
+            <span>💡</span> Guide Rapide
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-800">
+            <div>
+              <strong>Pour commencer :</strong>
+              <ol className="list-decimal list-inside mt-2 space-y-1 text-xs">
+                <li>Créez vos catégories de menu</li>
+                <li>Ajoutez vos premiers produits</li>
+                <li>Configurez les paramètres du site</li>
+                <li>Prévisualisez votre boutique</li>
+              </ol>
+            </div>
+            <div>
+              <strong>Raccourcis utiles :</strong>
+              <ul className="list-disc list-inside mt-2 space-y-1 text-xs">
+                <li><code className="bg-blue-100 px-1 py-0.5 rounded">/admin/products</code> - Modifier produits</li>
+                <li><code className="bg-blue-100 px-1 py-0.5 rounded">/admin/categories</code> - Gérer menu</li>
+                <li><code className="bg-blue-100 px-1 py-0.5 rounded">/admin/settings</code> - Paramètres site</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer admin */}
+        <div className="mt-10 text-center text-sm text-gray-500">
+          <p>CMS Réutilisable • Créé avec Next.js 15 + Firebase Firestore</p>
+          <p className="text-xs mt-1">Consultez CMS_README.md pour transférer ce CMS sur d'autres projets</p>
+        </div>
+
       </div>
     </div>
   );
@@ -356,25 +207,29 @@ export default function AdminPage() {
 
 /**
  * ============================================
- * GUIDE DE MODIFICATION
+ * GUIDE D'UTILISATION
  * ============================================
  *
- * Pour ajouter une nouvelle catégorie :
- * - Allez à la ligne 264 (section <select>)
- * - Ajoutez une nouvelle ligne : <option value="NouvelleCategorie">Nouvelle Catégorie</option>
+ * Cette page est le tableau de bord principal de l'admin.
+ * Elle présente :
  *
- * Pour changer les couleurs du thème :
- * - Remplacez #5d6e64 par votre couleur (ex: #FF6B6B)
- * - Recherchez toutes les occurrences dans le fichier
+ * 1. STATISTIQUES EN TEMPS RÉEL :
+ *    - Nombre de produits
+ *    - Nombre de catégories
+ *    - Status du site
  *
- * Pour ajouter un nouveau champ au formulaire :
- * 1. Créez un nouvel état : const [nouveauChamp, setNouveauChamp] = useState("");
- * 2. Ajoutez un <div> avec <input> ou <select> dans le formulaire
- * 3. Ajoutez le champ dans addDoc() (ligne 63)
- * 4. Réinitialisez-le dans setNouveauChamp("") (ligne 77)
+ * 2. NAVIGATION VERS LES FONCTIONNALITÉS :
+ *    - Ajouter un produit (/admin/add-product)
+ *    - Gérer les produits (/admin/products)
+ *    - Gérer les catégories (/admin/categories)
+ *    - Paramètres du site (/admin/settings)
+ *    - Voir le site (/)
  *
- * Pour modifier la collection Firestore :
- * - Changez "products" à la ligne 63 : collection(db, "products")
+ * 3. GUIDE RAPIDE :
+ *    - Étapes pour démarrer
+ *    - Raccourcis utiles
+ *
+ * ACCÈS : /admin
  *
  * ============================================
  */
