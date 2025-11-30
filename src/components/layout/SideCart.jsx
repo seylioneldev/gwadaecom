@@ -115,22 +115,37 @@ export default function SideCart() {
               <span>Total :</span>
               <span>${totalPrice}</span>
             </div>
-            
-            {/* --- MODIFICATION ICI : Bouton Checkout transformé en Link --- */}
-            <Link 
-              href="/checkout" // Redirige vers la page de paiement
-              onClick={closeCart} // Ferme le panier au clic
-              className={`w-full block text-center py-3 text-sm uppercase tracking-widest text-white transition duration-300
-                ${cart.length === 0 
-                  ? 'bg-gray-400 cursor-not-allowed pointer-events-none' // Désactivé si vide
-                  : 'bg-[#5d6e64] hover:bg-[#4a5850]' // Actif sinon
+
+            {/* Bouton Voir le panier */}
+            <Link
+              href="/cart"
+              onClick={closeCart}
+              className={`w-full block text-center py-3 text-sm uppercase tracking-widest transition duration-300 mb-2
+                ${cart.length === 0
+                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed pointer-events-none'
+                  : 'bg-gray-100 text-gray-800 hover:bg-gray-200 border border-gray-300'
                 }`
               }
-              aria-disabled={cart.length === 0} // Accessibilité
+              aria-disabled={cart.length === 0}
             >
-              Checkout
+              Voir le panier
             </Link>
-            
+
+            {/* Bouton Checkout */}
+            <Link
+              href="/checkout"
+              onClick={closeCart}
+              className={`w-full block text-center py-3 text-sm uppercase tracking-widest text-white transition duration-300
+                ${cart.length === 0
+                  ? 'bg-gray-400 cursor-not-allowed pointer-events-none'
+                  : 'bg-[#5d6e64] hover:bg-[#4a5850]'
+                }`
+              }
+              aria-disabled={cart.length === 0}
+            >
+              Passer commande
+            </Link>
+
             <button onClick={closeCart} className="w-full mt-2 text-xs text-gray-500 hover:underline">
               Continuer mes achats
             </button>
