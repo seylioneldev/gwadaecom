@@ -22,7 +22,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSettings, updateSettings, resetSettings } from '@/hooks/useSettings';
-import { Save, RotateCcw, Globe, Store, Home, Share2 } from 'lucide-react';
+import { Save, RotateCcw, Globe, Store, Home, Share2, Palette } from 'lucide-react';
 
 export default function AdminSettingsPage() {
   // Récupération des paramètres actuels
@@ -452,6 +452,276 @@ export default function AdminSettingsPage() {
                     Afficher "Nouveautés"
                   </span>
                 </label>
+              </div>
+            </div>
+          </div>
+
+          {/* SECTION 5 : PERSONNALISATION CSS */}
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="flex items-center gap-2 mb-6 pb-4 border-b">
+              <Palette className="text-[#5d6e64]" size={24} />
+              <h2 className="text-xl font-serif text-gray-800">Personnalisation CSS</h2>
+            </div>
+
+            {/* Header */}
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-gray-700 mb-4">Header</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
+                    Couleur de fond
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      name="customStyles.header.backgroundColor"
+                      value={formData.customStyles?.header?.backgroundColor || '#6B7A6E'}
+                      onChange={handleChange}
+                      className="w-16 h-10 border border-gray-300 rounded cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={formData.customStyles?.header?.backgroundColor || '#6B7A6E'}
+                      onChange={(e) => handleChange({ target: { name: 'customStyles.header.backgroundColor', value: e.target.value } })}
+                      className="flex-1 border border-gray-300 px-4 py-2 text-sm font-mono"
+                      placeholder="#6B7A6E"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
+                    Couleur du texte
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      name="customStyles.header.textColor"
+                      value={formData.customStyles?.header?.textColor || '#FFFFFF'}
+                      onChange={handleChange}
+                      className="w-16 h-10 border border-gray-300 rounded cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={formData.customStyles?.header?.textColor || '#FFFFFF'}
+                      onChange={(e) => handleChange({ target: { name: 'customStyles.header.textColor', value: e.target.value } })}
+                      className="flex-1 border border-gray-300 px-4 py-2 text-sm font-mono"
+                      placeholder="#FFFFFF"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-gray-700 mb-4">Footer</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
+                    Couleur de fond
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      name="customStyles.footer.backgroundColor"
+                      value={formData.customStyles?.footer?.backgroundColor || '#2D3748'}
+                      onChange={handleChange}
+                      className="w-16 h-10 border border-gray-300 rounded cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={formData.customStyles?.footer?.backgroundColor || '#2D3748'}
+                      onChange={(e) => handleChange({ target: { name: 'customStyles.footer.backgroundColor', value: e.target.value } })}
+                      className="flex-1 border border-gray-300 px-4 py-2 text-sm font-mono"
+                      placeholder="#2D3748"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
+                    Couleur du texte
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      name="customStyles.footer.textColor"
+                      value={formData.customStyles?.footer?.textColor || '#E2E8F0'}
+                      onChange={handleChange}
+                      className="w-16 h-10 border border-gray-300 rounded cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={formData.customStyles?.footer?.textColor || '#E2E8F0'}
+                      onChange={(e) => handleChange({ target: { name: 'customStyles.footer.textColor', value: e.target.value } })}
+                      className="flex-1 border border-gray-300 px-4 py-2 text-sm font-mono"
+                      placeholder="#E2E8F0"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Page */}
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-gray-700 mb-4">Page</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
+                    Couleur de fond
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      name="customStyles.page.backgroundColor"
+                      value={formData.customStyles?.page?.backgroundColor || '#FFFFFF'}
+                      onChange={handleChange}
+                      className="w-16 h-10 border border-gray-300 rounded cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={formData.customStyles?.page?.backgroundColor || '#FFFFFF'}
+                      onChange={(e) => handleChange({ target: { name: 'customStyles.page.backgroundColor', value: e.target.value } })}
+                      className="flex-1 border border-gray-300 px-4 py-2 text-sm font-mono"
+                      placeholder="#FFFFFF"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
+                    Couleur primaire
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      name="customStyles.page.primaryColor"
+                      value={formData.customStyles?.page?.primaryColor || '#5d6e64'}
+                      onChange={handleChange}
+                      className="w-16 h-10 border border-gray-300 rounded cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={formData.customStyles?.page?.primaryColor || '#5d6e64'}
+                      onChange={(e) => handleChange({ target: { name: 'customStyles.page.primaryColor', value: e.target.value } })}
+                      className="flex-1 border border-gray-300 px-4 py-2 text-sm font-mono"
+                      placeholder="#5d6e64"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Polices */}
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-gray-700 mb-4">Polices</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
+                    Police des titres
+                  </label>
+                  <select
+                    name="customStyles.fonts.headingFont"
+                    value={formData.customStyles?.fonts?.headingFont || 'serif'}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 px-4 py-2 text-sm"
+                  >
+                    <option value="serif">Serif (Georgia, Times)</option>
+                    <option value="sans-serif">Sans-Serif (Arial, Helvetica)</option>
+                    <option value="monospace">Monospace (Courier)</option>
+                    <option value="cursive">Cursive (Comic Sans)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
+                    Police du texte
+                  </label>
+                  <select
+                    name="customStyles.fonts.bodyFont"
+                    value={formData.customStyles?.fonts?.bodyFont || 'sans-serif'}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 px-4 py-2 text-sm"
+                  >
+                    <option value="serif">Serif (Georgia, Times)</option>
+                    <option value="sans-serif">Sans-Serif (Arial, Helvetica)</option>
+                    <option value="monospace">Monospace (Courier)</option>
+                    <option value="cursive">Cursive (Comic Sans)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Boutons */}
+            <div>
+              <h3 className="text-sm font-semibold text-gray-700 mb-4">Boutons</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
+                    Couleur de fond
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      name="customStyles.buttons.primaryBgColor"
+                      value={formData.customStyles?.buttons?.primaryBgColor || '#5d6e64'}
+                      onChange={handleChange}
+                      className="w-16 h-10 border border-gray-300 rounded cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={formData.customStyles?.buttons?.primaryBgColor || '#5d6e64'}
+                      onChange={(e) => handleChange({ target: { name: 'customStyles.buttons.primaryBgColor', value: e.target.value } })}
+                      className="flex-1 border border-gray-300 px-4 py-2 text-sm font-mono"
+                      placeholder="#5d6e64"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
+                    Couleur du texte
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      name="customStyles.buttons.primaryTextColor"
+                      value={formData.customStyles?.buttons?.primaryTextColor || '#FFFFFF'}
+                      onChange={handleChange}
+                      className="w-16 h-10 border border-gray-300 rounded cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={formData.customStyles?.buttons?.primaryTextColor || '#FFFFFF'}
+                      onChange={(e) => handleChange({ target: { name: 'customStyles.buttons.primaryTextColor', value: e.target.value } })}
+                      className="flex-1 border border-gray-300 px-4 py-2 text-sm font-mono"
+                      placeholder="#FFFFFF"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
+                    Couleur au survol
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      name="customStyles.buttons.primaryHoverBgColor"
+                      value={formData.customStyles?.buttons?.primaryHoverBgColor || '#4a5850'}
+                      onChange={handleChange}
+                      className="w-16 h-10 border border-gray-300 rounded cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={formData.customStyles?.buttons?.primaryHoverBgColor || '#4a5850'}
+                      onChange={(e) => handleChange({ target: { name: 'customStyles.buttons.primaryHoverBgColor', value: e.target.value } })}
+                      className="flex-1 border border-gray-300 px-4 py-2 text-sm font-mono"
+                      placeholder="#4a5850"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>

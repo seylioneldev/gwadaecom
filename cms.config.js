@@ -139,6 +139,45 @@ const cmsConfig = {
       showNewArrivals: true,
       productsPerPage: 9,
     },
+
+    // 🎨 PERSONNALISATION CSS
+    // Paramètres de style modifiables depuis l'interface admin
+    customStyles: {
+      // Header
+      header: {
+        backgroundColor: "#6B7A6E",
+        textColor: "#FFFFFF",
+        promoBarBgColor: "#5d6e64",
+        promoBarTextColor: "#FFFFFF",
+      },
+
+      // Footer
+      footer: {
+        backgroundColor: "#2D3748",
+        textColor: "#E2E8F0",
+      },
+
+      // Page
+      page: {
+        backgroundColor: "#FFFFFF",
+        textColor: "#333333",
+        primaryColor: "#5d6e64",
+        secondaryColor: "#E5E5E5",
+      },
+
+      // Polices
+      fonts: {
+        headingFont: "serif",      // Police des titres
+        bodyFont: "sans-serif",    // Police du texte
+      },
+
+      // Boutons
+      buttons: {
+        primaryBgColor: "#5d6e64",
+        primaryTextColor: "#FFFFFF",
+        primaryHoverBgColor: "#4a5850",
+      },
+    },
   },
 
   // ============================================
