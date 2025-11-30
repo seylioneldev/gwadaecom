@@ -1,39 +1,44 @@
 // ==========================================================
 // FICHIER : layout.js (Le SQUELETTE HTML de toute l'application)
-// RÔLE : Définit les balises <html> et <body>. Le contenu (Header, Footer, etc.)
-//        est injecté via la variable {children}.
 // ==========================================================
-import { CartProvider } from "../context/CartContext";
-import { Geist, Geist_Mono } from "next/font/google"; // Importe la police Geist (par défaut dans Next.js)
-import "./globals.css"; // Importe les styles globaux (ton Tailwind CSS)
+import { Geist, Geist_Mono } from "next/font/google"; 
+import "./globals.css"; 
+
+// 1. IMPORT DU CONTEXTE ET DU COMPOSANT PANIER
+import { CartProvider } from "../context/CartContext"; 
+import SideCart from "../components/layout/SideCart"; // <--- IL MANQUAIT CETTE LIGNE !
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
+  variable: "--font-geist-sans", 
   subsets: ["latin"],
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+  variable: "--font-geist-mono", 
   subsets: ["latin"],
 });
 
-// MÉTADONNÉES (Informations pour les moteurs de recherche - SEO)
 export const metadata = {
-  title: "Vivi et Margot - Votre Boutique de Lifestyle Français",
-  description:
-    "Boutique en ligne pour les paniers, savons et articles textiles de style français authentique.",
+  title: "Vivi et Margot - Votre Boutique de Lifestyle Français", 
+  description: "Boutique en ligne pour les paniers, savons et articles textiles de style français authentique.", 
 };
 
-// COMPOSANT PRINCIPAL RootLayout
 export default function RootLayout({ children }) {
-  // Nous réintégrons le formatage original, mais avec tes valeurs.
-  // Assure-toi que le 'return' commence directement sur la balise <html>
   return (
     <html lang="fr">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <CartProvider>{children}</CartProvider>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        
+        {/* Le Fournisseur de données (Panier) enveloppe tout */}
+        <CartProvider>
+          
+          {/* Le contenu de la page (Accueil, Produit...) */}
+          {children} 
+
+          {/* 2. LE PANNEAU LATÉRAL (Il doit être ici pour s'afficher par-dessus le reste) */}
+          <SideCart /> 
+
+        </CartProvider>
+      
       </body>
     </html>
   );

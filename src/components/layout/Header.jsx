@@ -1,22 +1,26 @@
-"use client"; // ESSENTIEL pour utiliser le hook useCart
+"use client"; // INDISPENSABLE car ce composant est interactif (clic bouton)
 
 import { Search, ShoppingBasket, User, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
-import { useCart } from '../../context/CartContext'; // CORRECTION DU CHEMIN
+
+// --- CORRECTION CRITIQUE ICI ---
+// Le chemin '../..' remonte de 2 dossiers (layout -> components -> src) pour trouver 'context'
+import { useCart } from '../../context/CartContext'; 
 
 export default function Header() {
-  // Récupère la fonction pour ouvrir le panier et le nombre d'articles
+  // On récupère les outils du panier depuis le contexte
   const { totalItems, setIsCartOpen } = useCart(); 
 
-  // Fonction appelée au clic sur l'icône
+  // Fonction pour ouvrir le panneau quand on clique sur l'icône
   const handleCartClick = () => {
+    console.log("Ouverture du panier"); // Petit test pour la console
     setIsCartOpen(true);
   };
 
   return (
-    <header className="w-full font-sans text-gray-800">
+    <header className="w-full font-sans text-gray-800 sticky top-0 z-30 bg-white shadow-sm">
       
-      {/* 1. Bandeau supérieur (Gris/Vert) */}
+      {/* 1. Bandeau supérieur */}
       <div className="bg-[#5d6e64] text-white text-xs py-2 px-4 flex justify-between items-center">
         <div className="hidden md:flex tracking-widest italic">carte cadeau</div>
         <div className="flex-1 text-center font-light">
@@ -27,24 +31,23 @@ export default function Header() {
         </button>
       </div>
 
-      {/* 2. Zone Principale (Logo & Outils) */}
-      <div className="bg-[#6B7A6E] text-white py-8 px-8">
+      {/* 2. Zone Principale */}
+      <div className="bg-[#6B7A6E] text-white py-6 px-8">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           
-          {/* A Gauche : Sélecteur de devise */}
+          {/* Devise */}
           <div className="hidden md:flex items-center gap-2 bg-white text-[#5d6e64] px-3 py-1 text-xs font-semibold cursor-pointer">
             <span>USD ($)</span>
             <ChevronDown size={14} />
           </div>
 
-          {/* Au Centre : Le Logo */}
-          <div className="text-3xl md:text-5xl font-serif tracking-widest text-center flex-1">
+          {/* Logo */}
+          <Link href="/" className="text-3xl md:text-5xl font-serif tracking-widest text-center flex-1 cursor-pointer hover:opacity-90">
             VIVI <span className="text-lg italic mx-1 font-serif">et</span> MARGOT
-          </div>
+          </Link>
 
-          {/* A Droite : Icônes */}
+          {/* Icônes */}
           <div className="flex items-center gap-6">
-            {/* Barre de recherche */}
             <div className="hidden md:flex items-center border border-white/50 px-3 py-1 gap-2">
               <Search size={14} />
               <input 
@@ -54,21 +57,21 @@ export default function Header() {
               />
             </div>
             
-            {/* Icône Panier CONNECTÉE */}
-            <div 
-              className="flex flex-col items-center cursor-pointer hover:opacity-80 transition relative"
-              onClick={handleCartClick} // <--- ACTION : Ouvre le panneau
+            {/* BOUTON PANIER (C'est ici que l'action se passe) */}
+            <button 
+              onClick={handleCartClick}
+              className="flex flex-col items-center cursor-pointer hover:opacity-80 transition relative bg-transparent border-none p-0 text-white"
             >
               <ShoppingBasket size={22} strokeWidth={1.5} />
               <span className="text-[10px] italic mt-1 font-serif">panier</span>
               
-              {/* Compteur d'articles (Affiche totalItems du Panier) */}
+              {/* Badge Compteur (S'affiche seulement si > 0) */}
               {totalItems > 0 && (
                 <span className="absolute -top-1 -right-2 w-4 h-4 bg-red-500 text-white rounded-full text-[10px] flex items-center justify-center font-bold">
                   {totalItems}
                 </span>
               )}
-            </div>
+            </button>
             
             <User size={22} strokeWidth={1.5} className="cursor-pointer hover:opacity-80 transition" />
           </div>
