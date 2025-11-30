@@ -1,101 +1,595 @@
+/**
+ * PAGE : Checkout (Passage de commande)
+ * ======================================
+ *
+ * Page de commande avec système hybride :
+ * - Invité (checkout rapide sans compte)
+ * - Connexion (utilisateur existant)
+ * - Inscription (nouveau compte)
+ *
+ * 🔧 FICHIER MODIFIÉ : src/app/checkout/page.js
+ * DATE : 2025-11-30
+ */
+
 "use client";
 
-import Header from "../../components/layout/Header";
-import Footer from "../../components/layout/Footer";
-import { useCart } from "../../context/CartContext";
-import { useState } from "react";
-import { useRouter } from "next/navigation"; // Pour rediriger après le paiement
+import { useState, useEffect } from 'react';
+import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { User, LogIn, UserPlus, ArrowLeft, ArrowRight, CreditCard } from 'lucide-react';
+import Header from '@/components/layout/Header';
+import Footer from '@/components/layout/Footer';
 
 export default function CheckoutPage() {
-  const { cart, totalPrice, clearCart } = useCart();
-  const [isProcessing, setIsProcessing] = useState(false);
+  const { cart, getTotalPrice } = useCart();
+  const { user, signIn, signUp } = useAuth();
   const router = useRouter();
 
-  const handlePayment = (e) => {
-    e.preventDefault(); // Empêche le rechargement de la page
-    setIsProcessing(true);
+  // État du mode de checkout
+  const [checkoutMode, setCheckoutMode] = useState(null); // null | 'guest' | 'login' | 'signup'
 
-    // Simulation d'un délai réseau (2 secondes)
-    setTimeout(() => {
-      clearCart(); // On vide le panier
-      router.push("/checkout/success"); // On redirige vers la page de succès
-    }, 2000);
+  // État du formulaire invité
+  const [guestForm, setGuestForm] = useState({
+    email: '',
+    firstName: '',
+    lastName: '',
+    address: '',
+    city: '',
+    postalCode: '',
+    country: 'France',
+    phone: '',
+  });
+
+  // État du formulaire connexion
+  const [loginForm, setLoginForm] = useState({
+    email: '',
+    password: '',
+  });
+
+  // État du formulaire inscription
+  const [signupForm, setSignupForm] = useState({
+    email: '',
+    password: '',
+    confirmPassword: '',
+    firstName: '',
+    lastName: '',
+  });
+
+  // États des erreurs et chargement
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  /**
+   * REDIRECTION SI PANIER VIDE
+   */
+  useEffect(() => {
+    if (cart.length === 0) {
+      router.push('/cart');
+    }
+  }, [cart, router]);
+
+  /**
+   * SI UTILISATEUR DÉJÀ CONNECTÉ, PASSER EN MODE INVITÉ
+   */
+  useEffect(() => {
+    if (user && checkoutMode === null) {
+      setCheckoutMode('guest');
+      setGuestForm({
+        ...guestForm,
+        email: user.email || '',
+        firstName: user.displayName?.split(' ')[0] || '',
+        lastName: user.displayName?.split(' ')[1] || '',
+      });
+    }
+  }, [user]);
+
+  /**
+   * GESTION DE LA CONNEXION
+   */
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      await signIn(loginForm.email, loginForm.password);
+      setCheckoutMode('guest'); // Passer au formulaire de commande
+    } catch (err) {
+      setError('Email ou mot de passe incorrect');
+    } finally {
+      setLoading(false);
+    }
   };
 
+  /**
+   * GESTION DE L'INSCRIPTION
+   */
+  const handleSignup = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    if (signupForm.password !== signupForm.confirmPassword) {
+      setError('Les mots de passe ne correspondent pas');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      await signUp(signupForm.email, signupForm.password, `${signupForm.firstName} ${signupForm.lastName}`);
+      setCheckoutMode('guest'); // Passer au formulaire de commande
+    } catch (err) {
+      setError(err.message || 'Erreur lors de l\'inscription');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * TRAITEMENT DU FORMULAIRE INVITÉ (sans paiement pour l'instant)
+   */
+  const handleGuestCheckout = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    // Validation basique
+    if (!guestForm.email || !guestForm.firstName || !guestForm.lastName || !guestForm.address) {
+      setError('Veuillez remplir tous les champs obligatoires');
+      return;
+    }
+
+    // Pour l'instant, on redirige vers une page de confirmation temporaire
+    // TODO: Intégrer Stripe pour le paiement
+    alert('Fonctionnalité de paiement à venir ! Votre commande sera enregistrée.');
+    console.log('Commande invité:', guestForm);
+  };
+
+  // Si panier vide, ne rien afficher
   if (cart.length === 0) {
-    return (
-      <main className="min-h-screen bg-white">
-        <Header />
-        <div className="flex flex-col items-center justify-center py-40">
-          <h1 className="text-2xl font-serif text-gray-800 mb-4">Votre panier est vide</h1>
-          <a href="/" className="text-[#5d6e64] hover:underline">Retourner à la boutique</a>
-        </div>
-        <Footer />
-      </main>
-    );
+    return null;
   }
 
   return (
-    <main className="min-h-screen bg-white">
+    <>
       <Header />
 
-      <div className="max-w-7xl mx-auto px-6 py-10">
-        <h1 className="font-serif text-3xl text-gray-800 mb-10 text-center">Finaliser la Commande</h1>
+      <div className="min-h-screen bg-gray-50 py-12 px-4">
+        <div className="max-w-6xl mx-auto">
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-          
-          {/* COLONNE GAUCHE : Formulaire */}
-          <div>
-            <h2 className="text-sm uppercase tracking-widest text-gray-500 mb-6 border-b pb-2">Informations de livraison</h2>
-            <form onSubmit={handlePayment} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <input required type="text" placeholder="Prénom" className="border border-gray-300 p-3 w-full text-sm outline-none focus:border-[#5d6e64]" />
-                <input required type="text" placeholder="Nom" className="border border-gray-300 p-3 w-full text-sm outline-none focus:border-[#5d6e64]" />
-              </div>
-              <input required type="email" placeholder="Email" className="border border-gray-300 p-3 w-full text-sm outline-none focus:border-[#5d6e64]" />
-              <input required type="text" placeholder="Adresse" className="border border-gray-300 p-3 w-full text-sm outline-none focus:border-[#5d6e64]" />
-              <div className="grid grid-cols-2 gap-4">
-                <input required type="text" placeholder="Ville" className="border border-gray-300 p-3 w-full text-sm outline-none focus:border-[#5d6e64]" />
-                <input required type="text" placeholder="Code Postal" className="border border-gray-300 p-3 w-full text-sm outline-none focus:border-[#5d6e64]" />
-              </div>
-
-              <button 
-                type="submit" 
-                disabled={isProcessing}
-                className="w-full bg-[#5d6e64] text-white py-4 uppercase tracking-widest text-xs hover:bg-[#4a5850] transition mt-6 disabled:opacity-50"
-              >
-                {isProcessing ? "Traitement en cours..." : `Payer $${totalPrice}`}
-              </button>
-            </form>
+          {/* En-tête */}
+          <div className="mb-8">
+            <Link href="/cart" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800 transition mb-4">
+              <ArrowLeft size={16} />
+              Retour au panier
+            </Link>
+            <h1 className="text-3xl font-serif text-gray-800 flex items-center gap-3">
+              <CreditCard size={32} className="text-[#5d6e64]" />
+              Finaliser ma commande
+            </h1>
           </div>
 
-          {/* COLONNE DROITE : Résumé */}
-          <div className="bg-gray-50 p-8 h-fit">
-            <h2 className="text-sm uppercase tracking-widest text-gray-500 mb-6 border-b pb-2">Résumé de la commande</h2>
-            <div className="space-y-4 mb-6">
-              {cart.map((item) => (
-                <div key={item.id} className="flex justify-between items-center text-sm">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gray-200"></div> {/* Placeholder image */}
-                    <div>
-                      <p className="font-medium text-gray-800">{item.name}</p>
-                      <p className="text-gray-500 text-xs">Qté: {item.quantity}</p>
-                    </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+            {/* FORMULAIRE DE COMMANDE */}
+            <div className="lg:col-span-2">
+
+              {/* CHOIX DU MODE DE CHECKOUT */}
+              {checkoutMode === null && !user && (
+                <div className="bg-white rounded-lg shadow-md p-8">
+                  <h2 className="text-2xl font-serif text-gray-800 mb-6 text-center">Comment souhaitez-vous commander ?</h2>
+
+                  <div className="space-y-4">
+                    {/* Invité */}
+                    <button
+                      onClick={() => setCheckoutMode('guest')}
+                      className="w-full p-6 border-2 border-gray-200 rounded-lg hover:border-[#5d6e64] hover:bg-gray-50 transition text-left"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
+                          <User size={24} className="text-blue-600" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold text-gray-800 mb-1">Continuer en tant qu'invité</h3>
+                          <p className="text-sm text-gray-600">Commandez rapidement sans créer de compte</p>
+                        </div>
+                        <ArrowRight size={20} className="text-gray-400" />
+                      </div>
+                    </button>
+
+                    {/* Connexion */}
+                    <button
+                      onClick={() => setCheckoutMode('login')}
+                      className="w-full p-6 border-2 border-gray-200 rounded-lg hover:border-[#5d6e64] hover:bg-gray-50 transition text-left"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center shrink-0">
+                          <LogIn size={24} className="text-green-600" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold text-gray-800 mb-1">J'ai déjà un compte</h3>
+                          <p className="text-sm text-gray-600">Connectez-vous pour accéder à votre historique</p>
+                        </div>
+                        <ArrowRight size={20} className="text-gray-400" />
+                      </div>
+                    </button>
+
+                    {/* Inscription */}
+                    <button
+                      onClick={() => setCheckoutMode('signup')}
+                      className="w-full p-6 border-2 border-gray-200 rounded-lg hover:border-[#5d6e64] hover:bg-gray-50 transition text-left"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center shrink-0">
+                          <UserPlus size={24} className="text-purple-600" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold text-gray-800 mb-1">Créer un compte</h3>
+                          <p className="text-sm text-gray-600">Suivez vos commandes et bénéficiez d'avantages</p>
+                        </div>
+                        <ArrowRight size={20} className="text-gray-400" />
+                      </div>
+                    </button>
                   </div>
-                  <p className="text-gray-600">${(item.price * item.quantity).toFixed(2)}</p>
                 </div>
-              ))}
+              )}
+
+              {/* FORMULAIRE CONNEXION */}
+              {checkoutMode === 'login' && (
+                <div className="bg-white rounded-lg shadow-md p-8">
+                  <h2 className="text-2xl font-serif text-gray-800 mb-6">Connexion</h2>
+
+                  {error && (
+                    <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded mb-6 text-sm">
+                      {error}
+                    </div>
+                  )}
+
+                  <form onSubmit={handleLogin} className="space-y-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                      <input
+                        type="email"
+                        value={loginForm.email}
+                        onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
+                        required
+                        className="w-full border border-gray-300 px-4 py-3 rounded focus:outline-none focus:border-[#5d6e64]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Mot de passe</label>
+                      <input
+                        type="password"
+                        value={loginForm.password}
+                        onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                        required
+                        className="w-full border border-gray-300 px-4 py-3 rounded focus:outline-none focus:border-[#5d6e64]"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full bg-[#5d6e64] text-white py-3 rounded font-medium hover:bg-[#4a5850] transition disabled:opacity-50"
+                    >
+                      {loading ? 'Connexion...' : 'Se connecter'}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setCheckoutMode(null)}
+                      className="w-full text-sm text-gray-600 hover:text-gray-800"
+                    >
+                      ← Retour aux options
+                    </button>
+                  </form>
+                </div>
+              )}
+
+              {/* FORMULAIRE INSCRIPTION */}
+              {checkoutMode === 'signup' && (
+                <div className="bg-white rounded-lg shadow-md p-8">
+                  <h2 className="text-2xl font-serif text-gray-800 mb-6">Créer un compte</h2>
+
+                  {error && (
+                    <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded mb-6 text-sm">
+                      {error}
+                    </div>
+                  )}
+
+                  <form onSubmit={handleSignup} className="space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Prénom</label>
+                        <input
+                          type="text"
+                          value={signupForm.firstName}
+                          onChange={(e) => setSignupForm({ ...signupForm, firstName: e.target.value })}
+                          required
+                          className="w-full border border-gray-300 px-4 py-3 rounded focus:outline-none focus:border-[#5d6e64]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Nom</label>
+                        <input
+                          type="text"
+                          value={signupForm.lastName}
+                          onChange={(e) => setSignupForm({ ...signupForm, lastName: e.target.value })}
+                          required
+                          className="w-full border border-gray-300 px-4 py-3 rounded focus:outline-none focus:border-[#5d6e64]"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                      <input
+                        type="email"
+                        value={signupForm.email}
+                        onChange={(e) => setSignupForm({ ...signupForm, email: e.target.value })}
+                        required
+                        className="w-full border border-gray-300 px-4 py-3 rounded focus:outline-none focus:border-[#5d6e64]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Mot de passe</label>
+                      <input
+                        type="password"
+                        value={signupForm.password}
+                        onChange={(e) => setSignupForm({ ...signupForm, password: e.target.value })}
+                        required
+                        minLength={6}
+                        className="w-full border border-gray-300 px-4 py-3 rounded focus:outline-none focus:border-[#5d6e64]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Confirmer le mot de passe</label>
+                      <input
+                        type="password"
+                        value={signupForm.confirmPassword}
+                        onChange={(e) => setSignupForm({ ...signupForm, confirmPassword: e.target.value })}
+                        required
+                        minLength={6}
+                        className="w-full border border-gray-300 px-4 py-3 rounded focus:outline-none focus:border-[#5d6e64]"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full bg-[#5d6e64] text-white py-3 rounded font-medium hover:bg-[#4a5850] transition disabled:opacity-50"
+                    >
+                      {loading ? 'Création...' : 'Créer mon compte'}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setCheckoutMode(null)}
+                      className="w-full text-sm text-gray-600 hover:text-gray-800"
+                    >
+                      ← Retour aux options
+                    </button>
+                  </form>
+                </div>
+              )}
+
+              {/* FORMULAIRE INVITÉ */}
+              {checkoutMode === 'guest' && (
+                <div className="bg-white rounded-lg shadow-md p-8">
+                  <h2 className="text-2xl font-serif text-gray-800 mb-6">Informations de livraison</h2>
+
+                  {error && (
+                    <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded mb-6 text-sm">
+                      {error}
+                    </div>
+                  )}
+
+                  <form onSubmit={handleGuestCheckout} className="space-y-6">
+                    {/* Email */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                      <input
+                        type="email"
+                        value={guestForm.email}
+                        onChange={(e) => setGuestForm({ ...guestForm, email: e.target.value })}
+                        required
+                        disabled={!!user}
+                        className="w-full border border-gray-300 px-4 py-3 rounded focus:outline-none focus:border-[#5d6e64] disabled:bg-gray-100"
+                      />
+                    </div>
+
+                    {/* Nom et Prénom */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Prénom *</label>
+                        <input
+                          type="text"
+                          value={guestForm.firstName}
+                          onChange={(e) => setGuestForm({ ...guestForm, firstName: e.target.value })}
+                          required
+                          className="w-full border border-gray-300 px-4 py-3 rounded focus:outline-none focus:border-[#5d6e64]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Nom *</label>
+                        <input
+                          type="text"
+                          value={guestForm.lastName}
+                          onChange={(e) => setGuestForm({ ...guestForm, lastName: e.target.value })}
+                          required
+                          className="w-full border border-gray-300 px-4 py-3 rounded focus:outline-none focus:border-[#5d6e64]"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Adresse */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Adresse *</label>
+                      <input
+                        type="text"
+                        value={guestForm.address}
+                        onChange={(e) => setGuestForm({ ...guestForm, address: e.target.value })}
+                        required
+                        className="w-full border border-gray-300 px-4 py-3 rounded focus:outline-none focus:border-[#5d6e64]"
+                        placeholder="Numéro et nom de rue"
+                      />
+                    </div>
+
+                    {/* Ville et Code postal */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Ville *</label>
+                        <input
+                          type="text"
+                          value={guestForm.city}
+                          onChange={(e) => setGuestForm({ ...guestForm, city: e.target.value })}
+                          required
+                          className="w-full border border-gray-300 px-4 py-3 rounded focus:outline-none focus:border-[#5d6e64]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Code postal *</label>
+                        <input
+                          type="text"
+                          value={guestForm.postalCode}
+                          onChange={(e) => setGuestForm({ ...guestForm, postalCode: e.target.value })}
+                          required
+                          className="w-full border border-gray-300 px-4 py-3 rounded focus:outline-none focus:border-[#5d6e64]"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Pays */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Pays *</label>
+                      <select
+                        value={guestForm.country}
+                        onChange={(e) => setGuestForm({ ...guestForm, country: e.target.value })}
+                        required
+                        className="w-full border border-gray-300 px-4 py-3 rounded focus:outline-none focus:border-[#5d6e64]"
+                      >
+                        <option value="France">France</option>
+                        <option value="Guadeloupe">Guadeloupe</option>
+                        <option value="Martinique">Martinique</option>
+                        <option value="Guyane">Guyane</option>
+                        <option value="Réunion">Réunion</option>
+                      </select>
+                    </div>
+
+                    {/* Téléphone */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Téléphone</label>
+                      <input
+                        type="tel"
+                        value={guestForm.phone}
+                        onChange={(e) => setGuestForm({ ...guestForm, phone: e.target.value })}
+                        className="w-full border border-gray-300 px-4 py-3 rounded focus:outline-none focus:border-[#5d6e64]"
+                        placeholder="+33 6 12 34 56 78"
+                      />
+                    </div>
+
+                    <div className="border-t pt-6">
+                      <button
+                        type="submit"
+                        className="w-full bg-[#5d6e64] text-white py-3 rounded font-medium hover:bg-[#4a5850] transition flex items-center justify-center gap-2"
+                      >
+                        Procéder au paiement
+                        <ArrowRight size={20} />
+                      </button>
+                    </div>
+
+                    {!user && (
+                      <button
+                        type="button"
+                        onClick={() => setCheckoutMode(null)}
+                        className="w-full text-sm text-gray-600 hover:text-gray-800"
+                      >
+                        ← Retour aux options
+                      </button>
+                    )}
+                  </form>
+                </div>
+              )}
+
             </div>
-            <div className="border-t border-gray-200 pt-4 flex justify-between font-bold text-lg text-gray-800">
-              <span>Total</span>
-              <span>${totalPrice}</span>
+
+            {/* RÉCAPITULATIF */}
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
+                <h2 className="text-xl font-serif text-gray-800 mb-4">Récapitulatif</h2>
+
+                {/* Liste des produits */}
+                <div className="space-y-3 mb-6 pb-6 border-b border-gray-200">
+                  {cart.map((item) => (
+                    <div key={item.id} className="flex items-center gap-3">
+                      <div className={`w-12 h-14 ${item.image} bg-cover bg-center rounded shrink-0`}></div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-800">{item.name}</p>
+                        <p className="text-xs text-gray-500">Qté : {item.quantity}</p>
+                      </div>
+                      <p className="text-sm font-semibold text-gray-800">
+                        ${(item.price * item.quantity).toFixed(2)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Totaux */}
+                <div className="space-y-2 mb-6">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Sous-total</span>
+                    <span className="font-medium text-gray-800">${getTotalPrice().toFixed(2)}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Livraison</span>
+                    <span className="text-green-600 font-medium">Gratuite</span>
+                  </div>
+                </div>
+
+                {/* Total */}
+                <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                  <span className="text-lg font-semibold text-gray-800">Total</span>
+                  <span className="text-2xl font-bold text-[#5d6e64]">${getTotalPrice().toFixed(2)}</span>
+                </div>
+              </div>
             </div>
+
           </div>
 
         </div>
       </div>
 
       <Footer />
-    </main>
+    </>
   );
 }
+
+/**
+ * ============================================
+ * GUIDE D'UTILISATION
+ * ============================================
+ *
+ * ACCÈS : /checkout
+ *
+ * MODES DE CHECKOUT :
+ * 1. Invité : Achat rapide sans compte
+ * 2. Connexion : Utilisateur existant
+ * 3. Inscription : Nouveau compte
+ *
+ * ÉTAPES :
+ * 1. Choix du mode (invité/login/signup)
+ * 2. Formulaire de livraison (invité) ou auth
+ * 3. Paiement (à implémenter avec Stripe)
+ * 4. Confirmation
+ *
+ * TODO :
+ * - Intégrer Stripe pour le paiement
+ * - Enregistrer les commandes dans Firestore
+ * - Envoyer emails de confirmation
+ *
+ * ============================================
+ */
