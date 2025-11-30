@@ -1,26 +1,113 @@
-"use client"; // INDISPENSABLE car ce composant est interactif (clic bouton)
+"use client"; // Composant Client obligatoire (hooks React et interactivité)
 
-import { Search, ShoppingBasket, User, ChevronDown } from 'lucide-react';
-import Link from 'next/link';
-
-// --- CORRECTION CRITIQUE ICI ---
-// Le chemin '../..' remonte de 2 dossiers (layout -> components -> src) pour trouver 'context'
-import { useCart } from '../../context/CartContext'; 
+import { Search, ShoppingBasket, User, ChevronDown, X } from "lucide-react";
+import Link from "next/link";
+import { useCart } from "../../context/CartContext"; // Pour le compteur du panier
+import { useState, useEffect, useRef } from "react"; 
+import { useRouter } from "next/navigation"; // Pour la redirection URL
+import { products } from "../../data/products"; // Source de données pour les suggestions
 
 export default function Header() {
-  // On récupère les outils du panier depuis le contexte
-  const { totalItems, setIsCartOpen } = useCart(); 
+  const { totalItems, setIsCartOpen } = useCart();
 
-  // Fonction pour ouvrir le panneau quand on clique sur l'icône
+  // ==========================================================
+  // 1. GESTION DES ÉTATS (STATE)
+  // ==========================================================
+  const [searchTerm, setSearchTerm] = useState("");           // Ce que l'utilisateur tape
+  const [suggestions, setSuggestions] = useState([]);         // Liste des produits suggérés
+  const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false); // Panneau de suggestions visible ?
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false); // Barre ouverte sur mobile ?
+
+  // Outils de navigation et références DOM
+  const router = useRouter(); 
+  const searchContainerRef = useRef(null); // Sert à détecter un clic "en dehors" de la barre
+  const searchInputRef = useRef(null);     // Sert à mettre le focus (curseur) dans le champ
+
+  // Ouvre le panier latéral
   const handleCartClick = () => {
-    console.log("Ouverture du panier"); // Petit test pour la console
     setIsCartOpen(true);
+  };
+
+  // ==========================================================
+  // 2. LOGIQUE DE SUGGESTION (AUTO-COMPLÉTION)
+  // Se déclenche à chaque fois que 'searchTerm' change
+  // ==========================================================
+  useEffect(() => {
+    if (searchTerm.trim().length > 1) {
+      // On filtre les produits qui contiennent le texte tapé
+      const filteredSuggestions = products
+        .filter((product) =>
+          product.name.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+        .slice(0, 5); // On ne garde que les 5 premiers
+
+      setSuggestions(filteredSuggestions);
+      setIsSuggestionsOpen(filteredSuggestions.length > 0);
+    } else {
+      // Si moins de 2 lettres, on vide les suggestions
+      setSuggestions([]);
+      setIsSuggestionsOpen(false);
+    }
+  }, [searchTerm]);
+
+  // ==========================================================
+  // 3. GESTION CLIC EN DEHORS (UX)
+  // Ferme les suggestions si on clique ailleurs sur la page
+  // ==========================================================
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(event.target)
+      ) {
+        setIsSuggestionsOpen(false);
+        // Sur mobile, si le champ est vide et qu'on clique ailleurs, on le referme pour gagner de la place
+        if (window.innerWidth < 768 && searchTerm === "") {
+            setIsMobileSearchOpen(false);
+        }
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [searchContainerRef, searchTerm]);
+
+  // ==========================================================
+  // 4. GESTION RECHERCHE MOBILE
+  // Animation d'ouverture et focus automatique
+  // ==========================================================
+  const handleMobileSearchToggle = () => {
+    if (!isMobileSearchOpen) {
+      setIsMobileSearchOpen(true);
+      // Petit délai pour laisser le temps à l'élément de s'afficher avant de mettre le focus
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 100); 
+    }
+  };
+
+  // Lance la recherche et redirige vers la page de résultats
+  const handleSearch = (e) => {
+    e.preventDefault(); 
+    if (searchTerm.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchTerm)}`);
+      setIsSuggestionsOpen(false); // Ferme les suggestions après validation
+      setIsMobileSearchOpen(false); // Ferme la barre mobile après validation
+    }
+  };
+
+  // Permet de valider avec la touche "Entrée"
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      handleSearch(e);
+    }
   };
 
   return (
     <header className="w-full font-sans text-gray-800 sticky top-0 z-30 bg-white shadow-sm">
       
-      {/* 1. Bandeau supérieur */}
+      {/* --- BANDEAU SUPÉRIEUR (Promo) --- */}
       <div className="bg-[#5d6e64] text-white text-xs py-2 px-4 flex justify-between items-center">
         <div className="hidden md:flex tracking-widest italic">carte cadeau</div>
         <div className="flex-1 text-center font-light">
@@ -31,11 +118,11 @@ export default function Header() {
         </button>
       </div>
 
-      {/* 2. Zone Principale */}
+      {/* --- ZONE PRINCIPALE --- */}
       <div className="bg-[#6B7A6E] text-white py-6 px-8">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           
-          {/* Devise */}
+          {/* Devise (Caché sur mobile) */}
           <div className="hidden md:flex items-center gap-2 bg-white text-[#5d6e64] px-3 py-1 text-xs font-semibold cursor-pointer">
             <span>USD ($)</span>
             <ChevronDown size={14} />
@@ -46,48 +133,102 @@ export default function Header() {
             VIVI <span className="text-lg italic mx-1 font-serif">et</span> MARGOT
           </Link>
 
-          {/* Icônes */}
+          {/* --- ZONE ICÔNES & RECHERCHE --- */}
           <div className="flex items-center gap-6">
-            <div className="hidden md:flex items-center border border-white/50 px-3 py-1 gap-2">
-              <Search size={14} />
-              <input 
-                type="text" 
-                placeholder="Search..." 
-                className="bg-transparent border-none outline-none text-xs text-white placeholder-white/70 w-20"
-              />
-            </div>
             
-            {/* BOUTON PANIER (C'est ici que l'action se passe) */}
-            <button 
-              onClick={handleCartClick}
-              className="flex flex-col items-center cursor-pointer hover:opacity-80 transition relative bg-transparent border-none p-0 text-white"
-            >
+            {/* Conteneur Recherche (Relatif pour positionner les suggestions) */}
+            <div ref={searchContainerRef} className="flex items-center relative">
+              
+              {/* Barre de recherche animée */}
+              {/* Sur mobile : s'agrandit au clic grâce aux classes conditionnelles */}
+              <div className="flex items-center border border-white/50 px-3 py-1.5 gap-2 bg-[#6B7A6E] z-10 rounded-full md:rounded-none">
+                <Search
+                  size={14}
+                  className="cursor-pointer hover:text-gray-200"
+                  onClick={(e) => {
+                    handleMobileSearchToggle(); // Ouvre sur mobile
+                    if(isMobileSearchOpen || window.innerWidth >= 768) handleSearch(e); // Cherche si déjà ouvert ou sur PC
+                  }}
+                />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Search..."
+                  // Classes conditionnelles pour l'animation de largeur (w-0 -> w-32)
+                  className={`
+                    bg-transparent border-none outline-none text-xs text-white placeholder-white/70 transition-all duration-300
+                    ${isMobileSearchOpen ? "w-32 px-1" : "w-0 px-0"}
+                    md:w-24 md:px-1 md:focus:w-32
+                  `}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onFocus={() => setIsSuggestionsOpen(suggestions.length > 0)}
+                  onKeyDown={handleKeyDown}
+                  onBlur={() => {
+                      // Petite tempo pour ne pas fermer si on clique sur une suggestion
+                      setTimeout(() => {
+                          if (window.innerWidth < 768 && searchTerm === "") setIsMobileSearchOpen(false)
+                      }, 200)
+                  }} 
+                />
+              </div>
+
+              {/* Panneau des Suggestions (Liste déroulante) */}
+              {isSuggestionsOpen && (
+                <div className="absolute top-full left-0 mt-2 w-full min-w-[200px] bg-white shadow-lg rounded-b-md overflow-hidden z-20">
+                  <ul>
+                    {suggestions.map((product) => (
+                      <li key={product.id}>
+                        <Link
+                          href={`/products/${product.id}`}
+                          onClick={() => {
+                            setIsSuggestionsOpen(false);
+                            setSearchTerm("");
+                            setIsMobileSearchOpen(false);
+                          }}
+                          className="flex items-center gap-3 p-3 hover:bg-gray-100 transition text-gray-700 border-b border-gray-50 last:border-0"
+                        >
+                          {/* Miniature image */}
+                          <div className={`w-10 h-12 ${product.image} bg-cover bg-center flex-shrink-0`}></div>
+                          <div className="flex flex-col">
+                             <span className="text-xs font-serif font-bold">{product.name}</span>
+                             <span className="text-[10px] text-gray-500">${product.price}</span>
+                          </div>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            {/* Bouton Panier */}
+            <button onClick={handleCartClick} className="flex flex-col items-center cursor-pointer hover:opacity-80 transition relative bg-transparent border-none p-0 text-white">
               <ShoppingBasket size={22} strokeWidth={1.5} />
               <span className="text-[10px] italic mt-1 font-serif">panier</span>
-              
-              {/* Badge Compteur (S'affiche seulement si > 0) */}
               {totalItems > 0 && (
                 <span className="absolute -top-1 -right-2 w-4 h-4 bg-red-500 text-white rounded-full text-[10px] flex items-center justify-center font-bold">
                   {totalItems}
                 </span>
               )}
             </button>
-            
+
+            {/* Compte Utilisateur */}
             <User size={22} strokeWidth={1.5} className="cursor-pointer hover:opacity-80 transition" />
           </div>
         </div>
 
-        {/* 3. Menu de Navigation */}
+        {/* --- MENU DE NAVIGATION --- */}
         <nav className="mt-8 border-t border-white/20 pt-5">
           <ul className="flex flex-wrap justify-center gap-8 text-[11px] md:text-xs uppercase tracking-[0.15em] font-medium">
             {[
-              { label: 'Shop Brand', slug: 'shop-brand' },
-              { label: 'Kitchen', slug: 'kitchen' },
-              { label: 'Baskets', slug: 'baskets' },
-              { label: 'Textiles', slug: 'textiles' },
-              { label: 'Etc', slug: 'etc' },
-              { label: 'Soaps', slug: 'soaps' },
-              { label: 'More', slug: 'more' },
+              { label: "Shop Brand", slug: "shop-brand" },
+              { label: "Kitchen", slug: "kitchen" },
+              { label: "Baskets", slug: "baskets" },
+              { label: "Textiles", slug: "textiles" },
+              { label: "Etc", slug: "etc" },
+              { label: "Soaps", slug: "soaps" },
+              { label: "More", slug: "more" },
             ].map((item) => (
               <li key={item.slug} className="cursor-pointer hover:text-gray-200 transition relative group">
                 <Link href={`/category/${item.slug}`} className="block">
