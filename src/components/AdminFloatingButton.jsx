@@ -16,39 +16,29 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import { Settings, X } from 'lucide-react';
+import { Settings } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 export default function AdminFloatingButton() {
-  const [isVisible, setIsVisible] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const { isAdmin, loading } = useAuth();
 
-  useEffect(() => {
-    /**
-     * CONDITION D'AFFICHAGE DU BOUTON ADMIN
-     * ========================================
-     *
-     * Option 1 : Mode développement (NODE_ENV)
-     * Option 2 : Variable d'environnement personnalisée
-     * Option 3 : Vérifier si l'utilisateur est connecté (Firebase Auth)
-     *
-     * Pour le moment, on utilise NODE_ENV en développement.
-     *
-     * IMPORTANT : En production, remplacez cette logique par :
-     * - Une vérification Firebase Auth (isAdmin: true dans le profil)
-     * - Ou un email spécifique autorisé
-     */
+  /**
+   * CONDITION D'AFFICHAGE DU BOUTON ADMIN
+   * ========================================
+   *
+   * Le bouton s'affiche si :
+   * - L'utilisateur est connecté ET admin (isAdmin === true)
+   * - OU en mode développement (pour faciliter le développement)
+   */
 
-    const isDev = process.env.NODE_ENV === 'development';
-    const isAdminEnabled = process.env.NEXT_PUBLIC_SHOW_ADMIN_BUTTON === 'true';
+  const isDev = process.env.NODE_ENV === 'development';
+  const isVisible = isAdmin || isDev;
 
-    // Afficher si en mode dev OU si la variable d'environnement est activée
-    setIsVisible(isDev || isAdminEnabled);
-  }, []);
-
-  // Ne rien afficher si le bouton n'est pas visible
-  if (!isVisible) return null;
+  // Ne rien afficher si le bouton n'est pas visible ou en chargement
+  if (!isVisible || loading) return null;
 
   return (
     <>
