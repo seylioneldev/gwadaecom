@@ -5,8 +5,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css"; 
 
 // 1. IMPORT DU CONTEXTE ET DU COMPOSANT PANIER
-import { CartProvider } from "../context/CartContext"; 
-import SideCart from "../components/layout/SideCart"; // <--- IL MANQUAIT CETTE LIGNE !
+import { CartProvider } from "../context/CartContext";
+import SideCart from "../components/layout/SideCart";
+import DynamicStyles from "../components/DynamicStyles"; // Styles CSS personnalisés depuis l'admin
 
 const geistSans = Geist({
   variable: "--font-geist-sans", 
@@ -30,12 +31,15 @@ export default function RootLayout({ children }) {
         
         {/* Le Fournisseur de données (Panier) enveloppe tout */}
         <CartProvider>
-          
+
+          {/* Styles CSS personnalisés depuis l'admin */}
+          <DynamicStyles />
+
           {/* Le contenu de la page (Accueil, Produit...) */}
-          {children} 
+          {children}
 
           {/* 2. LE PANNEAU LATÉRAL (Il doit être ici pour s'afficher par-dessus le reste) */}
-          <SideCart /> 
+          <SideCart />
 
         </CartProvider>
       
