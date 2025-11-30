@@ -26,7 +26,8 @@
 
 import { useState } from 'react';
 import { useAllCategories, addCategory, updateCategory, deleteCategory } from '@/hooks/useCategories';
-import { Eye, EyeOff, Edit2, Trash2, Plus, Save, X } from 'lucide-react';
+import { Eye, EyeOff, Edit2, Trash2, Plus, Save, X, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 
 export default function AdminCategoriesPage() {
   // Récupération de toutes les catégories (y compris masquées)
@@ -170,10 +171,15 @@ export default function AdminCategoriesPage() {
       <div className="max-w-6xl mx-auto">
 
         {/* En-tête */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-serif text-gray-800 mb-2">Gestion des Catégories</h1>
-            <p className="text-sm text-gray-500">Gérez les catégories affichées dans le menu de navigation</p>
+        <div className="flex justify-between items-start mb-8">
+          <div className="flex items-center gap-4">
+            <Link href="/admin" className="p-2 hover:bg-gray-200 rounded-full transition">
+              <ArrowLeft size={24} className="text-gray-600" />
+            </Link>
+            <div>
+              <h1 className="text-3xl font-serif text-gray-800 mb-2">Gestion des Catégories</h1>
+              <p className="text-sm text-gray-500">Gérez les catégories affichées dans le menu de navigation</p>
+            </div>
           </div>
 
           <button

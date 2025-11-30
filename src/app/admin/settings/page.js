@@ -22,7 +22,8 @@
 
 import { useState, useEffect } from 'react';
 import { useSettings, updateSettings, resetSettings } from '@/hooks/useSettings';
-import { Save, RotateCcw, Globe, Store, Home, Share2, Palette } from 'lucide-react';
+import { Save, RotateCcw, Globe, Store, Home, Share2, Palette, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 
 export default function AdminSettingsPage() {
   // Récupération des paramètres actuels
@@ -153,10 +154,15 @@ export default function AdminSettingsPage() {
       <div className="max-w-4xl mx-auto">
 
         {/* En-tête */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-serif text-gray-800 mb-2">Paramètres du Site</h1>
-            <p className="text-sm text-gray-500">Personnalisez les informations générales de votre site</p>
+        <div className="flex justify-between items-start mb-8">
+          <div className="flex items-center gap-4">
+            <Link href="/admin" className="p-2 hover:bg-gray-200 rounded-full transition">
+              <ArrowLeft size={24} className="text-gray-600" />
+            </Link>
+            <div>
+              <h1 className="text-3xl font-serif text-gray-800 mb-2">Paramètres du Site</h1>
+              <p className="text-sm text-gray-500">Personnalisez les informations générales de votre site</p>
+            </div>
           </div>
 
           <div className="flex gap-3">

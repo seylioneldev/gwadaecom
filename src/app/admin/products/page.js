@@ -25,7 +25,7 @@ import { useCategories } from '@/hooks/useCategories';
 import { db } from '@/lib/firebase';
 import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import cmsConfig from '../../../../cms.config';
-import { Edit2, Trash2, Save, X, Search, Grid, List } from 'lucide-react';
+import { Edit2, Trash2, Save, X, Search, Grid, List, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminProductsPage() {
@@ -139,16 +139,21 @@ export default function AdminProductsPage() {
       <div className="max-w-7xl mx-auto">
 
         {/* En-tête */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-serif text-gray-800 mb-2">Gestion des Produits</h1>
-            <p className="text-sm text-gray-500">
-              {filteredProducts.length} produit{filteredProducts.length > 1 ? 's' : ''} trouvé{filteredProducts.length > 1 ? 's' : ''}
-            </p>
+        <div className="flex justify-between items-start mb-8">
+          <div className="flex items-center gap-4">
+            <Link href="/admin" className="p-2 hover:bg-gray-200 rounded-full transition">
+              <ArrowLeft size={24} className="text-gray-600" />
+            </Link>
+            <div>
+              <h1 className="text-3xl font-serif text-gray-800 mb-2">Gestion des Produits</h1>
+              <p className="text-sm text-gray-500">
+                {filteredProducts.length} produit{filteredProducts.length > 1 ? 's' : ''} trouvé{filteredProducts.length > 1 ? 's' : ''}
+              </p>
+            </div>
           </div>
 
           <Link
-            href="/admin"
+            href="/admin/add-product"
             className="bg-[#5d6e64] text-white px-6 py-3 text-sm uppercase tracking-wider hover:bg-[#4a5850] transition"
           >
             Ajouter un Produit
