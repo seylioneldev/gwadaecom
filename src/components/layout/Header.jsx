@@ -3,12 +3,16 @@
 import { Search, ShoppingBasket, User, ChevronDown, X } from "lucide-react";
 import Link from "next/link";
 import { useCart } from "../../context/CartContext"; // Pour le compteur du panier
-import { useState, useEffect, useRef } from "react"; 
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation"; // Pour la redirection URL
 import { products } from "../../data/products"; // Source de données pour les suggestions
+import { useCategories } from "@/hooks/useCategories"; // Récupère les catégories depuis Firestore
 
 export default function Header() {
   const { totalItems, setIsCartOpen } = useCart();
+
+  // Récupération des catégories depuis Firestore
+  const { categories, loading: categoriesLoading } = useCategories();
 
   // ==========================================================
   // 1. GESTION DES ÉTATS (STATE)
@@ -219,24 +223,26 @@ export default function Header() {
         </div>
 
         {/* --- MENU DE NAVIGATION --- */}
+        {/* ✨ NOUVEAU : Menu dynamique depuis Firestore */}
         <nav className="mt-8 border-t border-white/20 pt-5">
           <ul className="flex flex-wrap justify-center gap-8 text-[11px] md:text-xs uppercase tracking-[0.15em] font-medium">
-            {[
-              { label: "Shop Brand", slug: "shop-brand" },
-              { label: "Kitchen", slug: "kitchen" },
-              { label: "Baskets", slug: "baskets" },
-              { label: "Textiles", slug: "textiles" },
-              { label: "Etc", slug: "etc" },
-              { label: "Soaps", slug: "soaps" },
-              { label: "More", slug: "more" },
-            ].map((item) => (
-              <li key={item.slug} className="cursor-pointer hover:text-gray-200 transition relative group">
-                <Link href={`/category/${item.slug}`} className="block">
-                  {item.label}
-                </Link>
-                <span className="absolute -bottom-1 left-0 w-0 h-px bg-white transition-all group-hover:w-full"></span>
-              </li>
-            ))}
+            {categoriesLoading ? (
+              // Message de chargement pendant la récupération des catégories
+              <li className="text-white/50 text-xs">Chargement du menu...</li>
+            ) : categories.length === 0 ? (
+              // Si aucune catégorie n'est trouvée
+              <li className="text-white/50 text-xs">Aucune catégorie disponible</li>
+            ) : (
+              // Affichage des catégories dynamiques depuis Firestore
+              categories.map((category) => (
+                <li key={category.id} className="cursor-pointer hover:text-gray-200 transition relative group">
+                  <Link href={`/category/${category.slug}`} className="block">
+                    {category.name}
+                  </Link>
+                  <span className="absolute -bottom-1 left-0 w-0 h-px bg-white transition-all group-hover:w-full"></span>
+                </li>
+              ))
+            )}
           </ul>
         </nav>
       </div>
