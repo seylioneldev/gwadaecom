@@ -22,9 +22,12 @@ import { User, LogIn, UserPlus, ArrowLeft, ArrowRight, CreditCard } from 'lucide
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import StripePaymentForm from '@/components/StripePaymentForm';
+import { db } from '@/lib/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import cmsConfig from '../../../cms.config';
 
 export default function CheckoutPage() {
-  const { cart, totalPrice } = useCart();
+  const { cart, totalPrice, clearCart } = useCart();
   const { user, signIn, signUp } = useAuth();
   const router = useRouter();
 
@@ -152,11 +155,70 @@ export default function CheckoutPage() {
   const handlePaymentSuccess = async (paymentIntent) => {
     console.log('Paiement réussi !', paymentIntent);
 
-    // TODO: Enregistrer la commande dans Firestore
-    // TODO: Envoyer email de confirmation
+    try {
+      // Préparer les données de la commande
+      const orderData = {
+        // Informations de la commande
+        orderId: `ORDER-${Date.now()}`,
+        paymentIntentId: paymentIntent.id,
+        status: 'paid',
 
-    // Rediriger vers la page de confirmation
-    router.push(`/order-confirmation?payment_intent=${paymentIntent.id}`);
+        // Informations client
+        customer: {
+          email: guestForm.email,
+          firstName: guestForm.firstName,
+          lastName: guestForm.lastName,
+          phone: guestForm.phone || '',
+          userId: user?.uid || null,
+        },
+
+        // Adresse de livraison
+        shippingAddress: {
+          address: guestForm.address,
+          city: guestForm.city,
+          postalCode: guestForm.postalCode,
+          country: guestForm.country,
+        },
+
+        // Produits commandés
+        items: cart.map(item => ({
+          id: item.id,
+          name: item.name,
+          price: parseFloat(item.price),
+          quantity: item.quantity,
+          total: parseFloat(item.price) * item.quantity,
+        })),
+
+        // Totaux
+        subtotal: parseFloat(totalPrice),
+        shipping: 0, // Livraison gratuite
+        total: parseFloat(totalPrice),
+        currency: 'EUR',
+
+        // Timestamps
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      };
+
+      // Enregistrer la commande dans Firestore
+      const ordersCollection = collection(db, cmsConfig.collections.orders);
+      const docRef = await addDoc(ordersCollection, orderData);
+
+      console.log('Commande enregistrée avec succès:', docRef.id);
+
+      // Vider le panier
+      clearCart();
+
+      // Rediriger vers la page de confirmation avec l'ID de la commande
+      router.push(`/order-confirmation?order_id=${docRef.id}&payment_intent=${paymentIntent.id}`);
+
+    } catch (error) {
+      console.error('Erreur lors de l\'enregistrement de la commande:', error);
+
+      // Même en cas d'erreur, on redirige vers la confirmation
+      // car le paiement a réussi
+      router.push(`/order-confirmation?payment_intent=${paymentIntent.id}`);
+    }
   };
 
   /**
