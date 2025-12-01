@@ -48,31 +48,62 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request) {
   try {
+    console.log('📧 ========================================');
+    console.log('📧 API d\'envoi d\'email appelée');
+    console.log('📧 ========================================');
+
     const { orderData } = await request.json();
+
+    console.log('📦 Données de commande reçues:', {
+      orderId: orderData?.orderId,
+      customerEmail: orderData?.customer?.email,
+      hasItems: !!orderData?.items,
+      itemsCount: orderData?.items?.length
+    });
 
     // Valider les données
     if (!orderData || !orderData.customer?.email) {
+      console.error('❌ Données de commande invalides');
       return NextResponse.json(
         { error: 'Données de commande invalides' },
         { status: 400 }
       );
     }
 
+    // Vérifier la clé API Resend
+    if (!process.env.RESEND_API_KEY) {
+      console.error('❌ RESEND_API_KEY non définie dans .env.local');
+      return NextResponse.json(
+        { error: 'Configuration email manquante' },
+        { status: 500 }
+      );
+    }
+
+    console.log('🔑 Clé API Resend détectée:', process.env.RESEND_API_KEY.substring(0, 10) + '...');
+
     // Préparer le contenu de l'email
     const emailContent = generateEmailHTML(orderData);
+    console.log('📄 Contenu email généré (longueur):', emailContent.length, 'caractères');
 
     // ====================================================================
     // ENVOI DE L'EMAIL - Resend activé
     // ====================================================================
 
+    console.log('📨 Envoi de l\'email à:', orderData.customer.email);
+    console.log('📨 Depuis:', 'Les Bijoux de Guadeloupe <onboarding@resend.dev>');
+    console.log('📨 Sujet:', `Confirmation de commande ${orderData.orderId}`);
+
     // OPTION 1: Avec Resend (ACTIF)
     // ----------------------
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: 'Les Bijoux de Guadeloupe <onboarding@resend.dev>',
       to: orderData.customer.email,
       subject: `Confirmation de commande ${orderData.orderId}`,
       html: emailContent,
     });
+
+    console.log('✅ Email envoyé avec succès!');
+    console.log('📧 Résultat Resend:', result);
 
     // OPTION 2: Avec SendGrid (DÉSACTIVÉ)
     // ----------------------
@@ -99,15 +130,34 @@ export async function POST(request) {
     // console.log('Subject:', `Confirmation de commande ${orderData.orderId}`);
     // console.log('Content:', emailContent.substring(0, 200) + '...');
 
+    console.log('📧 ========================================');
+    console.log('✅ Traitement terminé avec succès');
+    console.log('📧 ========================================');
+
     return NextResponse.json({
       success: true,
       message: 'Email de confirmation envoyé',
+      emailId: result?.id || 'unknown'
     });
 
   } catch (error) {
-    console.error('Erreur lors de l\'envoi de l\'email:', error);
+    console.error('❌ ========================================');
+    console.error('❌ ERREUR lors de l\'envoi de l\'email');
+    console.error('❌ ========================================');
+    console.error('❌ Type d\'erreur:', error.name);
+    console.error('❌ Message:', error.message);
+    console.error('❌ Stack:', error.stack);
+
+    if (error.response) {
+      console.error('❌ Réponse API:', error.response);
+    }
+
     return NextResponse.json(
-      { error: 'Erreur lors de l\'envoi de l\'email', details: error.message },
+      {
+        error: 'Erreur lors de l\'envoi de l\'email',
+        details: error.message,
+        type: error.name
+      },
       { status: 500 }
     );
   }
