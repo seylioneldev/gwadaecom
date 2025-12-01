@@ -206,6 +206,18 @@ export default function CheckoutPage() {
 
       console.log('Commande enregistrée avec succès:', docRef.id);
 
+      // Envoyer l'email de confirmation (ne pas attendre - en background)
+      fetch('/api/send-order-confirmation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ orderData }),
+      }).catch(err => {
+        // Log l'erreur mais ne pas bloquer la redirection
+        console.error('Erreur lors de l\'envoi de l\'email:', err);
+      });
+
       // Rediriger vers la page de confirmation avec l'ID de la commande
       // Note: Le panier sera vidé sur la page de confirmation pour éviter les conflits de redirection
       router.push(`/order-confirmation?order_id=${docRef.id}&payment_intent=${paymentIntent.id}`);
