@@ -23,9 +23,8 @@ import { NextResponse } from 'next/server';
 
 // OPTION 1: Resend (recommandé - moderne et simple)
 // ===================================================
-// Décommentez ce bloc si vous utilisez Resend
-// import { Resend } from 'resend';
-// const resend = new Resend(process.env.RESEND_API_KEY);
+import { Resend } from 'resend';
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // OPTION 2: SendGrid
 // ===================================================
@@ -63,19 +62,19 @@ export async function POST(request) {
     const emailContent = generateEmailHTML(orderData);
 
     // ====================================================================
-    // ENVOI DE L'EMAIL - Décommentez la section correspondant à votre service
+    // ENVOI DE L'EMAIL - Resend activé
     // ====================================================================
 
-    // OPTION 1: Avec Resend
+    // OPTION 1: Avec Resend (ACTIF)
     // ----------------------
-    // await resend.emails.send({
-    //   from: 'Les Bijoux de Guadeloupe <noreply@votre-domaine.com>',
-    //   to: orderData.customer.email,
-    //   subject: `Confirmation de commande ${orderData.orderId}`,
-    //   html: emailContent,
-    // });
+    await resend.emails.send({
+      from: 'Les Bijoux de Guadeloupe <onboarding@resend.dev>',
+      to: orderData.customer.email,
+      subject: `Confirmation de commande ${orderData.orderId}`,
+      html: emailContent,
+    });
 
-    // OPTION 2: Avec SendGrid
+    // OPTION 2: Avec SendGrid (DÉSACTIVÉ)
     // ----------------------
     // await sgMail.send({
     //   to: orderData.customer.email,
@@ -84,7 +83,7 @@ export async function POST(request) {
     //   html: emailContent,
     // });
 
-    // OPTION 3: Avec Nodemailer
+    // OPTION 3: Avec Nodemailer (DÉSACTIVÉ)
     // ----------------------
     // await transporter.sendMail({
     //   from: '"Les Bijoux de Guadeloupe" <noreply@votre-domaine.com>',
@@ -93,16 +92,16 @@ export async function POST(request) {
     //   html: emailContent,
     // });
 
-    // MODE DÉVELOPPEMENT : Log l'email au lieu de l'envoyer
+    // MODE DÉVELOPPEMENT : Désactivé - Envoi réel activé
     // ======================================================
-    console.log('📧 Email de confirmation (MODE DEV):');
-    console.log('To:', orderData.customer.email);
-    console.log('Subject:', `Confirmation de commande ${orderData.orderId}`);
-    console.log('Content:', emailContent.substring(0, 200) + '...');
+    // console.log('📧 Email de confirmation (MODE DEV):');
+    // console.log('To:', orderData.customer.email);
+    // console.log('Subject:', `Confirmation de commande ${orderData.orderId}`);
+    // console.log('Content:', emailContent.substring(0, 200) + '...');
 
     return NextResponse.json({
       success: true,
-      message: 'Email de confirmation envoyé (mode dev)',
+      message: 'Email de confirmation envoyé',
     });
 
   } catch (error) {
