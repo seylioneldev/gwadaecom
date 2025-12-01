@@ -24,7 +24,7 @@ import Footer from '@/components/layout/Footer';
 import StripePaymentForm from '@/components/StripePaymentForm';
 
 export default function CheckoutPage() {
-  const { cart, getTotalPrice } = useCart();
+  const { cart, totalPrice } = useCart();
   const { user, signIn, signUp } = useAuth();
   const router = useRouter();
 
@@ -562,7 +562,7 @@ export default function CheckoutPage() {
 
                   {/* Formulaire de paiement Stripe */}
                   <StripePaymentForm
-                    amount={getTotalPrice() * 100} // Convertir en centimes
+                    amount={totalPrice * 100} // Convertir en centimes
                     customerEmail={guestForm.email}
                     orderId={`ORDER-${Date.now()}`}
                     onSuccess={handlePaymentSuccess}
@@ -588,7 +588,7 @@ export default function CheckoutPage() {
                         <p className="text-xs text-gray-500">Qté : {item.quantity}</p>
                       </div>
                       <p className="text-sm font-semibold text-gray-800">
-                        ${(item.price * item.quantity).toFixed(2)}
+                        {(item.price * item.quantity).toFixed(2)}€
                       </p>
                     </div>
                   ))}
@@ -598,7 +598,7 @@ export default function CheckoutPage() {
                 <div className="space-y-2 mb-6">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-600">Sous-total</span>
-                    <span className="font-medium text-gray-800">${getTotalPrice().toFixed(2)}</span>
+                    <span className="font-medium text-gray-800">€{totalPrice}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-600">Livraison</span>
@@ -609,7 +609,7 @@ export default function CheckoutPage() {
                 {/* Total */}
                 <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                   <span className="text-lg font-semibold text-gray-800">Total</span>
-                  <span className="text-2xl font-bold text-[#5d6e64]">${getTotalPrice().toFixed(2)}</span>
+                  <span className="text-2xl font-bold text-[#5d6e64]">€{totalPrice}</span>
                 </div>
               </div>
             </div>
