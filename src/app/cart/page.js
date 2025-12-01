@@ -19,7 +19,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 
 export default function CartPage() {
-  const { cart, removeFromCart, updateQuantity, getTotalPrice } = useCart();
+  const { cart, removeFromCart, updateQuantity, totalPrice } = useCart();
   const router = useRouter();
 
   /**
@@ -96,7 +96,7 @@ export default function CartPage() {
                     {/* Infos produit */}
                     <div className="flex-1">
                       <h3 className="text-lg font-serif text-gray-800 mb-1">{item.name}</h3>
-                      <p className="text-sm text-gray-500 mb-3">Prix unitaire : ${item.price}</p>
+                      <p className="text-sm text-gray-500 mb-3">Prix unitaire : {item.price}€</p>
 
                       {/* Contrôle de quantité */}
                       <div className="flex items-center gap-3">
@@ -125,7 +125,7 @@ export default function CartPage() {
                     {/* Prix total et suppression */}
                     <div className="text-right flex flex-col items-end gap-4">
                       <p className="text-xl font-bold text-gray-800">
-                        ${(item.price * item.quantity).toFixed(2)}
+                        {(item.price * item.quantity).toFixed(2)}€
                       </p>
                       <button
                         onClick={() => removeFromCart(item.id)}
@@ -149,7 +149,7 @@ export default function CartPage() {
                   <div className="space-y-3 mb-6 pb-6 border-b border-gray-200">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">Sous-total</span>
-                      <span className="font-medium text-gray-800">${getTotalPrice().toFixed(2)}</span>
+                      <span className="font-medium text-gray-800">€{totalPrice}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">Livraison</span>
@@ -160,7 +160,7 @@ export default function CartPage() {
                   {/* Total */}
                   <div className="flex items-center justify-between mb-6">
                     <span className="text-lg font-semibold text-gray-800">Total</span>
-                    <span className="text-2xl font-bold text-[#5d6e64]">${getTotalPrice().toFixed(2)}</span>
+                    <span className="text-2xl font-bold text-[#5d6e64]">€{totalPrice}</span>
                   </div>
 
                   {/* Bouton Commander */}
