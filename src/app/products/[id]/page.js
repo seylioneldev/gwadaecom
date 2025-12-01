@@ -15,6 +15,7 @@
 
 import Header from "../../../components/layout/Header";
 import Footer from "../../../components/layout/Footer";
+import Price from "@/components/Price";
 import { ChevronRight, Minus, Plus } from "lucide-react";
 import Link from 'next/link';
 import { useState } from 'react';
@@ -111,7 +112,7 @@ export default function ProductPage() {
         {/* COLONNE DROITE : Détails et Actions */}
         <div className="flex flex-col justify-center">
             <h1 className="font-serif text-3xl md:text-4xl text-gray-800 mb-2">{product.name}</h1>
-            <p className="text-lg text-gray-600 mb-6 font-light">${product.price}</p>
+            <Price amount={product.price} className="text-lg text-gray-600 mb-6 font-light" />
             
             <p className="text-xs leading-relaxed text-gray-500 mb-8 border-b border-gray-100 pb-8">
                 {product.description}

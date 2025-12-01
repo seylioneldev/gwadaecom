@@ -15,6 +15,7 @@
 
 import { ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
+import Price from '@/components/Price';
 import { useProducts } from '@/hooks/useProducts'; // Nouveau : récupère depuis Firestore
 
 export default function ProductGrid() {
@@ -89,7 +90,7 @@ export default function ProductGrid() {
                     <h3 className="font-serif text-lg text-gray-700 group-hover:text-[#5d6e64] transition">
                       {product.name}
                     </h3>
-                    <p className="text-xs text-gray-500 tracking-wider">${product.price}</p>
+                    <Price amount={product.price} className="text-xs text-gray-500 tracking-wider" />
                   </div>
                 </Link>
               ))

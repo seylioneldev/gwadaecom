@@ -15,7 +15,7 @@
 
 "use client";
 
-import { useSettings } from '@/hooks/useSettings';
+import { useSettings } from '@/context/SettingsContext';
 import { useEffect } from 'react';
 
 export default function DynamicStyles() {

@@ -7,12 +7,16 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation"; // Pour la redirection URL
 import { products } from "../../data/products"; // Source de données pour les suggestions
 import { useCategories } from "@/hooks/useCategories"; // Récupère les catégories depuis Firestore
+import { useSettings } from "@/context/SettingsContext"; // Récupère les paramètres du site (Context temps réel)
 
 export default function Header() {
   const { totalItems, setIsCartOpen } = useCart();
 
   // Récupération des catégories depuis Firestore
   const { categories, loading: categoriesLoading } = useCategories();
+
+  // Récupération des paramètres du site (nom du site, etc.)
+  const { settings } = useSettings();
 
   // ==========================================================
   // 1. GESTION DES ÉTATS (STATE)
@@ -134,7 +138,17 @@ export default function Header() {
 
           {/* Logo */}
           <Link href="/" className="text-3xl md:text-5xl font-serif tracking-widest text-center flex-1 cursor-pointer hover:opacity-90">
-            VIVI <span className="text-lg italic mx-1 font-serif">et</span> MARGOT
+            {settings?.siteName ? (
+              settings.siteName.split(' et ').length === 2 ? (
+                <>
+                  {settings.siteName.split(' et ')[0].toUpperCase()} <span className="text-lg italic mx-1 font-serif">et</span> {settings.siteName.split(' et ')[1].toUpperCase()}
+                </>
+              ) : (
+                settings.siteName.toUpperCase()
+              )
+            ) : (
+              'VIVI et MARGOT'
+            )}
           </Link>
 
           {/* --- ZONE ICÔNES & RECHERCHE --- */}

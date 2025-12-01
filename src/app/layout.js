@@ -7,6 +7,7 @@ import "./globals.css";
 // 1. IMPORT DES CONTEXTES ET COMPOSANTS
 import { CartProvider } from "../context/CartContext";
 import { AuthProvider } from "../context/AuthContext"; // Authentification Firebase
+import { SettingsProvider } from "../context/SettingsContext"; // Paramètres du site
 import SideCart from "../components/layout/SideCart";
 import DynamicStyles from "../components/DynamicStyles"; // Styles CSS personnalisés depuis l'admin
 
@@ -33,19 +34,24 @@ export default function RootLayout({ children }) {
         {/* Authentification Firebase (enveloppe tout) */}
         <AuthProvider>
 
-          {/* Le Fournisseur de données (Panier) */}
-          <CartProvider>
+          {/* Paramètres du site (nom, configuration...) */}
+          <SettingsProvider>
 
-            {/* Styles CSS personnalisés depuis l'admin */}
-            <DynamicStyles />
+            {/* Le Fournisseur de données (Panier) */}
+            <CartProvider>
 
-            {/* Le contenu de la page (Accueil, Produit...) */}
-            {children}
+              {/* Styles CSS personnalisés depuis l'admin */}
+              <DynamicStyles />
 
-            {/* LE PANNEAU LATÉRAL (Il doit être ici pour s'afficher par-dessus le reste) */}
-            <SideCart />
+              {/* Le contenu de la page (Accueil, Produit...) */}
+              {children}
 
-          </CartProvider>
+              {/* LE PANNEAU LATÉRAL (Il doit être ici pour s'afficher par-dessus le reste) */}
+              <SideCart />
+
+            </CartProvider>
+
+          </SettingsProvider>
 
         </AuthProvider>
 

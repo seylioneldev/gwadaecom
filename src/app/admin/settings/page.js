@@ -21,13 +21,13 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useSettings, updateSettings, resetSettings } from '@/hooks/useSettings';
+import { useSettings } from '@/context/SettingsContext';
 import { Save, RotateCcw, Globe, Store, Home, Share2, Palette, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminSettingsPage() {
-  // Récupération des paramètres actuels
-  const { settings, loading, error } = useSettings();
+  // Récupération des paramètres actuels depuis le contexte (temps réel)
+  const { settings, loading, error, updateSettings, resetSettings } = useSettings();
 
   // État local pour le formulaire
   const [formData, setFormData] = useState(null);
