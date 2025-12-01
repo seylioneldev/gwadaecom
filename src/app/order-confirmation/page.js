@@ -17,10 +17,12 @@ import Link from 'next/link';
 import { CheckCircle, Package, Mail, Home, ArrowRight } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import { useCart } from '@/context/CartContext';
 
 function OrderConfirmationContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { clearCart } = useCart();
   const paymentIntentId = searchParams.get('payment_intent');
 
   const [loading, setLoading] = useState(true);
@@ -31,10 +33,13 @@ function OrderConfirmationContent() {
       // Si pas de payment intent, rediriger vers l'accueil
       router.push('/');
     } else {
+      // Vider le panier maintenant que la commande est confirmée
+      clearCart();
+
       // Simuler un chargement (en attendant l'intégration Firestore)
       setTimeout(() => setLoading(false), 1000);
     }
-  }, [paymentIntentId, router]);
+  }, [paymentIntentId, router, clearCart]);
 
   if (loading) {
     return (

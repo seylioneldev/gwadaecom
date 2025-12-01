@@ -206,10 +206,8 @@ export default function CheckoutPage() {
 
       console.log('Commande enregistrée avec succès:', docRef.id);
 
-      // Vider le panier
-      clearCart();
-
       // Rediriger vers la page de confirmation avec l'ID de la commande
+      // Note: Le panier sera vidé sur la page de confirmation pour éviter les conflits de redirection
       router.push(`/order-confirmation?order_id=${docRef.id}&payment_intent=${paymentIntent.id}`);
 
     } catch (error) {

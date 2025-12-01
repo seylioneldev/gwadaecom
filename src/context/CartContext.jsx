@@ -1,6 +1,6 @@
 "use client"; 
 
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 
 const CartContext = createContext();
 
@@ -24,30 +24,35 @@ export const CartProvider = ({ children }) => {
     }
   }, [cart]);
 
-  // ... (addItem, removeItem, updateQuantity restent identiques)
-  const addItem = (product, quantity = 1) => {
-    const existingItem = cart.find(item => item.id === product.id);
-    if (existingItem) {
-      setCart(cart.map(item => item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item));
-    } else {
-      setCart([...cart, { ...product, quantity }]);
-    }
+  // Mémoriser les fonctions pour éviter les re-renders inutiles
+  const addItem = useCallback((product, quantity = 1) => {
+    setCart(prevCart => {
+      const existingItem = prevCart.find(item => item.id === product.id);
+      if (existingItem) {
+        return prevCart.map(item => item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item);
+      } else {
+        return [...prevCart, { ...product, quantity }];
+      }
+    });
     setIsCartOpen(true);
-  };
+  }, []);
 
-  const removeItem = (productId) => {
-    setCart(cart.filter(item => item.id !== productId));
-  };
+  const removeItem = useCallback((productId) => {
+    setCart(prevCart => prevCart.filter(item => item.id !== productId));
+  }, []);
 
-  const updateQuantity = (productId, newQuantity) => {
-    if (newQuantity <= 0) { removeItem(productId); return; }
-    setCart(cart.map(item => item.id === productId ? { ...item, quantity: newQuantity } : item));
-  };
+  const updateQuantity = useCallback((productId, newQuantity) => {
+    if (newQuantity <= 0) {
+      setCart(prevCart => prevCart.filter(item => item.id !== productId));
+      return;
+    }
+    setCart(prevCart => prevCart.map(item => item.id === productId ? { ...item, quantity: newQuantity } : item));
+  }, []);
 
-  // NOUVELLE FONCTION : Vider le panier
-  const clearCart = () => {
+  // Vider le panier
+  const clearCart = useCallback(() => {
     setCart([]);
-  };
+  }, []);
   
   const totalItems = cart.reduce((total, item) => total + item.quantity, 0);
   const totalPrice = cart.reduce((total, item) => total + (parseFloat(item.price) * item.quantity), 0).toFixed(2);
