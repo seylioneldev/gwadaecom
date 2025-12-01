@@ -34,16 +34,38 @@ async function addProductToCart(page) {
   await page.goto('/');
 
   // Attendre que les produits soient chargés
-  await page.waitForSelector('text=/Collier|Bracelet|Boucles/i', { timeout: 10000 });
+  // Attendre soit l'apparition d'un produit, soit le message "Aucun produit disponible"
+  try {
+    await page.waitForSelector('a[href^="/products/"]', { timeout: 10000 });
+  } catch (error) {
+    // Si pas de produits, vérifier s'il y a le message "Aucun produit"
+    const noProductsMessage = await page.locator('text=/Aucun produit disponible/i').isVisible();
+    if (noProductsMessage) {
+      throw new Error('Aucun produit disponible dans la boutique. Ajoutez des produits depuis l\'admin.');
+    }
+    throw error;
+  }
 
-  // Cliquer sur le premier produit disponible
-  await page.locator('text=/Ajouter au panier/i').first().click();
+  // Cliquer sur le premier produit pour aller sur sa page détail
+  await page.locator('a[href^="/products/"]').first().click();
 
-  // Attendre que le panier soit ouvert
+  // Attendre d'être sur la page de détail du produit
+  await page.waitForURL(/\/products\/.+/, { timeout: 5000 });
+
+  // Attendre que le bouton "Add to Cart" soit visible
+  await page.waitForSelector('button:has-text("Add to Cart")', { timeout: 5000 });
+
+  // Cliquer sur le bouton "Add to Cart"
+  await page.locator('button:has-text("Add to Cart")').click();
+
+  // Attendre que le panier soit ouvert (le composant CartSidebar)
   await page.waitForSelector('text=/Votre Panier|Mon Panier/i', { timeout: 5000 });
 
   // Fermer le panier
   await page.locator('button').filter({ hasText: /×|Fermer/i }).first().click();
+
+  // Attendre que le panier soit fermé
+  await page.waitForTimeout(500);
 }
 
 // Helper : Vérifier les erreurs console
@@ -167,23 +189,33 @@ test.describe('Commande en tant qu\'invité', () => {
 // =============================================================================
 
 test.describe('Commande en tant qu\'utilisateur connecté', () => {
-  // Données de test pour un utilisateur existant
-  const testUser = {
-    email: 'test.user@example.com',
-    password: 'TestPassword123!',
-    firstName: 'Jean',
-    lastName: 'Dupont'
-  };
-
   test('doit permettre une commande avec un compte existant', async ({ page }) => {
-    // Étape 1 : Se connecter
-    console.log('🔐 Connexion de l\'utilisateur...');
+    // Créer un compte unique pour ce test
+    const testUser = {
+      email: `logged.user.${Date.now()}@example.com`,
+      password: 'TestPassword123!',
+      firstName: 'Jean',
+      lastName: 'Dupont'
+    };
+
+    // Étape 1 : Créer le compte
+    console.log('📝 Création du compte utilisateur...');
     await page.goto('/mon-compte');
 
-    // Remplir le formulaire de connexion
+    // Cliquer sur l'onglet "Créer un compte" si nécessaire
+    const createAccountTab = page.locator('button:has-text("Créer un compte"), a:has-text("Créer un compte")');
+    if (await createAccountTab.isVisible()) {
+      await createAccountTab.click();
+    }
+
+    // Remplir le formulaire d'inscription
+    await page.fill('input[name="firstName"], input[placeholder*="rénom"]', testUser.firstName);
+    await page.fill('input[name="lastName"], input[placeholder*="om"]', testUser.lastName);
     await page.fill('input[type="email"]', testUser.email);
     await page.fill('input[type="password"]', testUser.password);
-    await page.locator('button:has-text("Se connecter")').click();
+
+    // Soumettre le formulaire
+    await page.locator('button:has-text("Créer"), button:has-text("S\'inscrire")').click();
 
     // Attendre la redirection vers le compte
     await page.waitForURL(/\/compte/, { timeout: 10000 });
