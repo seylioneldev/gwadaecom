@@ -1,6 +1,6 @@
 "use client"; // Composant Client obligatoire (hooks React et interactivité)
 
-import { Search, ShoppingBasket, User, ChevronDown, X } from "lucide-react";
+import { Search, ShoppingBasket, User } from "lucide-react";
 import Link from "next/link";
 import { useCart } from "../../context/CartContext"; // Pour le compteur du panier
 import { useState, useEffect, useRef } from "react";
@@ -129,12 +129,6 @@ export default function Header() {
       {/* --- ZONE PRINCIPALE --- */}
       <div className="bg-[#6B7A6E] text-white py-6 px-8">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          
-          {/* Devise (Caché sur mobile) */}
-          <div className="hidden md:flex items-center gap-2 bg-white text-[#5d6e64] px-3 py-1 text-xs font-semibold cursor-pointer">
-            <span>USD ($)</span>
-            <ChevronDown size={14} />
-          </div>
 
           {/* Logo */}
           <Link href="/" className="text-3xl md:text-5xl font-serif tracking-widest text-center flex-1 cursor-pointer hover:opacity-90">
