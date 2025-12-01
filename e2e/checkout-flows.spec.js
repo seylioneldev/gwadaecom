@@ -97,9 +97,9 @@ test.describe('Commande en tant qu\'invité', () => {
 
     // Étape 2 : Ouvrir le panier et aller au checkout
     console.log('🛒 Navigation vers le checkout...');
-    await page.goto('/panier');
-    await page.waitForSelector('text=/Commander|Passer la commande/i');
-    await page.locator('text=/Commander|Passer la commande/i').click();
+    await page.goto('/cart');
+    await page.waitForSelector('button:has-text("Passer commande")');
+    await page.locator('button:has-text("Passer commande")').click();
 
     // Vérifier qu'on est sur la page checkout
     await expect(page).toHaveURL(/\/checkout/);
@@ -238,8 +238,8 @@ test.describe('Commande en tant qu\'utilisateur connecté', () => {
 
     // Étape 3 : Aller au checkout
     console.log('🛒 Navigation vers le checkout...');
-    await page.goto('/panier');
-    await page.locator('text=/Commander|Passer la commande/i').click();
+    await page.goto('/cart');
+    await page.locator('button:has-text("Passer commande")').click();
 
     // Vérifier qu'on est sur la page checkout
     await expect(page).toHaveURL(/\/checkout/);
@@ -331,8 +331,8 @@ test.describe('Commande avec création de nouveau compte', () => {
 
     // Étape 2 : Aller au checkout
     console.log('🛒 Navigation vers le checkout...');
-    await page.goto('/panier');
-    await page.locator('text=/Commander|Passer la commande/i').click();
+    await page.goto('/cart');
+    await page.locator('button:has-text("Passer commande")').click();
 
     // Vérifier qu'on est sur la page checkout
     await expect(page).toHaveURL(/\/checkout/);
@@ -434,8 +434,8 @@ test.describe('Vérification des permissions Firestore', () => {
 
     // Ajouter un produit au panier et passer commande
     await addProductToCart(page);
-    await page.goto('/panier');
-    await page.locator('text=/Commander|Passer la commande/i').click();
+    await page.goto('/cart');
+    await page.locator('button:has-text("Passer commande")').click();
 
     // Remplir le formulaire invité rapidement
     await page.fill('input[name="firstName"]', 'Test');
