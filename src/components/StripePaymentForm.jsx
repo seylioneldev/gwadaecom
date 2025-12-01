@@ -40,6 +40,7 @@ function PaymentForm({ onSuccess, onError, amount, customerEmail, orderId }) {
     e.preventDefault();
 
     if (!stripe || !elements) {
+      console.log('Stripe ou Elements non chargé');
       return; // Stripe.js n'est pas encore chargé
     }
 
@@ -47,6 +48,8 @@ function PaymentForm({ onSuccess, onError, amount, customerEmail, orderId }) {
     setErrorMessage('');
 
     try {
+      console.log('Tentative de confirmation du paiement...');
+
       // Confirmer le paiement
       const { error, paymentIntent } = await stripe.confirmPayment({
         elements,
@@ -56,20 +59,24 @@ function PaymentForm({ onSuccess, onError, amount, customerEmail, orderId }) {
         redirect: 'if_required', // Ne redirige que si nécessaire (3D Secure)
       });
 
+      console.log('Résultat Stripe:', { error, paymentIntent });
+
       if (error) {
         // Erreur lors du paiement
-        setErrorMessage(error.message);
+        console.error('Erreur Stripe:', error);
+        setErrorMessage(error.message || 'Erreur de paiement inconnue');
         if (onError) {
           onError(error);
         }
       } else if (paymentIntent && paymentIntent.status === 'succeeded') {
         // Paiement réussi !
+        console.log('Paiement réussi !', paymentIntent);
         if (onSuccess) {
           onSuccess(paymentIntent);
         }
       }
     } catch (err) {
-      console.error('Erreur lors du paiement:', err);
+      console.error('Exception lors du paiement:', err);
       setErrorMessage('Une erreur inattendue est survenue');
       if (onError) {
         onError(err);
@@ -119,7 +126,7 @@ function PaymentForm({ onSuccess, onError, amount, customerEmail, orderId }) {
         ) : (
           <>
             <CreditCard size={20} />
-            <span>Payer ${(amount / 100).toFixed(2)}</span>
+            <span>Payer {(amount / 100).toFixed(2)}€</span>
           </>
         )}
       </button>
@@ -160,7 +167,7 @@ export default function StripePaymentForm({ amount, customerEmail, orderId, onSu
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             amount: Math.round(amount), // Montant en centimes
-            currency: 'usd',
+            currency: 'eur',
             customerEmail,
             orderId,
           }),
