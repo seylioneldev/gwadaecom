@@ -11,15 +11,20 @@
 
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { LogOut, User, Package, Settings, Mail } from 'lucide-react';
+import { LogOut, User, Package, Settings, Mail, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import { db } from '@/lib/firebase';
+import { collection, query, where, orderBy, limit, onSnapshot } from 'firebase/firestore';
+import cmsConfig from '../../../cms.config';
 
 export default function ComptePage() {
   const { user, userRole, isAdmin, loading, signOut } = useAuth();
   const router = useRouter();
+  const [recentOrders, setRecentOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
 
   /**
    * REDIRECTION SI NON CONNECTÉ OU SI ADMIN
@@ -37,6 +42,35 @@ export default function ComptePage() {
   }, [user, isAdmin, loading, router]);
 
   /**
+   * RÉCUPÉRER LES COMMANDES DE L'UTILISATEUR
+   */
+  useEffect(() => {
+    if (!user?.email) {
+      setOrdersLoading(false);
+      return;
+    }
+
+    const ordersQuery = query(
+      collection(db, cmsConfig.collections.orders),
+      where('customer.email', '==', user.email),
+      orderBy('createdAt', 'desc'),
+      limit(3)
+    );
+
+    const unsubscribe = onSnapshot(ordersQuery, (snapshot) => {
+      const ordersData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+      }));
+      setRecentOrders(ordersData);
+      setOrdersLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  /**
    * GESTION DE LA DÉCONNEXION
    */
   const handleSignOut = async () => {
@@ -46,6 +80,45 @@ export default function ComptePage() {
     } catch (error) {
       console.error('Erreur lors de la déconnexion:', error);
     }
+  };
+
+  /**
+   * FORMATER LA DATE
+   */
+  const formatDate = (date) => {
+    return date.toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  /**
+   * OBTENIR LE STATUT EN FRANÇAIS
+   */
+  const getStatusLabel = (status) => {
+    const statusLabels = {
+      paid: 'Payée',
+      processing: 'En préparation',
+      shipped: 'Expédiée',
+      delivered: 'Livrée',
+      cancelled: 'Annulée'
+    };
+    return statusLabels[status] || status;
+  };
+
+  /**
+   * OBTENIR LA COULEUR DU STATUT
+   */
+  const getStatusColor = (status) => {
+    const colors = {
+      paid: 'bg-green-100 text-green-800',
+      processing: 'bg-blue-100 text-blue-800',
+      shipped: 'bg-purple-100 text-purple-800',
+      delivered: 'bg-emerald-100 text-emerald-800',
+      cancelled: 'bg-red-100 text-red-800'
+    };
+    return colors[status] || 'bg-gray-100 text-gray-800';
   };
 
   // Afficher un loader pendant la vérification
@@ -103,20 +176,69 @@ export default function ComptePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
           {/* Carte : Mes Commandes */}
-          <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-[#5d6e64] text-white rounded-full flex items-center justify-center">
-                <Package size={24} />
+          <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition md:col-span-2">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-[#5d6e64] text-white rounded-full flex items-center justify-center">
+                  <Package size={24} />
+                </div>
+                <h2 className="text-xl font-serif text-gray-800">Mes Commandes</h2>
               </div>
-              <h2 className="text-xl font-serif text-gray-800">Mes Commandes</h2>
+              {recentOrders.length > 0 && (
+                <Link
+                  href="/compte/commandes"
+                  className="text-sm text-[#5d6e64] hover:underline flex items-center gap-1"
+                >
+                  Voir tout
+                  <ChevronRight size={16} />
+                </Link>
+              )}
             </div>
             <p className="text-sm text-gray-600 mb-4">
               Consultez l'historique de vos commandes et suivez vos livraisons.
             </p>
-            <div className="bg-gray-50 rounded p-4 text-center">
-              <p className="text-sm text-gray-500 italic">Aucune commande pour le moment</p>
-            </div>
-            {/* Futur lien : <Link href="/compte/commandes" className="...">Voir toutes mes commandes</Link> */}
+
+            {ordersLoading ? (
+              <div className="bg-gray-50 rounded p-8 text-center">
+                <div className="w-8 h-8 border-4 border-[#5d6e64] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                <p className="text-sm text-gray-500">Chargement...</p>
+              </div>
+            ) : recentOrders.length === 0 ? (
+              <div className="bg-gray-50 rounded p-4 text-center">
+                <p className="text-sm text-gray-500 italic">Aucune commande pour le moment</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {recentOrders.map((order) => (
+                  <div
+                    key={order.id}
+                    className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <p className="font-mono text-sm font-semibold text-gray-800">
+                          {order.orderId}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {formatDate(order.createdAt)}
+                        </p>
+                      </div>
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                        {getStatusLabel(order.status)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t">
+                      <p className="text-sm text-gray-600">
+                        {order.items?.length || 0} article{order.items?.length > 1 ? 's' : ''}
+                      </p>
+                      <p className="font-semibold text-gray-800">
+                        {order.total?.toFixed(2)} €
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Carte : Paramètres du compte */}

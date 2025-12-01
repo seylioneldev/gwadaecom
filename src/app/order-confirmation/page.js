@@ -14,32 +14,58 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { CheckCircle, Package, Mail, Home, ArrowRight } from 'lucide-react';
+import { CheckCircle, Package, Mail, Home, ArrowRight, MapPin, ShoppingBag } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useCart } from '@/context/CartContext';
+import { db } from '@/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import cmsConfig from '../../../cms.config';
 
 function OrderConfirmationContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { clearCart } = useCart();
+  const orderId = searchParams.get('order_id');
   const paymentIntentId = searchParams.get('payment_intent');
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [orderData, setOrderData] = useState(null);
 
   useEffect(() => {
-    if (!paymentIntentId) {
-      // Si pas de payment intent, rediriger vers l'accueil
-      router.push('/');
-    } else {
+    const fetchOrderData = async () => {
+      if (!paymentIntentId) {
+        router.push('/');
+        return;
+      }
+
       // Vider le panier maintenant que la commande est confirmée
       clearCart();
 
-      // Simuler un chargement (en attendant l'intégration Firestore)
-      setTimeout(() => setLoading(false), 1000);
-    }
-  }, [paymentIntentId, router, clearCart]);
+      // Si on a un order_id, récupérer les détails de la commande
+      if (orderId) {
+        try {
+          const orderRef = doc(db, cmsConfig.collections.orders, orderId);
+          const orderSnap = await getDoc(orderRef);
+
+          if (orderSnap.exists()) {
+            setOrderData({ id: orderSnap.id, ...orderSnap.data() });
+          } else {
+            console.error('Commande non trouvée');
+            setError('Commande non trouvée');
+          }
+        } catch (err) {
+          console.error('Erreur lors de la récupération de la commande:', err);
+          setError('Impossible de récupérer les détails de la commande');
+        }
+      }
+
+      setLoading(false);
+    };
+
+    fetchOrderData();
+  }, [orderId, paymentIntentId, router, clearCart]);
 
   if (loading) {
     return (
@@ -99,11 +125,78 @@ function OrderConfirmationContent() {
               <div className="text-left">
                 <p className="text-xs text-gray-500">Numéro de commande</p>
                 <p className="font-mono font-semibold text-gray-800">
-                  {paymentIntentId ? paymentIntentId.slice(-12).toUpperCase() : 'N/A'}
+                  {orderData?.orderId || paymentIntentId?.slice(-12).toUpperCase() || 'N/A'}
                 </p>
               </div>
             </div>
           </div>
+
+          {/* Détails de la commande */}
+          {orderData && (
+            <>
+              {/* Produits commandés */}
+              <div className="bg-white rounded-lg shadow-md p-8 mb-6">
+                <h2 className="text-xl font-serif text-gray-800 mb-4 flex items-center gap-2">
+                  <ShoppingBag size={24} className="text-[#5d6e64]" />
+                  Produits commandés
+                </h2>
+
+                <div className="space-y-4">
+                  {orderData.items.map((item, index) => (
+                    <div key={index} className="flex items-center gap-4 pb-4 border-b last:border-b-0">
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-800">{item.name}</p>
+                        <p className="text-sm text-gray-600">Quantité : {item.quantity}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-gray-800">{item.total.toFixed(2)} €</p>
+                        <p className="text-sm text-gray-600">{item.price.toFixed(2)} € / unité</p>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Totaux */}
+                  <div className="pt-4 space-y-2">
+                    <div className="flex justify-between text-gray-600">
+                      <span>Sous-total</span>
+                      <span>{orderData.subtotal.toFixed(2)} €</span>
+                    </div>
+                    <div className="flex justify-between text-gray-600">
+                      <span>Livraison</span>
+                      <span>{orderData.shipping === 0 ? 'Gratuite' : `${orderData.shipping.toFixed(2)} €`}</span>
+                    </div>
+                    <div className="flex justify-between text-lg font-bold text-gray-800 pt-2 border-t">
+                      <span>Total</span>
+                      <span>{orderData.total.toFixed(2)} €</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Adresse de livraison */}
+              <div className="bg-white rounded-lg shadow-md p-8 mb-6">
+                <h2 className="text-xl font-serif text-gray-800 mb-4 flex items-center gap-2">
+                  <MapPin size={24} className="text-[#5d6e64]" />
+                  Adresse de livraison
+                </h2>
+
+                <div className="text-gray-600">
+                  <p className="font-medium text-gray-800 mb-2">
+                    {orderData.customer.firstName} {orderData.customer.lastName}
+                  </p>
+                  <p>{orderData.shippingAddress.address}</p>
+                  <p>
+                    {orderData.shippingAddress.postalCode} {orderData.shippingAddress.city}
+                  </p>
+                  <p>{orderData.shippingAddress.country}</p>
+                  {orderData.customer.phone && (
+                    <p className="mt-2">Tél : {orderData.customer.phone}</p>
+                  )}
+                  <p className="mt-2">Email : {orderData.customer.email}</p>
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Informations */}
           <div className="bg-white rounded-lg shadow-md p-8 mb-6">
