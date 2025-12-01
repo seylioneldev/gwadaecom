@@ -61,11 +61,13 @@ async function addProductToCart(page) {
   // Attendre que le panier soit ouvert (le composant CartSidebar)
   await page.waitForSelector('text=/Votre Panier|Mon Panier/i', { timeout: 5000 });
 
-  // Fermer le panier
-  await page.locator('button').filter({ hasText: /×|Fermer/i }).first().click();
-
-  // Attendre que le panier soit fermé
-  await page.waitForTimeout(500);
+  // Fermer le panier en cliquant sur l'overlay (fond noir semi-transparent)
+  // ou simplement naviguer ailleurs - le panier se fermera automatiquement
+  const overlay = page.locator('.fixed.inset-0.bg-black\\/50');
+  if (await overlay.isVisible()) {
+    await overlay.click();
+    await page.waitForTimeout(500);
+  }
 }
 
 // Helper : Vérifier les erreurs console
@@ -202,20 +204,27 @@ test.describe('Commande en tant qu\'utilisateur connecté', () => {
     console.log('📝 Création du compte utilisateur...');
     await page.goto('/mon-compte');
 
-    // Cliquer sur l'onglet "Créer un compte" si nécessaire
-    const createAccountTab = page.locator('button:has-text("Créer un compte"), a:has-text("Créer un compte")');
-    if (await createAccountTab.isVisible()) {
-      await createAccountTab.click();
-    }
+    // Cliquer sur l'onglet "Inscription"
+    const signupTab = page.locator('button:has-text("Inscription"), button:has-text("Créer un compte")');
+    await signupTab.click();
+    await page.waitForTimeout(500);
 
     // Remplir le formulaire d'inscription
-    await page.fill('input[name="firstName"], input[placeholder*="rénom"]', testUser.firstName);
-    await page.fill('input[name="lastName"], input[placeholder*="om"]', testUser.lastName);
-    await page.fill('input[type="email"]', testUser.email);
-    await page.fill('input[type="password"]', testUser.password);
+    // Le champ "Nom complet" est le premier input type="text"
+    const nameInput = page.locator('input[type="text"]').first();
+    await nameInput.fill(`${testUser.firstName} ${testUser.lastName}`);
+
+    // Email - le premier input type="email" dans le formulaire d'inscription
+    const emailInputs = page.locator('input[type="email"]');
+    await emailInputs.first().fill(testUser.email);
+
+    // Mot de passe - les inputs type="password"
+    const passwordInputs = page.locator('input[type="password"]');
+    await passwordInputs.first().fill(testUser.password);
+    await passwordInputs.nth(1).fill(testUser.password); // Confirmer le mot de passe
 
     // Soumettre le formulaire
-    await page.locator('button:has-text("Créer"), button:has-text("S\'inscrire")').click();
+    await page.locator('button:has-text("S\'inscrire"), button:has-text("Créer")').click();
 
     // Attendre la redirection vers le compte
     await page.waitForURL(/\/compte/, { timeout: 10000 });
