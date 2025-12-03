@@ -15,9 +15,9 @@ const cmsConfig = {
   // INFORMATIONS DU PROJET
   // ============================================
   project: {
-    name: "Vivi et Margot",
-    description: "Boutique en ligne d'artisanat",
-    url: "https://vivi-et-margot.com",
+    name: "Les Bijoux de Guadeloupe",
+    description: "Boutique en ligne de bijoux artisanaux",
+    url: "https://les-bijoux-de-guadeloupe.com",
     logo: "/logo.png", // Chemin vers le logo (à ajouter dans /public)
   },
 
@@ -25,15 +25,15 @@ const cmsConfig = {
   // THÈME ET COULEURS
   // ============================================
   theme: {
-    primaryColor: "#5d6e64",      // Couleur principale (vert)
+    primaryColor: "#5d6e64", // Couleur principale (vert)
     primaryColorHover: "#4a5850", // Couleur au survol
-    secondaryColor: "#E5E5E5",    // Couleur secondaire (gris clair)
-    backgroundColor: "#f0f0f0",   // Couleur de fond
-    textColor: "#333333",         // Couleur du texte
+    secondaryColor: "#E5E5E5", // Couleur secondaire (gris clair)
+    backgroundColor: "#f0f0f0", // Couleur de fond
+    textColor: "#333333", // Couleur du texte
 
     // Police de caractères
     fontFamily: {
-      serif: "serif",     // Pour les titres
+      serif: "serif", // Pour les titres
       sansSerif: "sans-serif", // Pour le texte normal
     },
   },
@@ -44,11 +44,11 @@ const cmsConfig = {
   // Définit les noms des collections dans Firestore
   // Modifier ces noms si vous voulez une structure différente
   collections: {
-    products: "products",       // Collection des produits
-    categories: "categories",   // Collection des catégories du menu
-    settings: "settings",       // Collection des paramètres généraux
-    orders: "orders",           // Collection des commandes (futur)
-    pages: "pages",             // Collection des pages statiques (futur)
+    products: "products", // Collection des produits
+    categories: "categories", // Collection des catégories du menu
+    settings: "settings", // Collection des paramètres généraux
+    orders: "orders", // Collection des commandes (futur)
+    pages: "pages", // Collection des pages statiques (futur)
   },
 
   // ============================================
@@ -111,9 +111,9 @@ const cmsConfig = {
   // ============================================
   // Paramètres modifiables depuis l'admin
   defaultSettings: {
-    siteName: "Vivi et Margot",
-    siteDescription: "Boutique en ligne d'artisanat de qualité",
-    email: "contact@vivi-et-margot.com",
+    siteName: "Les Bijoux de Guadeloupe",
+    siteDescription: "Boutique en ligne de bijoux artisanaux de Guadeloupe",
+    email: "contact@les-bijoux-de-guadeloupe.com",
     phone: "+33 6 12 34 56 78",
     address: "123 Rue de l'Artisanat, 75001 Paris",
 
@@ -127,15 +127,15 @@ const cmsConfig = {
     // Paramètres de la boutique
     shop: {
       currency: "€",
-      shippingCost: 5.00,
-      freeShippingThreshold: 50.00,
+      shippingCost: 5.0,
+      freeShippingThreshold: 50.0,
       taxRate: 20, // TVA en %
     },
 
     // Page d'accueil
     homepage: {
-      heroTitle: "Bienvenue chez Vivi et Margot",
-      heroSubtitle: "Découvrez notre collection d'artisanat",
+      heroTitle: "Bienvenue aux Bijoux de Guadeloupe",
+      heroSubtitle: "Découvrez notre collection de bijoux artisanaux",
       showNewArrivals: true,
       productsPerPage: 9,
     },
@@ -167,8 +167,8 @@ const cmsConfig = {
 
       // Polices
       fonts: {
-        headingFont: "serif",      // Police des titres
-        bodyFont: "sans-serif",    // Police du texte
+        headingFont: "serif", // Police des titres
+        bodyFont: "sans-serif", // Police du texte
       },
 
       // Boutons

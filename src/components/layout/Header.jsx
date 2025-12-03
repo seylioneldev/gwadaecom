@@ -18,7 +18,7 @@ export default function Header() {
   const { categories, loading: categoriesLoading } = useCategories();
 
   // Récupération des paramètres du site (nom du site, etc.)
-  const { settings } = useSettings();
+  const { settings, loading: settingsLoading } = useSettings();
 
   // ==========================================================
   // 1. GESTION DES ÉTATS (STATE)
@@ -158,7 +158,7 @@ export default function Header() {
                 settings.siteName.toUpperCase()
               )
             ) : (
-              "VIVI et MARGOT"
+              "LES BIJOUX DE GUADELOUPE"
             )}
           </Link>
 

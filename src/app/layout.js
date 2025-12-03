@@ -22,24 +22,24 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Les Bijoux de Guadeloupe - Votre Boutique de Lifestyle Français",
-  description: "Boutique en ligne pour les paniers, savons et articles textiles de style français authentique.",
+  title: "Les Bijoux de Guadeloupe - Bijoux Artisanaux de Guadeloupe",
+  description:
+    "Boutique en ligne de bijoux artisanaux authentiques de Guadeloupe. Découvrez notre collection unique.",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="fr">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
-
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
+      >
         {/* Authentification Firebase (enveloppe tout) */}
         <AuthProvider>
-
           {/* Paramètres du site (nom, configuration...) */}
           <SettingsProvider>
-
             {/* Le Fournisseur de données (Panier) */}
             <CartProvider>
-
               {/* Styles CSS personnalisés depuis l'admin */}
               <DynamicStyles />
 
@@ -48,13 +48,9 @@ export default function RootLayout({ children }) {
 
               {/* LE PANNEAU LATÉRAL (Il doit être ici pour s'afficher par-dessus le reste) */}
               <SideCart />
-
             </CartProvider>
-
           </SettingsProvider>
-
         </AuthProvider>
-
       </body>
     </html>
   );
