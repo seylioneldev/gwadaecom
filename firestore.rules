@@ -1,0 +1,63 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ====================================
+    // CATEGORIES - Lecture publique
+    // ====================================
+    // Les visiteurs peuvent voir les catégories
+    // Seuls les admins peuvent les modifier (via console Firebase)
+    match /categories/{doc} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // ====================================
+    // PRODUCTS - Lecture publique
+    // ====================================
+    // Les visiteurs peuvent voir les produits
+    // Seuls les admins peuvent les modifier (via console Firebase)
+    match /products/{doc} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // ====================================
+    // SETTINGS - Lecture publique, Écriture authentifiée
+    // ====================================
+    // Tout le monde peut lire les paramètres du site
+    // Seuls les utilisateurs authentifiés peuvent les modifier
+    match /settings/{doc} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // ====================================
+    // ORDERS - Création publique, Lecture authentifiée
+    // ====================================
+    // Permet aux visiteurs de créer des commandes (checkout sans compte)
+    // Seuls les utilisateurs connectés peuvent voir leurs commandes
+    match /orders/{orderId} {
+      allow create: if true;
+      allow read: if request.auth != null;
+      allow update, delete: if false;
+    }
+
+    // ====================================
+    // USERS - Accès restreint à son propre profil
+    // ====================================
+    // Un utilisateur peut uniquement lire et modifier ses propres données
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // ====================================
+    // RÈGLE PAR DÉFAUT - Tout bloquer
+    // ====================================
+    // Bloque l'accès à toutes les autres collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -6,45 +6,30 @@
  *
  * CONFIGURATION REQUISE :
  * -----------------------
- * 1. Installer un service d'email (voir EMAIL_SETUP.md)
- * 2. Ajouter les variables d'environnement nécessaires dans .env.local
- *
- * SERVICES D'EMAIL SUPPORTÉS :
- * ----------------------------
- * - Resend (recommandé) : npm install resend
- * - SendGrid : npm install @sendgrid/mail
- * - Nodemailer : npm install nodemailer
+ * 1. Configuration Gmail SMTP (voir EMAIL_GMAIL_SETUP.md)
+ * 2. Variables d'environnement dans .env.local :
+ *    - GMAIL_USER=votre.email@gmail.com
+ *    - GMAIL_APP_PASSWORD=votre_mot_de_passe_application
  *
  * 🆕 NOUVEAU FICHIER : src/app/api/send-order-confirmation/route.js
  * DATE : 2025-12-01
+ * 🔄 MODIFIÉ : Utilise Gmail SMTP via Nodemailer
  */
 
 import { NextResponse } from 'next/server';
+import nodemailer from 'nodemailer';
 
-// OPTION 1: Resend (recommandé - moderne et simple)
+// Configuration Gmail SMTP avec Nodemailer
 // ===================================================
-import { Resend } from 'resend';
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-// OPTION 2: SendGrid
-// ===================================================
-// Décommentez ce bloc si vous utilisez SendGrid
-// import sgMail from '@sendgrid/mail';
-// sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-
-// OPTION 3: Nodemailer (SMTP)
-// ===================================================
-// Décommentez ce bloc si vous utilisez Nodemailer
-// import nodemailer from 'nodemailer';
-// const transporter = nodemailer.createTransport({
-//   host: process.env.SMTP_HOST,
-//   port: process.env.SMTP_PORT,
-//   secure: true,
-//   auth: {
-//     user: process.env.SMTP_USER,
-//     pass: process.env.SMTP_PASS,
-//   },
-// });
+const transporter = nodemailer.createTransport({
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true,
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_APP_PASSWORD,
+  },
+});
 
 export async function POST(request) {
   try {
@@ -70,65 +55,41 @@ export async function POST(request) {
       );
     }
 
-    // Vérifier la clé API Resend
-    if (!process.env.RESEND_API_KEY) {
-      console.error('❌ RESEND_API_KEY non définie dans .env.local');
+    // Vérifier la configuration Gmail
+    if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+      console.error('❌ Configuration Gmail manquante dans .env.local');
+      console.error('❌ Vérifiez que GMAIL_USER et GMAIL_APP_PASSWORD sont définis');
       return NextResponse.json(
         { error: 'Configuration email manquante' },
         { status: 500 }
       );
     }
 
-    console.log('🔑 Clé API Resend détectée:', process.env.RESEND_API_KEY.substring(0, 10) + '...');
+    console.log('🔑 Configuration Gmail détectée:', process.env.GMAIL_USER);
 
     // Préparer le contenu de l'email
     const emailContent = generateEmailHTML(orderData);
     console.log('📄 Contenu email généré (longueur):', emailContent.length, 'caractères');
 
     // ====================================================================
-    // ENVOI DE L'EMAIL - Resend activé
+    // ENVOI DE L'EMAIL - Gmail SMTP avec Nodemailer
     // ====================================================================
 
     console.log('📨 Envoi de l\'email à:', orderData.customer.email);
-    console.log('📨 Depuis:', 'Les Bijoux de Guadeloupe <onboarding@resend.dev>');
+    console.log('📨 Depuis:', `Les Bijoux de Guadeloupe <${process.env.GMAIL_USER}>`);
     console.log('📨 Sujet:', `Confirmation de commande ${orderData.orderId}`);
 
-    // OPTION 1: Avec Resend (ACTIF)
+    // Envoi avec Gmail SMTP via Nodemailer
     // ----------------------
-    const result = await resend.emails.send({
-      from: 'Les Bijoux de Guadeloupe <onboarding@resend.dev>',
+    const result = await transporter.sendMail({
+      from: `"Les Bijoux de Guadeloupe" <${process.env.GMAIL_USER}>`,
       to: orderData.customer.email,
       subject: `Confirmation de commande ${orderData.orderId}`,
       html: emailContent,
     });
 
-    console.log('✅ Email envoyé avec succès!');
-    console.log('📧 Résultat Resend:', result);
-
-    // OPTION 2: Avec SendGrid (DÉSACTIVÉ)
-    // ----------------------
-    // await sgMail.send({
-    //   to: orderData.customer.email,
-    //   from: 'noreply@votre-domaine.com',
-    //   subject: `Confirmation de commande ${orderData.orderId}`,
-    //   html: emailContent,
-    // });
-
-    // OPTION 3: Avec Nodemailer (DÉSACTIVÉ)
-    // ----------------------
-    // await transporter.sendMail({
-    //   from: '"Les Bijoux de Guadeloupe" <noreply@votre-domaine.com>',
-    //   to: orderData.customer.email,
-    //   subject: `Confirmation de commande ${orderData.orderId}`,
-    //   html: emailContent,
-    // });
-
-    // MODE DÉVELOPPEMENT : Désactivé - Envoi réel activé
-    // ======================================================
-    // console.log('📧 Email de confirmation (MODE DEV):');
-    // console.log('To:', orderData.customer.email);
-    // console.log('Subject:', `Confirmation de commande ${orderData.orderId}`);
-    // console.log('Content:', emailContent.substring(0, 200) + '...');
+    console.log('✅ Email envoyé avec succès via Gmail SMTP!');
+    console.log('📧 Résultat Nodemailer:', result);
 
     console.log('📧 ========================================');
     console.log('✅ Traitement terminé avec succès');
@@ -136,8 +97,9 @@ export async function POST(request) {
 
     return NextResponse.json({
       success: true,
-      message: 'Email de confirmation envoyé',
-      emailId: result?.id || 'unknown'
+      message: 'Email de confirmation envoyé via Gmail SMTP',
+      messageId: result?.messageId || 'unknown',
+      accepted: result?.accepted || []
     });
 
   } catch (error) {
