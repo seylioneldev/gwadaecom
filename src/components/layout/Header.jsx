@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation"; // Pour la redirection URL
 import { products } from "../../data/products"; // Source de données pour les suggestions
 import { useCategories } from "@/hooks/useCategories"; // Récupère les catégories depuis Firestore
 import { useSettings } from "@/context/SettingsContext"; // Récupère les paramètres du site (Context temps réel)
+import { useIsMobile } from "@/hooks/useMediaQuery"; // Hook pour détecter mobile sans bug d'hydration
 
 export default function Header() {
   const { totalItems, setIsCartOpen } = useCart();
@@ -19,6 +20,9 @@ export default function Header() {
 
   // Récupération des paramètres du site (nom du site, etc.)
   const { settings, loading: settingsLoading } = useSettings();
+
+  // Détection mobile sans bug d'hydration
+  const isMobile = useIsMobile();
 
   // ==========================================================
   // 1. GESTION DES ÉTATS (STATE)
@@ -72,7 +76,7 @@ export default function Header() {
       ) {
         setIsSuggestionsOpen(false);
         // Sur mobile, si le champ est vide et qu'on clique ailleurs, on le referme pour gagner de la place
-        if (window.innerWidth < 768 && searchTerm === "") {
+        if (isMobile && searchTerm === "") {
           setIsMobileSearchOpen(false);
         }
       }
@@ -81,7 +85,7 @@ export default function Header() {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [searchContainerRef, searchTerm]);
+  }, [searchContainerRef, searchTerm, isMobile]);
 
   // ==========================================================
   // 4. GESTION RECHERCHE MOBILE
@@ -177,14 +181,14 @@ export default function Header() {
                   className="cursor-pointer hover:text-gray-200"
                   onClick={(e) => {
                     handleMobileSearchToggle(); // Ouvre sur mobile
-                    if (isMobileSearchOpen || window.innerWidth >= 768)
-                      handleSearch(e); // Cherche si déjà ouvert ou sur PC
+                    if (isMobileSearchOpen || !isMobile) handleSearch(e); // Cherche si déjà ouvert ou sur PC
                   }}
                 />
                 <input
                   ref={searchInputRef}
                   type="text"
                   placeholder="Search..."
+                  suppressHydrationWarning
                   // Classes conditionnelles pour l'animation de largeur (w-0 -> w-32)
                   className={`
                     bg-transparent border-none outline-none text-xs text-white placeholder-white/70 transition-all duration-300
@@ -198,7 +202,7 @@ export default function Header() {
                   onBlur={() => {
                     // Petite tempo pour ne pas fermer si on clique sur une suggestion
                     setTimeout(() => {
-                      if (window.innerWidth < 768 && searchTerm === "")
+                      if (isMobile && searchTerm === "")
                         setIsMobileSearchOpen(false);
                     }, 200);
                   }}

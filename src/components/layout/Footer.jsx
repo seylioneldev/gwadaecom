@@ -131,6 +131,7 @@ export default function Footer() {
             <input
               type="text"
               placeholder="Search..."
+              suppressHydrationWarning
               className="border border-gray-300 px-4 py-1 text-xs w-48 focus:outline-none focus:border-[#5d6e64]"
             />
           </div>
