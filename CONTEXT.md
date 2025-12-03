@@ -5,7 +5,7 @@
 > Si vous créez un nouveau chat dans Cascade/Windsurf, **lisez OBLIGATOIREMENT ce fichier en premier** pour comprendre le contexte complet du projet, les fonctionnalités existantes, les bugs connus, et les décisions techniques prises.
 
 > **Dernière mise à jour** : 2025-12-03
-> **Version** : 2.1.0
+> **Version** : 2.2.0
 
 ---
 
@@ -97,7 +97,8 @@ gwadaecom/
 │   │   ├── AuthContext.jsx           # Authentification
 │   │   └── CartContext.jsx           # Panier (useCallback optimisé)
 │   ├── hooks/                        # Hooks personnalisés
-│   │   └── useProducts.js            # Récupération produits Firestore
+│   │   ├── useProducts.js            # Récupération produits Firestore
+│   │   └── useMediaQuery.js          # Détection mobile sans bug hydration
 │   ├── lib/                          # Bibliothèques
 │   │   ├── firebase.js               # Config Firebase
 │   │   ├── stripe.js                 # Config Stripe
@@ -372,9 +373,27 @@ gwadaecom/
 - Email admin : `seymlionel@gmail.com`
 - Tous les emails (confirmations, bienvenue, support) utilisent maintenant Gmail SMTP
 
+#### 3. ~~Bug d'Hydration Mobile~~ ✅ RÉSOLU
+
+**Status** : ✅ Résolu le 2025-12-03
+**Solution appliquée** : Création du hook `useMediaQuery` et ajout de `suppressHydrationWarning`
+**Impact initial** : Erreur d'hydration dans la console sur mobile uniquement
+**Cause** :
+
+- Utilisation de `window.innerWidth` pendant le rendu (différence serveur/client)
+- Attribut `__gchrome_uniqueid` ajouté par Chrome mobile sur les inputs
+  **Solution** :
+- Création du hook `useMediaQuery.js` pour détecter mobile sans bug d'hydration
+- Remplacement de tous les `window.innerWidth` par `useIsMobile()` dans `Header.jsx`
+- Ajout de `suppressHydrationWarning` sur les inputs du Header et Footer
+  **Fichiers modifiés** :
+- `src/hooks/useMediaQuery.js` : Nouveau hook personnalisé
+- `src/components/layout/Header.jsx` : Utilisation du hook + suppressHydrationWarning
+- `src/components/layout/Footer.jsx` : Ajout suppressHydrationWarning
+
 ### ⚠️ MOYEN
 
-#### 3. ~~Email Non Pré-rempli Après Création Compte/Connexion~~ ✅ RÉSOLU
+#### 4. ~~Email Non Pré-rempli Après Création Compte/Connexion~~ ✅ RÉSOLU
 
 **Status** : ✅ Résolu le 2025-12-01
 **Impact** : Utilisateur devait retourner en arrière pour que l'email soit reconnu dans le formulaire de livraison
@@ -385,7 +404,7 @@ gwadaecom/
 - Pré-remplissage automatique de : email, prénom, nom
   **Fichier modifié** : [src/app/checkout/page.js](src/app/checkout/page.js:96-142)
 
-#### 4. ~~Tests Playwright Checkout Échouent~~ ✅ PARTIELLEMENT RÉSOLU
+#### 5. ~~Tests Playwright Checkout Échouent~~ ✅ PARTIELLEMENT RÉSOLU
 
 **Status** : ✅ Tests simplifiés mis en place - 2/4 tests échouent encore
 **Solution appliquée** :
@@ -398,7 +417,7 @@ gwadaecom/
 - Test création nouveau compte : timeout Stripe après inscription
   **Référence** : TESTS_ISSUES.md, section détaillée
 
-#### 5. Tests d'inscription de compte
+#### 6. Tests d'inscription de compte
 
 **Status** : Nouveau problème identifié
 **Impact** : 2 tests checkout échouent
@@ -569,6 +588,25 @@ service cloud.firestore {
 
 ## 📅 Historique des Modifications
 
+### 2025-12-03 - Session 7 : Correction Bug d'Hydration Mobile
+
+- ✅ **Bug corrigé** : Erreur d'hydration sur mobile uniquement
+- ✅ **Cause identifiée** :
+  - Utilisation de `window.innerWidth` pendant le rendu (différence serveur/client)
+  - Attribut `__gchrome_uniqueid` ajouté par Chrome mobile sur les inputs
+- ✅ **Solution appliquée** :
+  - Création du hook `useMediaQuery.js` pour détecter mobile sans bug d'hydration
+  - Remplacement de tous les `window.innerWidth` par `useIsMobile()` dans `Header.jsx`
+  - Ajout de `suppressHydrationWarning` sur les inputs du Header et Footer
+- ✅ **Fichiers créés** :
+  - `src/hooks/useMediaQuery.js` : Hook personnalisé avec `useIsMobile()`
+- ✅ **Fichiers modifiés** :
+  - `src/components/layout/Header.jsx` : Utilisation du hook + suppressHydrationWarning
+  - `src/components/layout/Footer.jsx` : Ajout suppressHydrationWarning
+  - `CONTEXT.md` : Mise à jour complète (version 2.2.0)
+- ✅ **Résultat** : Plus d'erreur d'hydration sur mobile, console propre
+- ✅ Commit et push sur GitHub
+
 ### 2025-12-03 - Session 6 : Système de Support et Remboursements + Migration Gmail SMTP
 
 - ✅ **Nouvelle fonctionnalité majeure** : Système complet de support et remboursements
@@ -731,36 +769,35 @@ Après chaque modification importante, effectuer ces tests manuels :
 
 ---
 
-**Version du fichier** : 2.1.0
-**Dernière synchronisation** : 2025-12-03 12:55 UTC
-**Dernière modification** : Système de support et remboursements + Migration Gmail SMTP
-**Prochaine mise à jour recommandée** : Après test manuel du formulaire de contact et réception d'emails
+**Version du fichier** : 2.2.0
+**Dernière synchronisation** : 2025-12-03 13:51 UTC
+**Dernière modification** : Correction bug d'hydration mobile
+**Prochaine mise à jour recommandée** : Après ajout des images produits avec base de données
 
 ---
 
-## 📄 Fichiers Modifiés Cette Session (Session 6)
+## 📄 Fichiers Modifiés Cette Session (Session 7)
 
-### Nouvelles Pages
+### Nouveaux Hooks
 
-- `src/app/support/page.js` : Page contact/support avec formulaire
-- `src/app/politique-remboursement/page.js` : Politique de remboursement détaillée
-
-### API Routes
-
-- `src/app/api/send-email/route.js` : Envoi d'emails via Gmail SMTP pour formulaire de contact
+- `src/hooks/useMediaQuery.js` : Hook personnalisé pour détecter mobile sans bug d'hydration
+  - Fonction `useMediaQuery(query)` : Hook générique pour media queries
+  - Fonction `useIsMobile()` : Hook spécifique pour mobile (< 768px)
 
 ### Composants Modifiés
 
-- `src/app/compte/commandes/page.js` : Ajout modal "Besoin d'aide ?"
-- `src/components/layout/Footer.jsx` : Ajout liens vers nouvelles pages
+- `src/components/layout/Header.jsx` :
+  - Import et utilisation du hook `useIsMobile()`
+  - Remplacement de tous les `window.innerWidth` par `isMobile`
+  - Ajout de `suppressHydrationWarning` sur l'input de recherche
+  - Ajout de `isMobile` dans les dépendances du useEffect
+- `src/components/layout/Footer.jsx` :
+  - Ajout de `suppressHydrationWarning` sur l'input de recherche
 
 ### Documentation
 
-- `CONTEXT.md` : Mise à jour complète (version 2.1.0)
-  - Avertissement de lecture obligatoire en début de session
-  - Nouvelle section Support & Remboursements
-  - Migration Gmail SMTP documentée
-  - Historique des modifications (session 6)
-  - Mise à jour variables d'environnement
-  - Bugs résolus (emails)
-- `REFUND_MANAGEMENT_GUIDE.md` : Guide complet de gestion des remboursements
+- `CONTEXT.md` : Mise à jour complète (version 2.2.0)
+  - Ajout du hook `useMediaQuery.js` dans la structure des dossiers
+  - Nouveau bug résolu : Bug d'hydration mobile
+  - Historique des modifications (session 7)
+  - Mise à jour des métadonnées de fin de fichier
