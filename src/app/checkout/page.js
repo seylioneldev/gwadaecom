@@ -13,18 +13,25 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
-import { useCart } from '@/context/CartContext';
-import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { User, LogIn, UserPlus, ArrowLeft, ArrowRight, CreditCard } from 'lucide-react';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
-import StripePaymentForm from '@/components/StripePaymentForm';
-import { db } from '@/lib/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import cmsConfig from '../../../cms.config';
+import { useState, useEffect } from "react";
+import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import {
+  User,
+  LogIn,
+  UserPlus,
+  ArrowLeft,
+  ArrowRight,
+  CreditCard,
+} from "lucide-react";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+import StripePaymentForm from "@/components/StripePaymentForm";
+import { db } from "@/lib/firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import cmsConfig from "../../../cms.config";
 
 export default function CheckoutPage() {
   const { cart, totalPrice, clearCart } = useCart();
@@ -37,33 +44,33 @@ export default function CheckoutPage() {
 
   // État du formulaire invité
   const [guestForm, setGuestForm] = useState({
-    email: '',
-    firstName: '',
-    lastName: '',
-    address: '',
-    city: '',
-    postalCode: '',
-    country: 'France',
-    phone: '',
+    email: "",
+    firstName: "",
+    lastName: "",
+    address: "",
+    city: "",
+    postalCode: "",
+    country: "France",
+    phone: "",
   });
 
   // État du formulaire connexion
   const [loginForm, setLoginForm] = useState({
-    email: '',
-    password: '',
+    email: "",
+    password: "",
   });
 
   // État du formulaire inscription
   const [signupForm, setSignupForm] = useState({
-    email: '',
-    password: '',
-    confirmPassword: '',
-    firstName: '',
-    lastName: '',
+    email: "",
+    password: "",
+    confirmPassword: "",
+    firstName: "",
+    lastName: "",
   });
 
   // États des erreurs et chargement
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   /**
@@ -71,7 +78,7 @@ export default function CheckoutPage() {
    */
   useEffect(() => {
     if (cart.length === 0) {
-      router.push('/cart');
+      router.push("/cart");
     }
   }, [cart, router]);
 
@@ -80,12 +87,12 @@ export default function CheckoutPage() {
    */
   useEffect(() => {
     if (user && checkoutMode === null) {
-      setCheckoutMode('guest');
+      setCheckoutMode("guest");
       setGuestForm({
         ...guestForm,
-        email: user.email || '',
-        firstName: user.displayName?.split(' ')[0] || '',
-        lastName: user.displayName?.split(' ')[1] || '',
+        email: user.email || "",
+        firstName: user.displayName?.split(" ")[0] || "",
+        lastName: user.displayName?.split(" ")[1] || "",
       });
     }
   }, [user]);
@@ -95,14 +102,23 @@ export default function CheckoutPage() {
    */
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
-      await signIn(loginForm.email, loginForm.password);
-      setCheckoutMode('guest'); // Passer au formulaire de commande
+      const loggedUser = await signIn(loginForm.email, loginForm.password);
+
+      // Pré-remplir le formulaire de livraison avec les données de l'utilisateur
+      setGuestForm({
+        ...guestForm,
+        email: loginForm.email,
+        firstName: loggedUser?.displayName?.split(" ")[0] || "",
+        lastName: loggedUser?.displayName?.split(" ")[1] || "",
+      });
+
+      setCheckoutMode("guest"); // Passer au formulaire de commande
     } catch (err) {
-      setError('Email ou mot de passe incorrect');
+      setError("Email ou mot de passe incorrect");
     } finally {
       setLoading(false);
     }
@@ -113,20 +129,33 @@ export default function CheckoutPage() {
    */
   const handleSignup = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     if (signupForm.password !== signupForm.confirmPassword) {
-      setError('Les mots de passe ne correspondent pas');
+      setError("Les mots de passe ne correspondent pas");
       setLoading(false);
       return;
     }
 
     try {
-      await signUp(signupForm.email, signupForm.password, `${signupForm.firstName} ${signupForm.lastName}`);
-      setCheckoutMode('guest'); // Passer au formulaire de commande
+      await signUp(
+        signupForm.email,
+        signupForm.password,
+        `${signupForm.firstName} ${signupForm.lastName}`
+      );
+
+      // Pré-remplir le formulaire de livraison avec les données du nouveau compte
+      setGuestForm({
+        ...guestForm,
+        email: signupForm.email,
+        firstName: signupForm.firstName,
+        lastName: signupForm.lastName,
+      });
+
+      setCheckoutMode("guest"); // Passer au formulaire de commande
     } catch (err) {
-      setError(err.message || 'Erreur lors de l\'inscription');
+      setError(err.message || "Erreur lors de l'inscription");
     } finally {
       setLoading(false);
     }
@@ -137,11 +166,16 @@ export default function CheckoutPage() {
    */
   const handleGuestCheckout = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     // Validation basique
-    if (!guestForm.email || !guestForm.firstName || !guestForm.lastName || !guestForm.address) {
-      setError('Veuillez remplir tous les champs obligatoires');
+    if (
+      !guestForm.email ||
+      !guestForm.firstName ||
+      !guestForm.lastName ||
+      !guestForm.address
+    ) {
+      setError("Veuillez remplir tous les champs obligatoires");
       return;
     }
 
@@ -153,7 +187,7 @@ export default function CheckoutPage() {
    * GESTION DU PAIEMENT RÉUSSI
    */
   const handlePaymentSuccess = async (paymentIntent) => {
-    console.log('Paiement réussi !', paymentIntent);
+    console.log("Paiement réussi !", paymentIntent);
 
     try {
       // Préparer les données de la commande
@@ -161,14 +195,14 @@ export default function CheckoutPage() {
         // Informations de la commande
         orderId: `ORDER-${Date.now()}`,
         paymentIntentId: paymentIntent.id,
-        status: 'paid',
+        status: "paid",
 
         // Informations client
         customer: {
           email: guestForm.email,
           firstName: guestForm.firstName,
           lastName: guestForm.lastName,
-          phone: guestForm.phone || '',
+          phone: guestForm.phone || "",
           userId: user?.uid || null,
         },
 
@@ -181,7 +215,7 @@ export default function CheckoutPage() {
         },
 
         // Produits commandés
-        items: cart.map(item => ({
+        items: cart.map((item) => ({
           id: item.id,
           name: item.name,
           price: parseFloat(item.price),
@@ -193,7 +227,7 @@ export default function CheckoutPage() {
         subtotal: parseFloat(totalPrice),
         shipping: 0, // Livraison gratuite
         total: parseFloat(totalPrice),
-        currency: 'EUR',
+        currency: "EUR",
 
         // Timestamps
         createdAt: serverTimestamp(),
@@ -204,43 +238,51 @@ export default function CheckoutPage() {
       const ordersCollection = collection(db, cmsConfig.collections.orders);
       const docRef = await addDoc(ordersCollection, orderData);
 
-      console.log('Commande enregistrée avec succès:', docRef.id);
+      console.log("Commande enregistrée avec succès:", docRef.id);
+
+      // Préparer les données pour l'email (sans serverTimestamp qui n'est pas sérialisable)
+      const emailOrderData = {
+        ...orderData,
+        createdAt: new Date(), // Remplacer serverTimestamp par Date pour la sérialisation JSON
+        updatedAt: new Date(),
+      };
 
       // Envoyer l'email de confirmation (ne pas attendre - en background)
-      console.log('📧 Tentative d\'envoi de l\'email de confirmation...');
-      console.log('📧 Destinataire:', orderData.customer.email);
-      console.log('📧 Commande ID:', orderData.orderId);
+      console.log("📧 Tentative d'envoi de l'email de confirmation...");
+      console.log("📧 Destinataire:", emailOrderData.customer.email);
+      console.log("📧 Commande ID:", emailOrderData.orderId);
 
-      fetch('/api/send-order-confirmation', {
-        method: 'POST',
+      fetch("/api/send-order-confirmation", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ orderData }),
+        body: JSON.stringify({ orderData: emailOrderData }),
       })
-        .then(response => {
-          console.log('📧 Réponse HTTP:', response.status);
+        .then((response) => {
+          console.log("📧 Réponse HTTP:", response.status);
           return response.json();
         })
-        .then(data => {
+        .then((data) => {
           if (data.success) {
-            console.log('✅ Email envoyé avec succès!', data);
+            console.log("✅ Email envoyé avec succès!", data);
           } else {
-            console.error('❌ Échec de l\'envoi de l\'email:', data);
+            console.error("❌ Échec de l'envoi de l'email:", data);
           }
         })
-        .catch(err => {
+        .catch((err) => {
           // Log l'erreur mais ne pas bloquer la redirection
-          console.error('❌ Erreur lors de l\'envoi de l\'email:', err);
-          console.error('❌ Détails:', err.message);
+          console.error("❌ Erreur lors de l'envoi de l'email:", err);
+          console.error("❌ Détails:", err.message);
         });
 
       // Rediriger vers la page de confirmation avec l'ID de la commande
       // Note: Le panier sera vidé sur la page de confirmation pour éviter les conflits de redirection
-      router.push(`/order-confirmation?order_id=${docRef.id}&payment_intent=${paymentIntent.id}`);
-
+      router.push(
+        `/order-confirmation?order_id=${docRef.id}&payment_intent=${paymentIntent.id}`
+      );
     } catch (error) {
-      console.error('Erreur lors de l\'enregistrement de la commande:', error);
+      console.error("Erreur lors de l'enregistrement de la commande:", error);
 
       // Même en cas d'erreur, on redirige vers la confirmation
       // car le paiement a réussi
@@ -252,8 +294,8 @@ export default function CheckoutPage() {
    * GESTION DES ERREURS DE PAIEMENT
    */
   const handlePaymentError = (error) => {
-    console.error('Erreur de paiement:', error);
-    setError(error.message || 'Erreur lors du paiement');
+    console.error("Erreur de paiement:", error);
+    setError(error.message || "Erreur lors du paiement");
   };
 
   // Si panier vide, ne rien afficher
@@ -267,10 +309,12 @@ export default function CheckoutPage() {
 
       <div className="min-h-screen bg-gray-50 py-12 px-4">
         <div className="max-w-6xl mx-auto">
-
           {/* En-tête */}
           <div className="mb-8">
-            <Link href="/cart" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800 transition mb-4">
+            <Link
+              href="/cart"
+              className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800 transition mb-4"
+            >
               <ArrowLeft size={16} />
               Retour au panier
             </Link>
@@ -281,19 +325,19 @@ export default function CheckoutPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
             {/* FORMULAIRE DE COMMANDE */}
             <div className="lg:col-span-2">
-
               {/* CHOIX DU MODE DE CHECKOUT */}
               {checkoutMode === null && !user && (
                 <div className="bg-white rounded-lg shadow-md p-8">
-                  <h2 className="text-2xl font-serif text-gray-800 mb-6 text-center">Comment souhaitez-vous commander ?</h2>
+                  <h2 className="text-2xl font-serif text-gray-800 mb-6 text-center">
+                    Comment souhaitez-vous commander ?
+                  </h2>
 
                   <div className="space-y-4">
                     {/* Invité */}
                     <button
-                      onClick={() => setCheckoutMode('guest')}
+                      onClick={() => setCheckoutMode("guest")}
                       className="w-full p-6 border-2 border-gray-200 rounded-lg hover:border-[#5d6e64] hover:bg-gray-50 transition text-left"
                     >
                       <div className="flex items-center gap-4">
@@ -301,8 +345,12 @@ export default function CheckoutPage() {
                           <User size={24} className="text-blue-600" />
                         </div>
                         <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-gray-800 mb-1">Continuer en tant qu'invité</h3>
-                          <p className="text-sm text-gray-600">Commandez rapidement sans créer de compte</p>
+                          <h3 className="text-lg font-semibold text-gray-800 mb-1">
+                            Continuer en tant qu'invité
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            Commandez rapidement sans créer de compte
+                          </p>
                         </div>
                         <ArrowRight size={20} className="text-gray-400" />
                       </div>
@@ -310,7 +358,7 @@ export default function CheckoutPage() {
 
                     {/* Connexion */}
                     <button
-                      onClick={() => setCheckoutMode('login')}
+                      onClick={() => setCheckoutMode("login")}
                       className="w-full p-6 border-2 border-gray-200 rounded-lg hover:border-[#5d6e64] hover:bg-gray-50 transition text-left"
                     >
                       <div className="flex items-center gap-4">
@@ -318,8 +366,12 @@ export default function CheckoutPage() {
                           <LogIn size={24} className="text-green-600" />
                         </div>
                         <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-gray-800 mb-1">J'ai déjà un compte</h3>
-                          <p className="text-sm text-gray-600">Connectez-vous pour accéder à votre historique</p>
+                          <h3 className="text-lg font-semibold text-gray-800 mb-1">
+                            J'ai déjà un compte
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            Connectez-vous pour accéder à votre historique
+                          </p>
                         </div>
                         <ArrowRight size={20} className="text-gray-400" />
                       </div>
@@ -327,7 +379,7 @@ export default function CheckoutPage() {
 
                     {/* Inscription */}
                     <button
-                      onClick={() => setCheckoutMode('signup')}
+                      onClick={() => setCheckoutMode("signup")}
                       className="w-full p-6 border-2 border-gray-200 rounded-lg hover:border-[#5d6e64] hover:bg-gray-50 transition text-left"
                     >
                       <div className="flex items-center gap-4">
@@ -335,8 +387,12 @@ export default function CheckoutPage() {
                           <UserPlus size={24} className="text-purple-600" />
                         </div>
                         <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-gray-800 mb-1">Créer un compte</h3>
-                          <p className="text-sm text-gray-600">Suivez vos commandes et bénéficiez d'avantages</p>
+                          <h3 className="text-lg font-semibold text-gray-800 mb-1">
+                            Créer un compte
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            Suivez vos commandes et bénéficiez d'avantages
+                          </p>
                         </div>
                         <ArrowRight size={20} className="text-gray-400" />
                       </div>
@@ -346,9 +402,11 @@ export default function CheckoutPage() {
               )}
 
               {/* FORMULAIRE CONNEXION */}
-              {checkoutMode === 'login' && (
+              {checkoutMode === "login" && (
                 <div className="bg-white rounded-lg shadow-md p-8">
-                  <h2 className="text-2xl font-serif text-gray-800 mb-6">Connexion</h2>
+                  <h2 className="text-2xl font-serif text-gray-800 mb-6">
+                    Connexion
+                  </h2>
 
                   {error && (
                     <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded mb-6 text-sm">
@@ -358,22 +416,33 @@ export default function CheckoutPage() {
 
                   <form onSubmit={handleLogin} className="space-y-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Email
+                      </label>
                       <input
                         type="email"
                         value={loginForm.email}
-                        onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
+                        onChange={(e) =>
+                          setLoginForm({ ...loginForm, email: e.target.value })
+                        }
                         required
                         className="w-full border border-gray-300 px-4 py-3 rounded focus:outline-none focus:border-[#5d6e64]"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Mot de passe</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Mot de passe
+                      </label>
                       <input
                         type="password"
                         value={loginForm.password}
-                        onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                        onChange={(e) =>
+                          setLoginForm({
+                            ...loginForm,
+                            password: e.target.value,
+                          })
+                        }
                         required
                         className="w-full border border-gray-300 px-4 py-3 rounded focus:outline-none focus:border-[#5d6e64]"
                       />
@@ -384,7 +453,7 @@ export default function CheckoutPage() {
                       disabled={loading}
                       className="w-full bg-[#5d6e64] text-white py-3 rounded font-medium hover:bg-[#4a5850] transition disabled:opacity-50"
                     >
-                      {loading ? 'Connexion...' : 'Se connecter'}
+                      {loading ? "Connexion..." : "Se connecter"}
                     </button>
 
                     <button
@@ -399,9 +468,11 @@ export default function CheckoutPage() {
               )}
 
               {/* FORMULAIRE INSCRIPTION */}
-              {checkoutMode === 'signup' && (
+              {checkoutMode === "signup" && (
                 <div className="bg-white rounded-lg shadow-md p-8">
-                  <h2 className="text-2xl font-serif text-gray-800 mb-6">Créer un compte</h2>
+                  <h2 className="text-2xl font-serif text-gray-800 mb-6">
+                    Créer un compte
+                  </h2>
 
                   {error && (
                     <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded mb-6 text-sm">
@@ -412,21 +483,37 @@ export default function CheckoutPage() {
                   <form onSubmit={handleSignup} className="space-y-6">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Prénom</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Prénom
+                        </label>
                         <input
                           type="text"
+                          name="firstName"
                           value={signupForm.firstName}
-                          onChange={(e) => setSignupForm({ ...signupForm, firstName: e.target.value })}
+                          onChange={(e) =>
+                            setSignupForm({
+                              ...signupForm,
+                              firstName: e.target.value,
+                            })
+                          }
                           required
                           className="w-full border border-gray-300 px-4 py-3 rounded focus:outline-none focus:border-[#5d6e64]"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Nom</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Nom
+                        </label>
                         <input
                           type="text"
+                          name="lastName"
                           value={signupForm.lastName}
-                          onChange={(e) => setSignupForm({ ...signupForm, lastName: e.target.value })}
+                          onChange={(e) =>
+                            setSignupForm({
+                              ...signupForm,
+                              lastName: e.target.value,
+                            })
+                          }
                           required
                           className="w-full border border-gray-300 px-4 py-3 rounded focus:outline-none focus:border-[#5d6e64]"
                         />
@@ -434,22 +521,38 @@ export default function CheckoutPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Email
+                      </label>
                       <input
                         type="email"
+                        name="email"
                         value={signupForm.email}
-                        onChange={(e) => setSignupForm({ ...signupForm, email: e.target.value })}
+                        onChange={(e) =>
+                          setSignupForm({
+                            ...signupForm,
+                            email: e.target.value,
+                          })
+                        }
                         required
                         className="w-full border border-gray-300 px-4 py-3 rounded focus:outline-none focus:border-[#5d6e64]"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Mot de passe</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Mot de passe
+                      </label>
                       <input
                         type="password"
+                        name="password"
                         value={signupForm.password}
-                        onChange={(e) => setSignupForm({ ...signupForm, password: e.target.value })}
+                        onChange={(e) =>
+                          setSignupForm({
+                            ...signupForm,
+                            password: e.target.value,
+                          })
+                        }
                         required
                         minLength={6}
                         className="w-full border border-gray-300 px-4 py-3 rounded focus:outline-none focus:border-[#5d6e64]"
@@ -457,11 +560,19 @@ export default function CheckoutPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Confirmer le mot de passe</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Confirmer le mot de passe
+                      </label>
                       <input
                         type="password"
+                        name="confirmPassword"
                         value={signupForm.confirmPassword}
-                        onChange={(e) => setSignupForm({ ...signupForm, confirmPassword: e.target.value })}
+                        onChange={(e) =>
+                          setSignupForm({
+                            ...signupForm,
+                            confirmPassword: e.target.value,
+                          })
+                        }
                         required
                         minLength={6}
                         className="w-full border border-gray-300 px-4 py-3 rounded focus:outline-none focus:border-[#5d6e64]"
@@ -473,7 +584,7 @@ export default function CheckoutPage() {
                       disabled={loading}
                       className="w-full bg-[#5d6e64] text-white py-3 rounded font-medium hover:bg-[#4a5850] transition disabled:opacity-50"
                     >
-                      {loading ? 'Création...' : 'Créer mon compte'}
+                      {loading ? "Création..." : "Créer mon compte"}
                     </button>
 
                     <button
@@ -488,9 +599,11 @@ export default function CheckoutPage() {
               )}
 
               {/* FORMULAIRE INVITÉ */}
-              {checkoutMode === 'guest' && !showPayment && (
+              {checkoutMode === "guest" && !showPayment && (
                 <div className="bg-white rounded-lg shadow-md p-8">
-                  <h2 className="text-2xl font-serif text-gray-800 mb-6">Informations de livraison</h2>
+                  <h2 className="text-2xl font-serif text-gray-800 mb-6">
+                    Informations de livraison
+                  </h2>
 
                   {error && (
                     <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded mb-6 text-sm">
@@ -501,11 +614,16 @@ export default function CheckoutPage() {
                   <form onSubmit={handleGuestCheckout} className="space-y-6">
                     {/* Email */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Email *
+                      </label>
                       <input
                         type="email"
+                        name="email"
                         value={guestForm.email}
-                        onChange={(e) => setGuestForm({ ...guestForm, email: e.target.value })}
+                        onChange={(e) =>
+                          setGuestForm({ ...guestForm, email: e.target.value })
+                        }
                         required
                         disabled={!!user}
                         className="w-full border border-gray-300 px-4 py-3 rounded focus:outline-none focus:border-[#5d6e64] disabled:bg-gray-100"
@@ -515,21 +633,37 @@ export default function CheckoutPage() {
                     {/* Nom et Prénom */}
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Prénom *</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Prénom *
+                        </label>
                         <input
                           type="text"
+                          name="firstName"
                           value={guestForm.firstName}
-                          onChange={(e) => setGuestForm({ ...guestForm, firstName: e.target.value })}
+                          onChange={(e) =>
+                            setGuestForm({
+                              ...guestForm,
+                              firstName: e.target.value,
+                            })
+                          }
                           required
                           className="w-full border border-gray-300 px-4 py-3 rounded focus:outline-none focus:border-[#5d6e64]"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Nom *</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Nom *
+                        </label>
                         <input
                           type="text"
+                          name="lastName"
                           value={guestForm.lastName}
-                          onChange={(e) => setGuestForm({ ...guestForm, lastName: e.target.value })}
+                          onChange={(e) =>
+                            setGuestForm({
+                              ...guestForm,
+                              lastName: e.target.value,
+                            })
+                          }
                           required
                           className="w-full border border-gray-300 px-4 py-3 rounded focus:outline-none focus:border-[#5d6e64]"
                         />
@@ -538,11 +672,19 @@ export default function CheckoutPage() {
 
                     {/* Adresse */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Adresse *</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Adresse *
+                      </label>
                       <input
                         type="text"
+                        name="address"
                         value={guestForm.address}
-                        onChange={(e) => setGuestForm({ ...guestForm, address: e.target.value })}
+                        onChange={(e) =>
+                          setGuestForm({
+                            ...guestForm,
+                            address: e.target.value,
+                          })
+                        }
                         required
                         className="w-full border border-gray-300 px-4 py-3 rounded focus:outline-none focus:border-[#5d6e64]"
                         placeholder="Numéro et nom de rue"
@@ -552,21 +694,34 @@ export default function CheckoutPage() {
                     {/* Ville et Code postal */}
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Ville *</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Ville *
+                        </label>
                         <input
                           type="text"
+                          name="city"
                           value={guestForm.city}
-                          onChange={(e) => setGuestForm({ ...guestForm, city: e.target.value })}
+                          onChange={(e) =>
+                            setGuestForm({ ...guestForm, city: e.target.value })
+                          }
                           required
                           className="w-full border border-gray-300 px-4 py-3 rounded focus:outline-none focus:border-[#5d6e64]"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Code postal *</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Code postal *
+                        </label>
                         <input
                           type="text"
+                          name="postalCode"
                           value={guestForm.postalCode}
-                          onChange={(e) => setGuestForm({ ...guestForm, postalCode: e.target.value })}
+                          onChange={(e) =>
+                            setGuestForm({
+                              ...guestForm,
+                              postalCode: e.target.value,
+                            })
+                          }
                           required
                           className="w-full border border-gray-300 px-4 py-3 rounded focus:outline-none focus:border-[#5d6e64]"
                         />
@@ -575,10 +730,18 @@ export default function CheckoutPage() {
 
                     {/* Pays */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Pays *</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Pays *
+                      </label>
                       <select
+                        name="country"
                         value={guestForm.country}
-                        onChange={(e) => setGuestForm({ ...guestForm, country: e.target.value })}
+                        onChange={(e) =>
+                          setGuestForm({
+                            ...guestForm,
+                            country: e.target.value,
+                          })
+                        }
                         required
                         className="w-full border border-gray-300 px-4 py-3 rounded focus:outline-none focus:border-[#5d6e64]"
                       >
@@ -592,11 +755,16 @@ export default function CheckoutPage() {
 
                     {/* Téléphone */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Téléphone</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Téléphone
+                      </label>
                       <input
                         type="tel"
+                        name="phone"
                         value={guestForm.phone}
-                        onChange={(e) => setGuestForm({ ...guestForm, phone: e.target.value })}
+                        onChange={(e) =>
+                          setGuestForm({ ...guestForm, phone: e.target.value })
+                        }
                         className="w-full border border-gray-300 px-4 py-3 rounded focus:outline-none focus:border-[#5d6e64]"
                         placeholder="+33 6 12 34 56 78"
                       />
@@ -631,7 +799,9 @@ export default function CheckoutPage() {
                   {/* Récapitulatif des informations */}
                   <div className="bg-white rounded-lg shadow-md p-6">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-serif text-gray-800">Informations de livraison</h3>
+                      <h3 className="text-lg font-serif text-gray-800">
+                        Informations de livraison
+                      </h3>
                       <button
                         onClick={() => setShowPayment(false)}
                         className="text-sm text-[#5d6e64] hover:underline"
@@ -640,10 +810,14 @@ export default function CheckoutPage() {
                       </button>
                     </div>
                     <div className="text-sm text-gray-600 space-y-1">
-                      <p className="font-medium text-gray-800">{guestForm.firstName} {guestForm.lastName}</p>
+                      <p className="font-medium text-gray-800">
+                        {guestForm.firstName} {guestForm.lastName}
+                      </p>
                       <p>{guestForm.email}</p>
                       <p>{guestForm.address}</p>
-                      <p>{guestForm.postalCode} {guestForm.city}</p>
+                      <p>
+                        {guestForm.postalCode} {guestForm.city}
+                      </p>
                       <p>{guestForm.country}</p>
                       {guestForm.phone && <p>{guestForm.phone}</p>}
                     </div>
@@ -659,22 +833,29 @@ export default function CheckoutPage() {
                   />
                 </div>
               )}
-
             </div>
 
             {/* RÉCAPITULATIF */}
             <div className="lg:col-span-1">
               <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
-                <h2 className="text-xl font-serif text-gray-800 mb-4">Récapitulatif</h2>
+                <h2 className="text-xl font-serif text-gray-800 mb-4">
+                  Récapitulatif
+                </h2>
 
                 {/* Liste des produits */}
                 <div className="space-y-3 mb-6 pb-6 border-b border-gray-200">
                   {cart.map((item) => (
                     <div key={item.id} className="flex items-center gap-3">
-                      <div className={`w-12 h-14 ${item.image} bg-cover bg-center rounded shrink-0`}></div>
+                      <div
+                        className={`w-12 h-14 ${item.image} bg-cover bg-center rounded shrink-0`}
+                      ></div>
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-800">{item.name}</p>
-                        <p className="text-xs text-gray-500">Qté : {item.quantity}</p>
+                        <p className="text-sm font-medium text-gray-800">
+                          {item.name}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Qté : {item.quantity}
+                        </p>
                       </div>
                       <p className="text-sm font-semibold text-gray-800">
                         {(item.price * item.quantity).toFixed(2)}€
@@ -687,7 +868,9 @@ export default function CheckoutPage() {
                 <div className="space-y-2 mb-6">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-600">Sous-total</span>
-                    <span className="font-medium text-gray-800">€{totalPrice}</span>
+                    <span className="font-medium text-gray-800">
+                      €{totalPrice}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-600">Livraison</span>
@@ -697,14 +880,16 @@ export default function CheckoutPage() {
 
                 {/* Total */}
                 <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                  <span className="text-lg font-semibold text-gray-800">Total</span>
-                  <span className="text-2xl font-bold text-[#5d6e64]">€{totalPrice}</span>
+                  <span className="text-lg font-semibold text-gray-800">
+                    Total
+                  </span>
+                  <span className="text-2xl font-bold text-[#5d6e64]">
+                    €{totalPrice}
+                  </span>
                 </div>
               </div>
             </div>
-
           </div>
-
         </div>
       </div>
 
