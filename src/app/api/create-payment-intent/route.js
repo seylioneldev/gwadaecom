@@ -70,6 +70,23 @@ export async function POST(request) {
             continue;
           }
 
+          if (typeof productData.stock === "number") {
+            const availableStock = Number(productData.stock);
+            if (Number.isFinite(availableStock) && quantity > availableStock) {
+              return NextResponse.json(
+                {
+                  error: `Stock insuffisant pour le produit "${
+                    productData.name || ""
+                  }"`,
+                  productId: String(item.id),
+                  requestedQuantity: quantity,
+                  availableStock,
+                },
+                { status: 400 }
+              );
+            }
+          }
+
           // price est supposé être en euros côté Firestore, convertir en centimes
           const lineTotal = price * quantity;
           computedTotal += Math.round(price * 100) * quantity;

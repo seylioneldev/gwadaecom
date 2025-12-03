@@ -2,25 +2,31 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // ====================================
-    // CATEGORIES - Lecture publique
-    // ====================================
-    // Les visiteurs peuvent voir les catégories
-    // Seuls les admins peuvent les modifier (via console Firebase)
-    match /categories/{doc} {
-      allow read: if true;
-      allow write: if false;
+    function isAdmin() {
+      return request.auth != null && (
+        request.auth.token.email in ["admin@gwadecom.com"] ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
     }
 
     // ====================================
-    // PRODUCTS - Lecture publique
+    // CATEGORIES - Lecture publique, écriture admin
+    // ====================================
+    // Les visiteurs peuvent voir les catégories
+    // Seuls les admins authentifiés peuvent les modifier (UI admin + console Firebase)
+    match /categories/{doc} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ====================================
+    // PRODUCTS - Lecture publique, écriture admin
     // ====================================
     // Les visiteurs peuvent voir les produits
-    // Seuls les admins peuvent les modifier (via console Firebase)
+    // Seuls les admins authentifiés peuvent les modifier (UI admin)
     match /products/{doc} {
       allow read: if true;
-      allow write: if false;
+      allow write: if isAdmin();
     }
 
     // ====================================

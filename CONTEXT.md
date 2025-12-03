@@ -5,7 +5,7 @@
 > Si vous créez un nouveau chat dans Cascade/Windsurf, **lisez OBLIGATOIREMENT ce fichier en premier** pour comprendre le contexte complet du projet, les fonctionnalités existantes, les bugs connus, et les décisions techniques prises.
 
 > **Dernière mise à jour** : 2025-12-03
-> **Version** : 2.3.0
+> **Version** : 2.3.1
 
 ---
 
@@ -197,6 +197,11 @@ gwadaecom/
   - Affichage conditionnel (connecté/non connecté)
   - Menu déroulant avec accès rapide (Mon compte, Mes commandes)
   - Affichage du nom d'utilisateur ou email
+  - ✅ **Badges de stock dynamiques** sur home, pages catégorie et fiche produit
+    - Affichage du statut de stock : "En stock" (vert), "Bientôt épuisé" (orange), "Rupture" (noir)
+    - Affichage de la quantité restante lorsque le stock est connu
+    - Cartes produits en rupture non cliquables depuis les listes
+    - Blocage de l'ajout au panier et de la sélection de quantité sur la fiche produit quand stock = 0
 
 #### 🔐 Authentification
 
@@ -305,6 +310,7 @@ gwadaecom/
   - Footer avec liens vers Support, Politique de Remboursement, Mes Commandes
 - ✅ **Documentation**
   - `REFUND_MANAGEMENT_GUIDE.md` : Guide complet de gestion des remboursements
+- ✅ Mise à jour de CONTEXT.md
 
 ---
 
@@ -554,30 +560,52 @@ RESEND_API_KEY=re_your_resend_api_key_here
 
 ```javascript
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Products - Lecture publique, écriture admin
-    match /products/{productId} {
+    function isAdmin() {
+      return request.auth != null && (
+        request.auth.token.email in ["admin@gwadecom.com"] ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
+    }
+
+    // CATEGORIES - Lecture publique, écriture admin
+    match /categories/{doc} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // PRODUCTS - Lecture publique, écriture admin
+    match /products/{doc} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // SETTINGS - Lecture publique, écriture authentifiée
+    match /settings/{doc} {
       allow read: if true;
       allow write: if request.auth != null;
     }
 
-    // Categories - Lecture publique, écriture admin
-    match /categories/{categoryId} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
-
-    // Orders - Création publique, lecture avec ID
+    // ORDERS - Création publique, Lecture publique
     match /orders/{orderId} {
       allow create: if true;
-      allow read: if true;  // Permet lecture avec l'ID (sécurisé car IDs aléatoires)
-      allow update, delete: if request.auth != null;
+      allow read: if true;  // Permet la lecture pour la page de confirmation
+      allow update, delete: if false;
     }
 
-    // Users - Lecture/écriture authentifiée uniquement
+    // USERS - Accès restreint à son propre profil
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, update, delete: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null
+                    && request.auth.uid == userId
+                    && request.resource.data.role == 'client';
+    }
+
+    // RÈGLE PAR DÉFAUT - Tout bloquer
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
@@ -605,6 +633,26 @@ service cloud.firestore {
 ---
 
 ## 📅 Historique des Modifications
+
+### 2025-12-03 - Session 9 : Gestion visuelle du stock (badges + blocage achat)
+
+- ✅ Mise en place de **badges de statut de stock** sur les produits :
+  - "En stock" (fond vert) pour les stocks > 10
+  - "Bientôt épuisé" (fond orange) pour les stocks entre 1 et 10
+  - "Rupture" (fond noir) pour les stocks à 0
+- ✅ Affichage de la quantité disponible lorsque le champ `stock` est renseigné côté Firestore.
+- ✅ Blocage de l'ajout au panier sur la fiche produit lorsque le stock est à 0 :
+  - Bouton "Add to Cart" désactivé et grisé avec label "Indisponible".
+  - Sélecteur de quantité masqué.
+  - Message d'information indiquant que le produit est en rupture de stock.
+- ✅ Cartes produits en rupture non cliquables depuis les listes :
+  - Sur la page d'accueil (`ProductGrid.jsx`) et les pages catégorie (`/category/[slug]`),
+    les produits en rupture affichent un badge "Rupture" et un bandeau "Rupture de stock",
+    et ne redirigent plus vers la fiche produit.
+- ✅ Harmonisation de l'UX de stock entre :
+  - Grille d'accueil (`src/components/products/ProductGrid.jsx`)
+  - Pages catégorie (`src/app/category/[slug]/page.js`)
+  - Fiche produit (`src/app/products/[id]/page.js`)
 
 ### 2025-12-03 - Session 8 : Flux de paiement côté backend (Stripe + Firebase Admin)
 

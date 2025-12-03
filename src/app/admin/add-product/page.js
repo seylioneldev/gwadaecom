@@ -18,13 +18,13 @@
 
 "use client";
 
-import { useState } from 'react';
-import { db } from '@/lib/firebase';
-import { collection, addDoc } from 'firebase/firestore';
-import { useCategories } from '@/hooks/useCategories';
-import cmsConfig from '../../../../cms.config';
-import { ArrowLeft, Save } from 'lucide-react';
-import Link from 'next/link';
+import { useState } from "react";
+import { db } from "@/lib/firebase";
+import { collection, addDoc } from "firebase/firestore";
+import { useCategories } from "@/hooks/useCategories";
+import cmsConfig from "../../../../cms.config";
+import { ArrowLeft, Save } from "lucide-react";
+import Link from "next/link";
 
 export default function AddProductPage() {
   // Récupération des catégories pour le dropdown
@@ -37,6 +37,7 @@ export default function AddProductPage() {
   const [description, setDescription] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [label, setLabel] = useState(""); // Badge optionnel (ex: "Sold Out", "New")
+  const [stock, setStock] = useState("");
 
   // États pour les messages
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -47,7 +48,7 @@ export default function AddProductPage() {
    * Afficher un message temporaire
    */
   const showMessage = (type, text) => {
-    if (type === 'success') {
+    if (type === "success") {
       setSuccessMessage(text);
       setTimeout(() => setSuccessMessage(""), 3000);
     } else {
@@ -69,37 +70,53 @@ export default function AddProductPage() {
       // Validation du prix
       const priceNum = parseFloat(price);
       if (isNaN(priceNum) || priceNum <= 0) {
-        showMessage('error', "Le prix doit être un nombre positif.");
+        showMessage("error", "Le prix doit être un nombre positif.");
         setIsSubmitting(false);
         return;
       }
 
       // Validation du nom
       if (!productName.trim()) {
-        showMessage('error', "Le nom du produit est requis.");
+        showMessage("error", "Le nom du produit est requis.");
         setIsSubmitting(false);
         return;
       }
 
       // Validation de la catégorie
       if (!category) {
-        showMessage('error', "Veuillez sélectionner une catégorie.");
+        showMessage("error", "Veuillez sélectionner une catégorie.");
         setIsSubmitting(false);
         return;
       }
 
-      // Ajout du produit à Firestore
-      await addDoc(collection(db, cmsConfig.collections.products), {
+      let stockNum = null;
+      if (stock !== "") {
+        stockNum = parseInt(stock, 10);
+        if (Number.isNaN(stockNum) || stockNum < 0) {
+          showMessage("error", "Le stock doit être un entier positif ou nul.");
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      const productData = {
         name: productName,
         price: priceNum,
         category: category,
         description: description || "",
         imageUrl: imageUrl || "bg-gray-200",
         label: label || "",
-        createdAt: new Date()
-      });
+        createdAt: new Date(),
+      };
 
-      showMessage('success', `Produit "${productName}" ajouté avec succès !`);
+      if (stockNum !== null) {
+        productData.stock = stockNum;
+      }
+
+      // Ajout du produit à Firestore
+      await addDoc(collection(db, cmsConfig.collections.products), productData);
+
+      showMessage("success", `Produit "${productName}" ajouté avec succès !`);
 
       // Réinitialisation du formulaire
       setProductName("");
@@ -108,9 +125,12 @@ export default function AddProductPage() {
       setDescription("");
       setImageUrl("");
       setLabel("");
-
+      setStock("");
     } catch (err) {
-      showMessage('error', "Erreur lors de l'ajout du produit : " + err.message);
+      showMessage(
+        "error",
+        "Erreur lors de l'ajout du produit : " + err.message
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -119,7 +139,6 @@ export default function AddProductPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto">
-
         {/* En-tête */}
         <div className="flex items-center gap-4 mb-8">
           <Link
@@ -130,8 +149,12 @@ export default function AddProductPage() {
             <ArrowLeft size={24} className="text-gray-600" />
           </Link>
           <div>
-            <h1 className="text-3xl font-serif text-gray-800 mb-2">Ajouter un Produit</h1>
-            <p className="text-sm text-gray-500">Créez un nouveau produit pour votre boutique</p>
+            <h1 className="text-3xl font-serif text-gray-800 mb-2">
+              Ajouter un Produit
+            </h1>
+            <p className="text-sm text-gray-500">
+              Créez un nouveau produit pour votre boutique
+            </p>
           </div>
         </div>
 
@@ -148,10 +171,11 @@ export default function AddProductPage() {
         )}
 
         {/* Formulaire */}
-        <form onSubmit={handleAddProduct} className="bg-white rounded-lg shadow-md p-8">
-
+        <form
+          onSubmit={handleAddProduct}
+          className="bg-white rounded-lg shadow-md p-8"
+        >
           <div className="space-y-6">
-
             {/* Nom du produit */}
             <div>
               <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
@@ -201,7 +225,7 @@ export default function AddProductPage() {
                   {categoriesLoading ? (
                     <option disabled>Chargement...</option>
                   ) : (
-                    categories.map(cat => (
+                    categories.map((cat) => (
                       <option key={cat.id} value={cat.slug}>
                         {cat.name}
                       </option>
@@ -209,6 +233,20 @@ export default function AddProductPage() {
                   )}
                 </select>
               </div>
+            </div>
+
+            <div>
+              <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
+                Stock disponible (optionnel)
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={stock}
+                onChange={(e) => setStock(e.target.value)}
+                className="w-full border border-gray-300 px-4 py-3 text-sm focus:outline-none focus:border-[#5d6e64]"
+                placeholder="Ex: 10"
+              />
             </div>
 
             {/* Description */}
@@ -261,7 +299,6 @@ export default function AddProductPage() {
                 </p>
               </div>
             </div>
-
           </div>
 
           {/* Boutons */}
@@ -272,7 +309,7 @@ export default function AddProductPage() {
               className="bg-[#5d6e64] text-white px-8 py-3 text-sm uppercase tracking-wider hover:bg-[#4a5850] transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Save size={16} />
-              {isSubmitting ? 'Ajout en cours...' : 'Ajouter le produit'}
+              {isSubmitting ? "Ajout en cours..." : "Ajouter le produit"}
             </button>
 
             <Link
@@ -282,20 +319,32 @@ export default function AddProductPage() {
               Annuler
             </Link>
           </div>
-
         </form>
 
         {/* Aide */}
         <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="text-sm font-semibold text-blue-900 mb-2">💡 Conseils</h3>
+          <h3 className="text-sm font-semibold text-blue-900 mb-2">
+            💡 Conseils
+          </h3>
           <ul className="text-xs text-blue-800 space-y-1">
-            <li>• <strong>Image :</strong> Utilisez une URL complète (https://...) ou une couleur Tailwind (bg-gray-200)</li>
-            <li>• <strong>Prix :</strong> Entrez un nombre avec décimales (ex: 29.99)</li>
-            <li>• <strong>Label :</strong> Optionnel. Affiche un badge sur l'image (ex: "New", "Sold Out")</li>
-            <li>• <strong>Catégorie :</strong> Si aucune catégorie n'apparaît, créez-en dans "Gérer les Catégories"</li>
+            <li>
+              • <strong>Image :</strong> Utilisez une URL complète (https://...)
+              ou une couleur Tailwind (bg-gray-200)
+            </li>
+            <li>
+              • <strong>Prix :</strong> Entrez un nombre avec décimales (ex:
+              29.99)
+            </li>
+            <li>
+              • <strong>Label :</strong> Optionnel. Affiche un badge sur l'image
+              (ex: "New", "Sold Out")
+            </li>
+            <li>
+              • <strong>Catégorie :</strong> Si aucune catégorie n'apparaît,
+              créez-en dans "Gérer les Catégories"
+            </li>
           </ul>
         </div>
-
       </div>
     </div>
   );

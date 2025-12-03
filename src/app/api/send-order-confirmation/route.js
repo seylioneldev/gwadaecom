@@ -16,13 +16,13 @@
  * 🔄 MODIFIÉ : Utilise Gmail SMTP via Nodemailer
  */
 
-import { NextResponse } from 'next/server';
-import nodemailer from 'nodemailer';
+import { NextResponse } from "next/server";
+import nodemailer from "nodemailer";
 
 // Configuration Gmail SMTP avec Nodemailer
 // ===================================================
 const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
+  host: "smtp.gmail.com",
   port: 465,
   secure: true,
   auth: {
@@ -33,51 +33,60 @@ const transporter = nodemailer.createTransport({
 
 export async function POST(request) {
   try {
-    console.log('📧 ========================================');
-    console.log('📧 API d\'envoi d\'email appelée');
-    console.log('📧 ========================================');
+    console.log("📧 ========================================");
+    console.log("📧 API d'envoi d'email appelée");
+    console.log("📧 ========================================");
 
     const { orderData } = await request.json();
 
-    console.log('📦 Données de commande reçues:', {
+    console.log("📦 Données de commande reçues:", {
       orderId: orderData?.orderId,
       customerEmail: orderData?.customer?.email,
       hasItems: !!orderData?.items,
-      itemsCount: orderData?.items?.length
+      itemsCount: orderData?.items?.length,
     });
 
     // Valider les données
     if (!orderData || !orderData.customer?.email) {
-      console.error('❌ Données de commande invalides');
+      console.error("❌ Données de commande invalides");
       return NextResponse.json(
-        { error: 'Données de commande invalides' },
+        { error: "Données de commande invalides" },
         { status: 400 }
       );
     }
 
     // Vérifier la configuration Gmail
     if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
-      console.error('❌ Configuration Gmail manquante dans .env.local');
-      console.error('❌ Vérifiez que GMAIL_USER et GMAIL_APP_PASSWORD sont définis');
+      console.error("❌ Configuration Gmail manquante dans .env.local");
+      console.error(
+        "❌ Vérifiez que GMAIL_USER et GMAIL_APP_PASSWORD sont définis"
+      );
       return NextResponse.json(
-        { error: 'Configuration email manquante' },
+        { error: "Configuration email manquante" },
         { status: 500 }
       );
     }
 
-    console.log('🔑 Configuration Gmail détectée:', process.env.GMAIL_USER);
+    console.log("🔑 Configuration Gmail détectée:", process.env.GMAIL_USER);
 
     // Préparer le contenu de l'email
     const emailContent = generateEmailHTML(orderData);
-    console.log('📄 Contenu email généré (longueur):', emailContent.length, 'caractères');
+    console.log(
+      "📄 Contenu email généré (longueur):",
+      emailContent.length,
+      "caractères"
+    );
 
     // ====================================================================
     // ENVOI DE L'EMAIL - Gmail SMTP avec Nodemailer
     // ====================================================================
 
-    console.log('📨 Envoi de l\'email à:', orderData.customer.email);
-    console.log('📨 Depuis:', `Les Bijoux de Guadeloupe <${process.env.GMAIL_USER}>`);
-    console.log('📨 Sujet:', `Confirmation de commande ${orderData.orderId}`);
+    console.log("📨 Envoi de l'email à:", orderData.customer.email);
+    console.log(
+      "📨 Depuis:",
+      `Les Bijoux de Guadeloupe <${process.env.GMAIL_USER}>`
+    );
+    console.log("📨 Sujet:", `Confirmation de commande ${orderData.orderId}`);
 
     // Envoi avec Gmail SMTP via Nodemailer
     // ----------------------
@@ -88,37 +97,36 @@ export async function POST(request) {
       html: emailContent,
     });
 
-    console.log('✅ Email envoyé avec succès via Gmail SMTP!');
-    console.log('📧 Résultat Nodemailer:', result);
+    console.log("✅ Email envoyé avec succès via Gmail SMTP!");
+    console.log("📧 Résultat Nodemailer:", result);
 
-    console.log('📧 ========================================');
-    console.log('✅ Traitement terminé avec succès');
-    console.log('📧 ========================================');
+    console.log("📧 ========================================");
+    console.log("✅ Traitement terminé avec succès");
+    console.log("📧 ========================================");
 
     return NextResponse.json({
       success: true,
-      message: 'Email de confirmation envoyé via Gmail SMTP',
-      messageId: result?.messageId || 'unknown',
-      accepted: result?.accepted || []
+      message: "Email de confirmation envoyé via Gmail SMTP",
+      messageId: result?.messageId || "unknown",
+      accepted: result?.accepted || [],
     });
-
   } catch (error) {
-    console.error('❌ ========================================');
-    console.error('❌ ERREUR lors de l\'envoi de l\'email');
-    console.error('❌ ========================================');
-    console.error('❌ Type d\'erreur:', error.name);
-    console.error('❌ Message:', error.message);
-    console.error('❌ Stack:', error.stack);
+    console.error("❌ ========================================");
+    console.error("❌ ERREUR lors de l'envoi de l'email");
+    console.error("❌ ========================================");
+    console.error("❌ Type d'erreur:", error.name);
+    console.error("❌ Message:", error.message);
+    console.error("❌ Stack:", error.stack);
 
     if (error.response) {
-      console.error('❌ Réponse API:', error.response);
+      console.error("❌ Réponse API:", error.response);
     }
 
     return NextResponse.json(
       {
-        error: 'Erreur lors de l\'envoi de l\'email',
+        error: "Erreur lors de l'envoi de l'email",
         details: error.message,
-        type: error.name
+        type: error.name,
       },
       { status: 500 }
     );
@@ -128,31 +136,38 @@ export async function POST(request) {
 /**
  * Génère le HTML de l'email de confirmation
  */
-function generateEmailHTML(orderData) {
-  const { customer, orderId, items, total, shippingAddress, createdAt } = orderData;
+export function generateEmailHTML(orderData) {
+  const { customer, orderId, items, total, shippingAddress, createdAt } =
+    orderData;
 
   // Formater la date
   const orderDate = createdAt?.toDate ? createdAt.toDate() : new Date();
-  const formattedDate = orderDate.toLocaleDateString('fr-FR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
+  const formattedDate = orderDate.toLocaleDateString("fr-FR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 
   // Générer la liste des produits
-  const itemsHTML = items.map(item => `
+  const itemsHTML = items
+    .map(
+      (item) => `
     <tr>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">
         <div style="font-weight: 600; color: #1f2937;">${item.name}</div>
-        <div style="font-size: 14px; color: #6b7280;">Quantité : ${item.quantity}</div>
+        <div style="font-size: 14px; color: #6b7280;">Quantité : ${
+          item.quantity
+        }</div>
       </td>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">
         ${item.total.toFixed(2)} €
       </td>
     </tr>
-  `).join('');
+  `
+    )
+    .join("");
 
   return `
     <!DOCTYPE html>
@@ -208,12 +223,20 @@ function generateEmailHTML(orderData) {
               <p style="margin: 0; font-weight: 600; color: #1f2937;">
                 ${customer.firstName} ${customer.lastName}
               </p>
-              <p style="margin: 4px 0 0 0; color: #6b7280;">${shippingAddress.address}</p>
+              <p style="margin: 4px 0 0 0; color: #6b7280;">${
+                shippingAddress.address
+              }</p>
               <p style="margin: 4px 0 0 0; color: #6b7280;">
                 ${shippingAddress.postalCode} ${shippingAddress.city}
               </p>
-              <p style="margin: 4px 0 0 0; color: #6b7280;">${shippingAddress.country}</p>
-              ${customer.phone ? `<p style="margin: 8px 0 0 0; color: #6b7280;">Tél : ${customer.phone}</p>` : ''}
+              <p style="margin: 4px 0 0 0; color: #6b7280;">${
+                shippingAddress.country
+              }</p>
+              ${
+                customer.phone
+                  ? `<p style="margin: 8px 0 0 0; color: #6b7280;">Tél : ${customer.phone}</p>`
+                  : ""
+              }
             </div>
           </div>
 
