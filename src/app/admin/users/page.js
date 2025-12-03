@@ -16,17 +16,18 @@ import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
-import { ArrowLeft, Users, Shield, User, Mail, Calendar, AlertCircle, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Users, Shield, User, Mail, Calendar, AlertCircle, CheckCircle, Trash2, RotateCcw, Filter } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminUsersPage() {
-  const { isAdmin, loading: authLoading } = useAuth();
+  const { isAdmin, loading: authLoading, softDeleteUser, restoreUser } = useAuth();
   const router = useRouter();
 
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [showDeleted, setShowDeleted] = useState(false);
 
   /**
    * REDIRECTION SI NON ADMIN
@@ -99,6 +100,81 @@ export default function AdminUsersPage() {
   };
 
   /**
+   * SUPPRIMER UN COMPTE (SOFT DELETE)
+   */
+  const handleDeleteUser = async (userId, userName) => {
+    const confirmed = window.confirm(
+      `⚠️ Êtes-vous sûr de vouloir supprimer le compte de "${userName}" ?\n\n` +
+      `Le compte sera marqué comme supprimé mais :\n` +
+      `✅ Les commandes seront conservées\n` +
+      `✅ L'historique sera préservé\n` +
+      `✅ Le compte pourra être restauré plus tard\n\n` +
+      `L'utilisateur ne pourra plus se connecter.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await softDeleteUser(userId, true);
+
+      // Mettre à jour l'état local
+      setUsers((prevUsers) =>
+        prevUsers.map((user) =>
+          user.id === userId
+            ? { ...user, status: 'deleted', deletedAt: new Date(), email: `deleted_${userId}@deleted.local`, displayName: 'Compte supprimé' }
+            : user
+        )
+      );
+
+      setSuccessMessage(`✅ Le compte de "${userName}" a été supprimé avec succès`);
+      setTimeout(() => setSuccessMessage(''), 5000);
+    } catch (err) {
+      console.error('Erreur lors de la suppression:', err);
+      setError(err.message || 'Impossible de supprimer le compte');
+      setTimeout(() => setError(''), 5000);
+    }
+  };
+
+  /**
+   * RESTAURER UN COMPTE SUPPRIMÉ
+   */
+  const handleRestoreUser = async (userId) => {
+    const confirmed = window.confirm(
+      `Restaurer ce compte ?\n\n` +
+      `L'utilisateur pourra à nouveau se connecter.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await restoreUser(userId);
+
+      // Recharger la liste des utilisateurs pour récupérer les données mises à jour
+      const usersRef = collection(db, 'users');
+      const snapshot = await getDocs(usersRef);
+      const usersData = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      usersData.sort((a, b) => {
+        const dateA = a.createdAt?.toDate?.() || new Date(0);
+        const dateB = b.createdAt?.toDate?.() || new Date(0);
+        return dateB - dateA;
+      });
+
+      setUsers(usersData);
+
+      setSuccessMessage(`✅ Le compte a été restauré avec succès`);
+      setTimeout(() => setSuccessMessage(''), 5000);
+    } catch (err) {
+      console.error('Erreur lors de la restauration:', err);
+      setError(err.message || 'Impossible de restaurer le compte');
+      setTimeout(() => setError(''), 5000);
+    }
+  };
+
+  /**
    * FORMATER LA DATE
    */
   const formatDate = (timestamp) => {
@@ -114,6 +190,20 @@ export default function AdminUsersPage() {
       return 'Date invalide';
     }
   };
+
+  /**
+   * FILTRER LES UTILISATEURS
+   */
+  const filteredUsers = users.filter((user) => {
+    const isDeleted = user.status === 'deleted' || user.deletedAt;
+    return showDeleted ? isDeleted : !isDeleted;
+  });
+
+  // Statistiques
+  const activeUsers = users.filter((u) => u.status !== 'deleted' && !u.deletedAt);
+  const deletedUsers = users.filter((u) => u.status === 'deleted' || u.deletedAt);
+  const activeAdmins = activeUsers.filter((u) => u.role === 'admin').length;
+  const activeClients = activeUsers.filter((u) => u.role === 'client').length;
 
   // Loader pendant la vérification de l'auth
   if (authLoading) {
@@ -152,6 +242,23 @@ export default function AdminUsersPage() {
               </p>
             </div>
           </div>
+
+          {/* Bouton de filtre */}
+          <button
+            onClick={() => setShowDeleted(!showDeleted)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition ${
+              showDeleted
+                ? 'bg-red-50 border-red-300 text-red-700'
+                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <Filter size={18} />
+            {showDeleted ? (
+              <>Comptes supprimés ({deletedUsers.length})</>
+            ) : (
+              <>Comptes actifs ({activeUsers.length})</>
+            )}
+          </button>
         </div>
 
         {/* Messages de succès/erreur */}
@@ -171,12 +278,15 @@ export default function AdminUsersPage() {
 
         {/* Informations */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <h3 className="text-sm font-semibold text-blue-900 mb-2">ℹ️ Informations</h3>
+          <h3 className="text-sm font-semibold text-blue-900 mb-2">ℹ️ Informations - Soft Delete</h3>
           <ul className="text-xs text-blue-800 space-y-1">
             <li>• Les admins ont accès au dashboard admin (/admin)</li>
             <li>• Les clients ont accès à leur espace personnel (/compte)</li>
             <li>• Vous pouvez changer le rôle d'un utilisateur en sélectionnant une option dans le menu déroulant</li>
-            <li>• Les emails dans ADMIN_EMAILS (AuthContext.jsx) auront toujours le rôle admin (fallback)</li>
+            <li>• <strong>Suppression de compte :</strong> Les comptes sont marqués comme supprimés (soft delete)</li>
+            <li>• <strong>Commandes préservées :</strong> Les commandes des utilisateurs supprimés restent intactes</li>
+            <li>• <strong>Restauration possible :</strong> Un compte supprimé peut être restauré à tout moment</li>
+            <li>• Les utilisateurs supprimés ne peuvent plus se connecter</li>
           </ul>
         </div>
 
@@ -188,10 +298,12 @@ export default function AdminUsersPage() {
               <div className="w-12 h-12 border-4 border-[#5d6e64] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
               <p className="text-gray-600">Chargement des utilisateurs...</p>
             </div>
-          ) : users.length === 0 ? (
+          ) : filteredUsers.length === 0 ? (
             <div className="p-12 text-center">
               <Users size={48} className="text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">Aucun utilisateur trouvé</p>
+              <p className="text-gray-500">
+                {showDeleted ? 'Aucun compte supprimé' : 'Aucun utilisateur actif'}
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -216,8 +328,10 @@ export default function AdminUsersPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {users.map((user) => (
-                    <tr key={user.id} className="hover:bg-gray-50 transition">
+                  {filteredUsers.map((user) => {
+                    const isDeleted = user.status === 'deleted' || user.deletedAt;
+                    return (
+                    <tr key={user.id} className={`transition ${isDeleted ? 'bg-red-50' : 'hover:bg-gray-50'}`}>
                       {/* Nom d'utilisateur */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
@@ -270,17 +384,41 @@ export default function AdminUsersPage() {
 
                       {/* Actions */}
                       <td className="px-6 py-4">
-                        <select
-                          value={user.role || 'client'}
-                          onChange={(e) => handleRoleChange(user.id, e.target.value)}
-                          className="border border-gray-300 rounded px-3 py-1 text-sm focus:outline-none focus:border-[#5d6e64]"
-                        >
-                          <option value="client">Client</option>
-                          <option value="admin">Admin</option>
-                        </select>
+                        <div className="flex items-center gap-2">
+                          {isDeleted ? (
+                            // Compte supprimé : bouton Restaurer
+                            <button
+                              onClick={() => handleRestoreUser(user.id)}
+                              className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded hover:bg-green-700 transition text-sm"
+                            >
+                              <RotateCcw size={14} />
+                              Restaurer
+                            </button>
+                          ) : (
+                            // Compte actif : dropdown rôle + bouton Supprimer
+                            <>
+                              <select
+                                value={user.role || 'client'}
+                                onChange={(e) => handleRoleChange(user.id, e.target.value)}
+                                className="border border-gray-300 rounded px-3 py-1 text-sm focus:outline-none focus:border-[#5d6e64]"
+                              >
+                                <option value="client">Client</option>
+                                <option value="admin">Admin</option>
+                              </select>
+                              <button
+                                onClick={() => handleDeleteUser(user.id, user.displayName || user.email)}
+                                className="flex items-center gap-1 px-3 py-1.5 bg-red-600 text-white rounded hover:bg-red-700 transition text-sm"
+                                title="Supprimer le compte"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -290,12 +428,12 @@ export default function AdminUsersPage() {
 
         {/* Statistiques */}
         {users.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-500">Total utilisateurs</p>
-                  <p className="text-3xl font-bold text-gray-800 mt-1">{users.length}</p>
+                  <p className="text-sm text-gray-500">Utilisateurs actifs</p>
+                  <p className="text-3xl font-bold text-gray-800 mt-1">{activeUsers.length}</p>
                 </div>
                 <Users size={32} className="text-gray-300" />
               </div>
@@ -305,9 +443,7 @@ export default function AdminUsersPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500">Administrateurs</p>
-                  <p className="text-3xl font-bold text-[#5d6e64] mt-1">
-                    {users.filter((u) => u.role === 'admin').length}
-                  </p>
+                  <p className="text-3xl font-bold text-[#5d6e64] mt-1">{activeAdmins}</p>
                 </div>
                 <Shield size={32} className="text-[#5d6e64]/30" />
               </div>
@@ -317,11 +453,19 @@ export default function AdminUsersPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500">Clients</p>
-                  <p className="text-3xl font-bold text-gray-800 mt-1">
-                    {users.filter((u) => u.role === 'client').length}
-                  </p>
+                  <p className="text-3xl font-bold text-gray-800 mt-1">{activeClients}</p>
                 </div>
                 <User size={32} className="text-gray-300" />
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Comptes supprimés</p>
+                  <p className="text-3xl font-bold text-red-600 mt-1">{deletedUsers.length}</p>
+                </div>
+                <Trash2 size={32} className="text-red-300" />
               </div>
             </div>
           </div>

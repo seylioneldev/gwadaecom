@@ -22,14 +22,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Vivi et Margot - Votre Boutique de Lifestyle Français",
+  title: "Les Bijoux de Guadeloupe - Votre Boutique de Lifestyle Français",
   description: "Boutique en ligne pour les paniers, savons et articles textiles de style français authentique.",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="fr">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
 
         {/* Authentification Firebase (enveloppe tout) */}
         <AuthProvider>

@@ -10,14 +10,28 @@
 
 "use client";
 
-import { useEffect, useState } from 'react';
-import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft, Package, Eye, X } from 'lucide-react';
-import Link from 'next/link';
-import { db } from '@/lib/firebase';
-import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
-import cmsConfig from '../../../../cms.config';
+import { useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+import {
+  ArrowLeft,
+  Package,
+  Eye,
+  X,
+  HelpCircle,
+  Mail,
+  FileText,
+} from "lucide-react";
+import Link from "next/link";
+import { db } from "@/lib/firebase";
+import {
+  collection,
+  query,
+  where,
+  orderBy,
+  onSnapshot,
+} from "firebase/firestore";
+import cmsConfig from "../../../../cms.config";
 
 export default function CommandesPage() {
   const { user, loading } = useAuth();
@@ -25,11 +39,13 @@ export default function CommandesPage() {
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
+  const [helpOrderId, setHelpOrderId] = useState("");
 
   // Redirection si non connecté
   useEffect(() => {
     if (!loading && !user) {
-      router.push('/mon-compte');
+      router.push("/mon-compte");
     }
   }, [user, loading, router]);
 
@@ -42,12 +58,12 @@ export default function CommandesPage() {
 
     const ordersQuery = query(
       collection(db, cmsConfig.collections.orders),
-      where('customer.email', '==', user.email),
-      orderBy('createdAt', 'desc')
+      where("customer.email", "==", user.email),
+      orderBy("createdAt", "desc")
     );
 
     const unsubscribe = onSnapshot(ordersQuery, (snapshot) => {
-      const ordersData = snapshot.docs.map(doc => ({
+      const ordersData = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
         createdAt: doc.data().createdAt?.toDate() || new Date(),
@@ -61,23 +77,23 @@ export default function CommandesPage() {
 
   // Formater la date
   const formatDate = (date) => {
-    return date.toLocaleDateString('fr-FR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return date.toLocaleDateString("fr-FR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   // Obtenir le statut en français
   const getStatusLabel = (status) => {
     const statusLabels = {
-      paid: 'Payée',
-      processing: 'En préparation',
-      shipped: 'Expédiée',
-      delivered: 'Livrée',
-      cancelled: 'Annulée'
+      paid: "Payée",
+      processing: "En préparation",
+      shipped: "Expédiée",
+      delivered: "Livrée",
+      cancelled: "Annulée",
     };
     return statusLabels[status] || status;
   };
@@ -85,13 +101,13 @@ export default function CommandesPage() {
   // Obtenir la couleur du statut
   const getStatusColor = (status) => {
     const colors = {
-      paid: 'bg-green-100 text-green-800',
-      processing: 'bg-blue-100 text-blue-800',
-      shipped: 'bg-purple-100 text-purple-800',
-      delivered: 'bg-emerald-100 text-emerald-800',
-      cancelled: 'bg-red-100 text-red-800'
+      paid: "bg-green-100 text-green-800",
+      processing: "bg-blue-100 text-blue-800",
+      shipped: "bg-purple-100 text-purple-800",
+      delivered: "bg-emerald-100 text-emerald-800",
+      cancelled: "bg-red-100 text-red-800",
     };
-    return colors[status] || 'bg-gray-100 text-gray-800';
+    return colors[status] || "bg-gray-100 text-gray-800";
   };
 
   // Afficher un loader pendant la vérification
@@ -109,18 +125,35 @@ export default function CommandesPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
       <div className="max-w-6xl mx-auto">
-
         {/* En-tête */}
-        <div className="flex items-center gap-4 mb-8">
-          <Link href="/compte" className="p-2 hover:bg-white rounded-full transition">
-            <ArrowLeft size={24} className="text-gray-600" />
-          </Link>
-          <div>
-            <h1 className="text-3xl font-serif text-gray-800 mb-2">Mes Commandes</h1>
-            <p className="text-sm text-gray-500">
-              {ordersLoading ? 'Chargement...' : `${orders.length} commande${orders.length > 1 ? 's' : ''} au total`}
-            </p>
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <Link
+              href="/compte"
+              className="p-2 hover:bg-white rounded-full transition"
+            >
+              <ArrowLeft size={24} className="text-gray-600" />
+            </Link>
+            <div>
+              <h1 className="text-3xl font-serif text-gray-800 mb-2">
+                Mes Commandes
+              </h1>
+              <p className="text-sm text-gray-500">
+                {ordersLoading
+                  ? "Chargement..."
+                  : `${orders.length} commande${
+                      orders.length > 1 ? "s" : ""
+                    } au total`}
+              </p>
+            </div>
           </div>
+          <button
+            onClick={() => setIsHelpModalOpen(true)}
+            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+          >
+            <HelpCircle size={20} />
+            <span className="hidden sm:inline">Besoin d'aide ?</span>
+          </button>
         </div>
 
         {/* Liste des commandes */}
@@ -132,7 +165,9 @@ export default function CommandesPage() {
         ) : orders.length === 0 ? (
           <div className="bg-white rounded-lg shadow-md p-12 text-center">
             <Package size={48} className="text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600 mb-4">Vous n'avez pas encore passé de commande</p>
+            <p className="text-gray-600 mb-4">
+              Vous n'avez pas encore passé de commande
+            </p>
             <Link
               href="/"
               className="inline-block bg-[#5d6e64] text-white px-6 py-3 rounded hover:bg-[#4a5850] transition"
@@ -157,7 +192,11 @@ export default function CommandesPage() {
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className={`px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
+                    <span
+                      className={`px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(
+                        order.status
+                      )}`}
+                    >
                       {getStatusLabel(order.status)}
                     </span>
                     <button
@@ -166,6 +205,16 @@ export default function CommandesPage() {
                       title="Voir détails"
                     >
                       <Eye size={20} />
+                    </button>
+                    <button
+                      onClick={() => {
+                        setHelpOrderId(order.orderId);
+                        setIsHelpModalOpen(true);
+                      }}
+                      className="p-2 text-green-600 hover:bg-green-100 rounded"
+                      title="Besoin d'aide ?"
+                    >
+                      <HelpCircle size={20} />
                     </button>
                   </div>
                 </div>
@@ -176,13 +225,17 @@ export default function CommandesPage() {
                     <div>
                       <p className="text-xs text-gray-500 mb-1">Articles</p>
                       <p className="font-medium text-gray-800">
-                        {order.items?.length || 0} produit{order.items?.length > 1 ? 's' : ''}
+                        {order.items?.length || 0} produit
+                        {order.items?.length > 1 ? "s" : ""}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 mb-1">Adresse de livraison</p>
+                      <p className="text-xs text-gray-500 mb-1">
+                        Adresse de livraison
+                      </p>
                       <p className="font-medium text-gray-800">
-                        {order.shippingAddress?.city}, {order.shippingAddress?.country}
+                        {order.shippingAddress?.city},{" "}
+                        {order.shippingAddress?.country}
                       </p>
                     </div>
                     <div className="text-right">
@@ -197,8 +250,114 @@ export default function CommandesPage() {
             ))}
           </div>
         )}
-
       </div>
+
+      {/* Modal d'aide */}
+      {isHelpModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full">
+            <div className="p-6 border-b flex items-center justify-between">
+              <h2 className="text-2xl font-serif text-gray-800">
+                Besoin d'aide ?
+              </h2>
+              <button
+                onClick={() => setIsHelpModalOpen(false)}
+                className="p-2 hover:bg-gray-100 rounded"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Email de contact */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <Mail className="text-blue-600" size={24} />
+                  <h3 className="font-semibold text-gray-800">
+                    Contactez-nous
+                  </h3>
+                </div>
+                <p className="text-sm text-gray-700 mb-2">
+                  Pour toute question sur vos commandes, retours ou
+                  remboursements :
+                </p>
+                <a
+                  href="mailto:seymlionel@gmail.com"
+                  className="text-blue-600 hover:underline font-medium"
+                >
+                  seymlionel@gmail.com
+                </a>
+                <p className="text-xs text-gray-500 mt-2">
+                  Réponse sous 24h ouvrées
+                </p>
+              </div>
+
+              {/* Numéro de commande */}
+              {helpOrderId && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <p className="text-sm text-gray-700 mb-2">
+                    <strong>Votre numéro de commande :</strong>
+                  </p>
+                  <p className="font-mono text-lg font-semibold text-gray-800">
+                    {helpOrderId}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Mentionnez ce numéro dans votre email
+                  </p>
+                </div>
+              )}
+
+              {/* Politique de remboursement */}
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <FileText className="text-green-600" size={24} />
+                  <h3 className="font-semibold text-gray-800">
+                    Politique de remboursement
+                  </h3>
+                </div>
+                <p className="text-sm text-gray-700 mb-3">
+                  Consultez notre politique complète de retours et
+                  remboursements.
+                </p>
+                <Link
+                  href="/politique-remboursement"
+                  className="inline-block bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-sm"
+                  onClick={() => setIsHelpModalOpen(false)}
+                >
+                  Voir la politique
+                </Link>
+              </div>
+
+              {/* Formulaire de contact */}
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <h3 className="font-semibold text-gray-800 mb-2">
+                  Formulaire de contact
+                </h3>
+                <p className="text-sm text-gray-700 mb-3">
+                  Préférez remplir un formulaire ? Utilisez notre page de
+                  support.
+                </p>
+                <Link
+                  href="/support"
+                  className="inline-block bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700 transition text-sm"
+                  onClick={() => setIsHelpModalOpen(false)}
+                >
+                  Aller au formulaire
+                </Link>
+              </div>
+            </div>
+
+            <div className="p-6 border-t bg-gray-50">
+              <button
+                onClick={() => setIsHelpModalOpen(false)}
+                className="w-full bg-gray-800 text-white py-3 rounded hover:bg-gray-700 transition"
+              >
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal détails de la commande */}
       {selectedOrder && (
@@ -219,38 +378,65 @@ export default function CommandesPage() {
             <div className="p-6 space-y-6">
               {/* Statut */}
               <div className="flex items-center justify-between bg-gray-50 p-4 rounded">
-                <span className="text-sm font-medium text-gray-600">Statut de la commande</span>
-                <span className={`px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(selectedOrder.status)}`}>
+                <span className="text-sm font-medium text-gray-600">
+                  Statut de la commande
+                </span>
+                <span
+                  className={`px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(
+                    selectedOrder.status
+                  )}`}
+                >
                   {getStatusLabel(selectedOrder.status)}
                 </span>
               </div>
 
               {/* Informations client */}
               <div>
-                <h3 className="font-semibold text-gray-800 mb-3">Informations de livraison</h3>
+                <h3 className="font-semibold text-gray-800 mb-3">
+                  Informations de livraison
+                </h3>
                 <div className="bg-gray-50 p-4 rounded">
-                  <p className="font-medium">{selectedOrder.customer.firstName} {selectedOrder.customer.lastName}</p>
-                  <p className="text-sm text-gray-600 mt-1">{selectedOrder.shippingAddress.address}</p>
-                  <p className="text-sm text-gray-600">
-                    {selectedOrder.shippingAddress.postalCode} {selectedOrder.shippingAddress.city}
+                  <p className="font-medium">
+                    {selectedOrder.customer.firstName}{" "}
+                    {selectedOrder.customer.lastName}
                   </p>
-                  <p className="text-sm text-gray-600">{selectedOrder.shippingAddress.country}</p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {selectedOrder.shippingAddress.address}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    {selectedOrder.shippingAddress.postalCode}{" "}
+                    {selectedOrder.shippingAddress.city}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    {selectedOrder.shippingAddress.country}
+                  </p>
                   {selectedOrder.customer.phone && (
-                    <p className="text-sm text-gray-600 mt-2">Tél : {selectedOrder.customer.phone}</p>
+                    <p className="text-sm text-gray-600 mt-2">
+                      Tél : {selectedOrder.customer.phone}
+                    </p>
                   )}
-                  <p className="text-sm text-gray-600 mt-1">Email : {selectedOrder.customer.email}</p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Email : {selectedOrder.customer.email}
+                  </p>
                 </div>
               </div>
 
               {/* Produits commandés */}
               <div>
-                <h3 className="font-semibold text-gray-800 mb-3">Produits commandés</h3>
+                <h3 className="font-semibold text-gray-800 mb-3">
+                  Produits commandés
+                </h3>
                 <div className="space-y-3">
                   {selectedOrder.items.map((item, index) => (
-                    <div key={index} className="flex justify-between items-center bg-gray-50 p-4 rounded">
+                    <div
+                      key={index}
+                      className="flex justify-between items-center bg-gray-50 p-4 rounded"
+                    >
                       <div>
                         <p className="font-medium">{item.name}</p>
-                        <p className="text-sm text-gray-600">Quantité : {item.quantity} × {item.price.toFixed(2)} €</p>
+                        <p className="text-sm text-gray-600">
+                          Quantité : {item.quantity} × {item.price.toFixed(2)} €
+                        </p>
                       </div>
                       <p className="font-semibold">{item.total.toFixed(2)} €</p>
                     </div>
@@ -266,7 +452,11 @@ export default function CommandesPage() {
                 </div>
                 <div className="flex justify-between mb-2">
                   <span>Livraison</span>
-                  <span>{selectedOrder.shipping === 0 ? 'Gratuite' : `${selectedOrder.shipping.toFixed(2)} €`}</span>
+                  <span>
+                    {selectedOrder.shipping === 0
+                      ? "Gratuite"
+                      : `${selectedOrder.shipping.toFixed(2)} €`}
+                  </span>
                 </div>
                 <div className="flex justify-between font-bold text-lg border-t pt-2">
                   <span>Total</span>
@@ -276,7 +466,10 @@ export default function CommandesPage() {
 
               {/* Date de commande */}
               <div className="bg-blue-50 p-4 rounded">
-                <p className="text-sm"><span className="font-medium">Date de commande :</span> {formatDate(selectedOrder.createdAt)}</p>
+                <p className="text-sm">
+                  <span className="font-medium">Date de commande :</span>{" "}
+                  {formatDate(selectedOrder.createdAt)}
+                </p>
               </div>
             </div>
 

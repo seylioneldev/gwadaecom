@@ -15,7 +15,7 @@ test.describe('Navigation générale', () => {
     await page.goto('/');
 
     // Vérifier que la page est chargée
-    await expect(page).toHaveTitle(/Vivi et Margot/);
+    await expect(page).toHaveTitle(/Les Bijoux de Guadeloupe/);
   });
 
   test('devrait naviguer vers les catégories depuis le menu', async ({ page }) => {

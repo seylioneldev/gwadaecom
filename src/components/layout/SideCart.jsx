@@ -67,9 +67,20 @@ export default function SideCart() {
               cart.map(item => (
                 <div key={item.id} className="flex items-center space-x-4 border-b border-gray-100 pb-4">
                   
-                  {/* Image/Placeholder */}
-                  {/* L'image est simulée par la couleur de fond du produit */}
-                  <div className={`w-20 h-24 ${item.image} flex-shrink-0 border border-gray-200`}></div>
+                  {/* Image du produit */}
+                  <div className="w-20 h-24 flex-shrink-0 border border-gray-200 overflow-hidden">
+                    {(item.imageUrl?.startsWith('http') || item.image?.startsWith('http')) ? (
+                      <img
+                        src={item.imageUrl || item.image}
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className={`w-full h-full ${item.imageUrl || item.image || 'bg-gray-100'} flex items-center justify-center text-gray-400`}>
+                        <span className="text-xs">Image</span>
+                      </div>
+                    )}
+                  </div>
                   
                   {/* Détails du produit */}
                   <div className="flex-1 min-w-0">

@@ -1,8 +1,9 @@
 "use client"; // Composant Client obligatoire (hooks React et interactivité)
 
-import { Search, ShoppingBasket, User } from "lucide-react";
+import { Search, ShoppingBasket, User, LogOut } from "lucide-react";
 import Link from "next/link";
 import { useCart } from "../../context/CartContext"; // Pour le compteur du panier
+import { useAuth } from "../../context/AuthContext"; // Pour l'authentification
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation"; // Pour la redirection URL
 import { products } from "../../data/products"; // Source de données pour les suggestions
@@ -11,6 +12,7 @@ import { useSettings } from "@/context/SettingsContext"; // Récupère les param
 
 export default function Header() {
   const { totalItems, setIsCartOpen } = useCart();
+  const { user, signOut } = useAuth(); // Récupération de l'utilisateur et de la fonction de déconnexion
 
   // Récupération des catégories depuis Firestore
   const { categories, loading: categoriesLoading } = useCategories();
@@ -27,7 +29,7 @@ export default function Header() {
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false); // Barre ouverte sur mobile ?
 
   // Outils de navigation et références DOM
-  const router = useRouter(); 
+  const router = useRouter();
   const searchContainerRef = useRef(null); // Sert à détecter un clic "en dehors" de la barre
   const searchInputRef = useRef(null);     // Sert à mettre le focus (curseur) dans le champ
 
@@ -109,6 +111,18 @@ export default function Header() {
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
       handleSearch(e);
+    }
+  };
+
+  // ==========================================================
+  // 6. GESTION DÉCONNEXION
+  // ==========================================================
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      router.push('/'); // Redirige vers l'accueil après déconnexion
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion:', error);
     }
   };
 
@@ -226,10 +240,35 @@ export default function Header() {
             </button>
 
             {/* Compte Utilisateur */}
-            <Link href="/mon-compte" className="flex flex-col items-center cursor-pointer hover:opacity-80 transition relative bg-transparent border-none p-0 text-white">
-              <User size={22} strokeWidth={1.5} />
-              <span className="text-[10px] italic mt-1 font-serif">compte</span>
-            </Link>
+            {user ? (
+              // Utilisateur connecté - Afficher les liens directement
+              <div className="flex flex-col items-center gap-1 text-white">
+                <Link
+                  href="/compte"
+                  className="text-[10px] italic font-serif hover:opacity-80 transition"
+                >
+                  Mon compte
+                </Link>
+                <Link
+                  href="/compte/commandes"
+                  className="text-[10px] italic font-serif hover:opacity-80 transition"
+                >
+                  Mes commandes
+                </Link>
+                <button
+                  onClick={handleSignOut}
+                  className="text-[10px] italic font-serif hover:opacity-80 transition bg-transparent border-none p-0 text-white cursor-pointer"
+                >
+                  Déconnexion
+                </button>
+              </div>
+            ) : (
+              // Utilisateur non connecté - Afficher lien vers connexion
+              <Link href="/mon-compte" className="flex flex-col items-center cursor-pointer hover:opacity-80 transition relative bg-transparent border-none p-0 text-white">
+                <User size={22} strokeWidth={1.5} />
+                <span className="text-[10px] italic mt-1 font-serif">compte</span>
+              </Link>
+            )}
           </div>
         </div>
 
