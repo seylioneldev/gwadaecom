@@ -5,7 +5,7 @@
 > Si vous créez un nouveau chat dans Cascade/Windsurf, **lisez OBLIGATOIREMENT ce fichier en premier** pour comprendre le contexte complet du projet, les fonctionnalités existantes, les bugs connus, et les décisions techniques prises.
 
 > **Dernière mise à jour** : 2025-12-03
-> **Version** : 2.2.0
+> **Version** : 2.3.0
 
 ---
 
@@ -235,9 +235,12 @@ gwadaecom/
 #### 💳 Paiement & Commandes
 
 - ✅ Intégration Stripe en mode test
-- ✅ Création PaymentIntent
-- ✅ Enregistrement commandes Firestore
-- ✅ Génération ID commande unique
+- ✅ Création PaymentIntent (`/api/create-payment-intent`)
+- ✅ Recalcul des prix côté serveur via Firestore (Firebase Admin) à partir des produits du panier
+- ✅ Création des commandes Firestore côté backend en statut `pending` avec `paymentIntentId` et `orderId`
+- ✅ Webhook Stripe (`/api/webhooks/stripe`) pour mise à jour des statuts de commande (`pending → paid` / `payment_failed`)
+- ✅ Page `/order-confirmation` reliée aux commandes backend (`order_id` + fallback par `payment_intent`)
+- ✅ Génération ID commande unique lisible (`ORDER-...`)
 - ✅ Calcul total avec devise EUR
 - ✅ Vidage panier après commande
 
@@ -390,6 +393,21 @@ gwadaecom/
 - `src/hooks/useMediaQuery.js` : Nouveau hook personnalisé
 - `src/components/layout/Header.jsx` : Utilisation du hook + suppressHydrationWarning
 - `src/components/layout/Footer.jsx` : Ajout suppressHydrationWarning
+
+#### 4. ~~Erreur Firebase Admin lors du recalcul des prix (DECODER routines)~~ ✅ RÉSOLU
+
+**Status** : ✅ Résolu le 2025-12-03
+**Impact initial** : Impossible de recalculer les prix côté serveur et de créer les commandes Firestore via l'API `/api/create-payment-intent` (les commandes n'étaient jamais créées en base, même si le paiement Stripe réussissait).
+
+**Cause** :
+
+- Mauvais format de `FIREBASE_ADMIN_PRIVATE_KEY` dans `.env.local` (copie directe de la valeur `private_key` du JSON avec la virgule finale, clé privée invalide pour OpenSSL → erreur `error:1E08010C:DECODER routines::unsupported`).
+
+**Solution** :
+
+- Recopier la valeur de `private_key` du JSON de service account **sans** la virgule finale, en conservant les `\n` littéraux et en l'encadrant par des guillemets doubles dans `.env.local`.
+- Vérifier l'initialisation Admin (`✅ Firebase Admin SDK initialisé avec succès`).
+- Laisser `firebase-admin.js` convertir les `\n` en vrais sauts de ligne lors de l'initialisation.
 
 ### ⚠️ MOYEN
 
@@ -588,6 +606,22 @@ service cloud.firestore {
 
 ## 📅 Historique des Modifications
 
+### 2025-12-03 - Session 8 : Flux de paiement côté backend (Stripe + Firebase Admin)
+
+- ✅ Mise en place de la création de commandes côté backend dans `/api/create-payment-intent` :
+  - Recalcul des prix à partir des produits Firestore via Firebase Admin (server-side).
+  - Création d'une commande Firestore dans la collection `orders` en statut `pending` avec `paymentIntentId`, `orderId`, `customer` et `shippingAddress`.
+- ✅ Renforcement du webhook Stripe `/api/webhooks/stripe` :
+  - Mise à jour robuste du statut des commandes (`pending → paid` ou `payment_failed`).
+  - Gestion des erreurs Firestore via try/catch et logs détaillés.
+- ✅ Correction de la configuration Firebase Admin SDK :
+  - Format correct de `FIREBASE_ADMIN_PRIVATE_KEY` dans `.env.local` (copie de la valeur `private_key` du JSON **sans** la virgule finale, conservation des `\n`).
+  - Disparition de l'erreur `error:1E08010C:DECODER routines::unsupported` lors des appels Firestore côté Admin.
+- ✅ Adaptation de la page `/order-confirmation` :
+  - Récupération de la commande par `order_id` lorsque présent dans l'URL.
+  - Fallback par `paymentIntentId` (requête Firestore côté client) lorsque seul `payment_intent` est disponible.
+- ✅ Tests manuels du flux complet de paiement (Stripe test card) et vérification de la présence de la commande dans Firestore.
+
 ### 2025-12-03 - Session 7 : Correction Bug d'Hydration Mobile
 
 - ✅ **Bug corrigé** : Erreur d'hydration sur mobile uniquement
@@ -769,9 +803,9 @@ Après chaque modification importante, effectuer ces tests manuels :
 
 ---
 
-**Version du fichier** : 2.2.0
-**Dernière synchronisation** : 2025-12-03 13:51 UTC
-**Dernière modification** : Correction bug d'hydration mobile
+**Version du fichier** : 2.3.0
+**Dernière synchronisation** : 2025-12-03 19:05 UTC
+**Dernière modification** : Flux de paiement backend Stripe + Firebase Admin (création commandes côté serveur, webhook, confirmation)
 **Prochaine mise à jour recommandée** : Après ajout des images produits avec base de données
 
 ---

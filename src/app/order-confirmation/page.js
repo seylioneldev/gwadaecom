@@ -11,57 +11,102 @@
 
 "use client";
 
-import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { CheckCircle, Package, Mail, Home, ArrowRight, MapPin, ShoppingBag } from 'lucide-react';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
-import { useCart } from '@/context/CartContext';
-import { db } from '@/lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
-import cmsConfig from '../../../cms.config';
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import {
+  CheckCircle,
+  Package,
+  Mail,
+  Home,
+  ArrowRight,
+  MapPin,
+  ShoppingBag,
+} from "lucide-react";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+import { useCart } from "@/context/CartContext";
+import { db } from "@/lib/firebase";
+import {
+  doc,
+  getDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+  limit,
+} from "firebase/firestore";
+import cmsConfig from "../../../cms.config";
 
 function OrderConfirmationContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { clearCart } = useCart();
-  const orderId = searchParams.get('order_id');
-  const paymentIntentId = searchParams.get('payment_intent');
+  const orderId = searchParams.get("order_id");
+  const paymentIntentId = searchParams.get("payment_intent");
 
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [orderData, setOrderData] = useState(null);
 
   useEffect(() => {
     const fetchOrderData = async () => {
       if (!paymentIntentId) {
-        router.push('/');
+        router.push("/");
         return;
       }
 
       // Vider le panier maintenant que la commande est confirmée
       clearCart();
 
-      // Si on a un order_id, récupérer les détails de la commande
-      if (orderId) {
-        try {
+      try {
+        let resolvedOrder = null;
+
+        // Si on a un order_id, récupérer les détails de la commande
+        if (orderId) {
           const orderRef = doc(db, cmsConfig.collections.orders, orderId);
           const orderSnap = await getDoc(orderRef);
 
           if (orderSnap.exists()) {
-            setOrderData({ id: orderSnap.id, ...orderSnap.data() });
-          } else {
-            console.error('Commande non trouvée');
-            setError('Commande non trouvée');
+            resolvedOrder = { id: orderSnap.id, ...orderSnap.data() };
           }
-        } catch (err) {
-          console.error('Erreur lors de la récupération de la commande:', err);
-          setError('Impossible de récupérer les détails de la commande');
         }
-      }
 
-      setLoading(false);
+        // Fallback : si aucune commande trouvée via order_id, chercher par paymentIntentId
+        if (!resolvedOrder && paymentIntentId) {
+          try {
+            const ordersRef = collection(db, cmsConfig.collections.orders);
+            const q = query(
+              ordersRef,
+              where("paymentIntentId", "==", paymentIntentId),
+              limit(1)
+            );
+            const querySnap = await getDocs(q);
+
+            if (!querySnap.empty) {
+              const docSnap = querySnap.docs[0];
+              resolvedOrder = { id: docSnap.id, ...docSnap.data() };
+            }
+          } catch (err) {
+            console.error(
+              "Erreur lors de la recherche de la commande par paymentIntentId:",
+              err
+            );
+          }
+        }
+
+        if (resolvedOrder) {
+          setOrderData(resolvedOrder);
+        } else {
+          console.error("Commande non trouvée");
+          setError("Commande non trouvée");
+        }
+      } catch (err) {
+        console.error("Erreur lors de la récupération de la commande:", err);
+        setError("Impossible de récupérer les détails de la commande");
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchOrderData();
@@ -105,7 +150,6 @@ function OrderConfirmationContent() {
 
       <div className="min-h-screen bg-gray-50 py-12 px-4">
         <div className="max-w-3xl mx-auto">
-
           {/* Confirmation visuelle */}
           <div className="bg-white rounded-lg shadow-md p-8 mb-6 text-center">
             <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -125,7 +169,9 @@ function OrderConfirmationContent() {
               <div className="text-left">
                 <p className="text-xs text-gray-500">Numéro de commande</p>
                 <p className="font-mono font-semibold text-gray-800">
-                  {orderData?.orderId || paymentIntentId?.slice(-12).toUpperCase() || 'N/A'}
+                  {orderData?.orderId ||
+                    paymentIntentId?.slice(-12).toUpperCase() ||
+                    "N/A"}
                 </p>
               </div>
             </div>
@@ -143,14 +189,23 @@ function OrderConfirmationContent() {
 
                 <div className="space-y-4">
                   {orderData.items.map((item, index) => (
-                    <div key={index} className="flex items-center gap-4 pb-4 border-b last:border-b-0">
+                    <div
+                      key={index}
+                      className="flex items-center gap-4 pb-4 border-b last:border-b-0"
+                    >
                       <div className="flex-1">
                         <p className="font-medium text-gray-800">{item.name}</p>
-                        <p className="text-sm text-gray-600">Quantité : {item.quantity}</p>
+                        <p className="text-sm text-gray-600">
+                          Quantité : {item.quantity}
+                        </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold text-gray-800">{item.total.toFixed(2)} €</p>
-                        <p className="text-sm text-gray-600">{item.price.toFixed(2)} € / unité</p>
+                        <p className="font-semibold text-gray-800">
+                          {item.total.toFixed(2)} €
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {item.price.toFixed(2)} € / unité
+                        </p>
                       </div>
                     </div>
                   ))}
@@ -163,7 +218,11 @@ function OrderConfirmationContent() {
                     </div>
                     <div className="flex justify-between text-gray-600">
                       <span>Livraison</span>
-                      <span>{orderData.shipping === 0 ? 'Gratuite' : `${orderData.shipping.toFixed(2)} €`}</span>
+                      <span>
+                        {orderData.shipping === 0
+                          ? "Gratuite"
+                          : `${orderData.shipping.toFixed(2)} €`}
+                      </span>
                     </div>
                     <div className="flex justify-between text-lg font-bold text-gray-800 pt-2 border-t">
                       <span>Total</span>
@@ -186,7 +245,8 @@ function OrderConfirmationContent() {
                   </p>
                   <p>{orderData.shippingAddress.address}</p>
                   <p>
-                    {orderData.shippingAddress.postalCode} {orderData.shippingAddress.city}
+                    {orderData.shippingAddress.postalCode}{" "}
+                    {orderData.shippingAddress.city}
                   </p>
                   <p>{orderData.shippingAddress.country}</p>
                   {orderData.customer.phone && (
@@ -211,8 +271,13 @@ function OrderConfirmationContent() {
                   1
                 </div>
                 <div>
-                  <p className="font-medium text-gray-800 mb-1">Email de confirmation</p>
-                  <p>Vous recevrez un email de confirmation avec les détails de votre commande dans quelques minutes.</p>
+                  <p className="font-medium text-gray-800 mb-1">
+                    Email de confirmation
+                  </p>
+                  <p>
+                    Vous recevrez un email de confirmation avec les détails de
+                    votre commande dans quelques minutes.
+                  </p>
                 </div>
               </div>
 
@@ -221,8 +286,13 @@ function OrderConfirmationContent() {
                   2
                 </div>
                 <div>
-                  <p className="font-medium text-gray-800 mb-1">Préparation de votre commande</p>
-                  <p>Nous préparons votre commande avec soin. Vous recevrez une notification dès son expédition.</p>
+                  <p className="font-medium text-gray-800 mb-1">
+                    Préparation de votre commande
+                  </p>
+                  <p>
+                    Nous préparons votre commande avec soin. Vous recevrez une
+                    notification dès son expédition.
+                  </p>
                 </div>
               </div>
 
@@ -232,7 +302,10 @@ function OrderConfirmationContent() {
                 </div>
                 <div>
                   <p className="font-medium text-gray-800 mb-1">Livraison</p>
-                  <p>Votre commande sera livrée sous 3 à 5 jours ouvrés à l'adresse indiquée.</p>
+                  <p>
+                    Votre commande sera livrée sous 3 à 5 jours ouvrés à
+                    l'adresse indiquée.
+                  </p>
                 </div>
               </div>
             </div>
@@ -260,18 +333,17 @@ function OrderConfirmationContent() {
           {/* Informations supplémentaires */}
           <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p className="text-sm text-blue-800">
-              <strong>Besoin d'aide ?</strong> Contactez notre service client à{' '}
+              <strong>Besoin d'aide ?</strong> Contactez notre service client à{" "}
               <a href="mailto:support@gwadecom.com" className="underline">
                 support@gwadecom.com
-              </a>
-              {' '}ou consultez notre{' '}
+              </a>{" "}
+              ou consultez notre{" "}
               <Link href="/faq" className="underline">
                 FAQ
               </Link>
               .
             </p>
           </div>
-
         </div>
       </div>
 

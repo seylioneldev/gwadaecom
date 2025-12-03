@@ -11,73 +11,86 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
+import { useState, useEffect } from "react";
+import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
   PaymentElement,
   useStripe,
-  useElements
-} from '@stripe/react-stripe-js';
-import { CreditCard, Lock, AlertCircle, CheckCircle } from 'lucide-react';
+  useElements,
+} from "@stripe/react-stripe-js";
+import { CreditCard, Lock, AlertCircle, CheckCircle } from "lucide-react";
 
 // Initialiser Stripe avec la clé publique
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+);
 
 /**
  * COMPOSANT INTERNE : Formulaire de paiement
  * ===========================================
  * Ce composant doit être wrappé dans <Elements>
  */
-function PaymentForm({ onSuccess, onError, amount, customerEmail, orderId }) {
+function PaymentForm({
+  onSuccess,
+  onError,
+  amount,
+  customerEmail,
+  orderId,
+  orderDocId,
+}) {
   const stripe = useStripe();
   const elements = useElements();
 
   const [isProcessing, setIsProcessing] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!stripe || !elements) {
-      console.log('Stripe ou Elements non chargé');
+      console.log("Stripe ou Elements non chargé");
       return; // Stripe.js n'est pas encore chargé
     }
 
     setIsProcessing(true);
-    setErrorMessage('');
+    setErrorMessage("");
 
     try {
-      console.log('Tentative de confirmation du paiement...');
+      console.log("Tentative de confirmation du paiement...");
 
       // Confirmer le paiement
       const { error, paymentIntent } = await stripe.confirmPayment({
         elements,
         confirmParams: {
-          return_url: `${window.location.origin}/order-confirmation`,
+          return_url: orderDocId
+            ? `${
+                window.location.origin
+              }/order-confirmation?order_id=${encodeURIComponent(orderDocId)}`
+            : `${window.location.origin}/order-confirmation`,
         },
-        redirect: 'if_required', // Ne redirige que si nécessaire (3D Secure)
+        redirect: "if_required", // Ne redirige que si nécessaire (3D Secure)
       });
 
-      console.log('Résultat Stripe:', { error, paymentIntent });
+      console.log("Résultat Stripe:", { error, paymentIntent });
 
       if (error) {
         // Erreur lors du paiement
-        console.error('Erreur Stripe:', error);
-        setErrorMessage(error.message || 'Erreur de paiement inconnue');
+        console.error("Erreur Stripe:", error);
+        setErrorMessage(error.message || "Erreur de paiement inconnue");
         if (onError) {
           onError(error);
         }
-      } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+      } else if (paymentIntent && paymentIntent.status === "succeeded") {
         // Paiement réussi !
-        console.log('Paiement réussi !', paymentIntent);
+        console.log("Paiement réussi !", paymentIntent);
         if (onSuccess) {
-          onSuccess(paymentIntent);
+          onSuccess(paymentIntent, orderDocId);
         }
       }
     } catch (err) {
-      console.error('Exception lors du paiement:', err);
-      setErrorMessage('Une erreur inattendue est survenue');
+      console.error("Exception lors du paiement:", err);
+      setErrorMessage("Une erreur inattendue est survenue");
       if (onError) {
         onError(err);
       }
@@ -88,7 +101,6 @@ function PaymentForm({ onSuccess, onError, amount, customerEmail, orderId }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-
       {/* En-tête sécurisé */}
       <div className="flex items-center gap-2 text-sm text-gray-600 bg-green-50 border border-green-200 rounded-lg p-3">
         <Lock size={16} className="text-green-600" />
@@ -99,7 +111,7 @@ function PaymentForm({ onSuccess, onError, amount, customerEmail, orderId }) {
       <div className="border border-gray-300 rounded-lg p-4 bg-white">
         <PaymentElement
           options={{
-            layout: 'tabs',
+            layout: "tabs",
           }}
         />
       </div>
@@ -132,12 +144,21 @@ function PaymentForm({ onSuccess, onError, amount, customerEmail, orderId }) {
       </button>
 
       {/* Informations de test */}
-      {process.env.NODE_ENV === 'development' && (
+      {process.env.NODE_ENV === "development" && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800">
           <p className="font-semibold mb-2">🧪 Mode Test - Carte de test :</p>
-          <p>Numéro : <code className="bg-white px-2 py-1 rounded">4242 4242 4242 4242</code></p>
-          <p>Date : <code className="bg-white px-2 py-1 rounded">12/34</code></p>
-          <p>CVC : <code className="bg-white px-2 py-1 rounded">123</code></p>
+          <p>
+            Numéro :{" "}
+            <code className="bg-white px-2 py-1 rounded">
+              4242 4242 4242 4242
+            </code>
+          </p>
+          <p>
+            Date : <code className="bg-white px-2 py-1 rounded">12/34</code>
+          </p>
+          <p>
+            CVC : <code className="bg-white px-2 py-1 rounded">123</code>
+          </p>
         </div>
       )}
     </form>
@@ -148,10 +169,20 @@ function PaymentForm({ onSuccess, onError, amount, customerEmail, orderId }) {
  * COMPOSANT PRINCIPAL : Wrapper Stripe Payment Form
  * ==================================================
  */
-export default function StripePaymentForm({ amount, customerEmail, orderId, onSuccess, onError }) {
-  const [clientSecret, setClientSecret] = useState('');
+export default function StripePaymentForm({
+  amount,
+  customerEmail,
+  orderId,
+  items,
+  customer,
+  shippingAddress,
+  onSuccess,
+  onError,
+}) {
+  const [clientSecret, setClientSecret] = useState("");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+  const [orderDocId, setOrderDocId] = useState(null);
 
   /**
    * Créer le Payment Intent au montage du composant
@@ -160,35 +191,39 @@ export default function StripePaymentForm({ amount, customerEmail, orderId, onSu
     const createPaymentIntent = async () => {
       try {
         setLoading(true);
-        setError('');
+        setError("");
 
-        const response = await fetch('/api/create-payment-intent', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const response = await fetch("/api/create-payment-intent", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            amount: Math.round(amount), // Montant en centimes
-            currency: 'eur',
+            amount: Math.round(amount), // Montant en centimes (fallback)
+            currency: "eur",
             customerEmail,
             orderId,
+            items,
+            customer,
+            shippingAddress,
           }),
         });
 
         if (!response.ok) {
-          throw new Error('Erreur lors de la création du paiement');
+          throw new Error("Erreur lors de la création du paiement");
         }
 
         const data = await response.json();
         setClientSecret(data.clientSecret);
+        setOrderDocId(data.orderDocId || null);
       } catch (err) {
-        console.error('Erreur:', err);
-        setError('Impossible d\'initialiser le paiement. Veuillez réessayer.');
+        console.error("Erreur:", err);
+        setError("Impossible d'initialiser le paiement. Veuillez réessayer.");
       } finally {
         setLoading(false);
       }
     };
 
     createPaymentIntent();
-  }, [amount, customerEmail, orderId]);
+  }, [amount, customerEmail, orderId, items, customer, shippingAddress]);
 
   // Loader pendant la création du Payment Intent
   if (loading) {
@@ -224,7 +259,9 @@ export default function StripePaymentForm({ amount, customerEmail, orderId, onSu
         </div>
         <div>
           <h2 className="text-xl font-serif text-gray-800">Paiement</h2>
-          <p className="text-sm text-gray-500">Entrez vos informations de carte bancaire</p>
+          <p className="text-sm text-gray-500">
+            Entrez vos informations de carte bancaire
+          </p>
         </div>
       </div>
 
@@ -234,14 +271,14 @@ export default function StripePaymentForm({ amount, customerEmail, orderId, onSu
           options={{
             clientSecret,
             appearance: {
-              theme: 'stripe',
+              theme: "stripe",
               variables: {
-                colorPrimary: '#5d6e64',
-                colorBackground: '#ffffff',
-                colorText: '#1f2937',
-                colorDanger: '#ef4444',
-                fontFamily: 'system-ui, sans-serif',
-                borderRadius: '8px',
+                colorPrimary: "#5d6e64",
+                colorBackground: "#ffffff",
+                colorText: "#1f2937",
+                colorDanger: "#ef4444",
+                fontFamily: "system-ui, sans-serif",
+                borderRadius: "8px",
               },
             },
           }}
@@ -252,6 +289,7 @@ export default function StripePaymentForm({ amount, customerEmail, orderId, onSu
             amount={amount}
             customerEmail={customerEmail}
             orderId={orderId}
+            orderDocId={orderDocId}
           />
         </Elements>
       )}

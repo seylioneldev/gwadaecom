@@ -41,6 +41,7 @@ export default function CheckoutPage() {
   // État du mode de checkout
   const [checkoutMode, setCheckoutMode] = useState(null); // null | 'guest' | 'login' | 'signup'
   const [showPayment, setShowPayment] = useState(false); // Afficher le formulaire de paiement
+  const [orderReference, setOrderReference] = useState(null);
 
   // État du formulaire invité
   const [guestForm, setGuestForm] = useState({
@@ -180,112 +181,27 @@ export default function CheckoutPage() {
     }
 
     // Passer à l'étape de paiement
+    const newOrderRef = `ORDER-${Date.now()}`;
+    setOrderReference(newOrderRef);
     setShowPayment(true);
   };
 
   /**
    * GESTION DU PAIEMENT RÉUSSI
    */
-  const handlePaymentSuccess = async (paymentIntent) => {
+  const handlePaymentSuccess = async (paymentIntent, orderDocId) => {
     console.log("Paiement réussi !", paymentIntent);
 
     try {
-      // Préparer les données de la commande
-      const orderData = {
-        // Informations de la commande
-        orderId: `ORDER-${Date.now()}`,
-        paymentIntentId: paymentIntent.id,
-        status: "paid",
-
-        // Informations client
-        customer: {
-          email: guestForm.email,
-          firstName: guestForm.firstName,
-          lastName: guestForm.lastName,
-          phone: guestForm.phone || "",
-          userId: user?.uid || null,
-        },
-
-        // Adresse de livraison
-        shippingAddress: {
-          address: guestForm.address,
-          city: guestForm.city,
-          postalCode: guestForm.postalCode,
-          country: guestForm.country,
-        },
-
-        // Produits commandés
-        items: cart.map((item) => ({
-          id: item.id,
-          name: item.name,
-          price: parseFloat(item.price),
-          quantity: item.quantity,
-          total: parseFloat(item.price) * item.quantity,
-        })),
-
-        // Totaux
-        subtotal: parseFloat(totalPrice),
-        shipping: 0, // Livraison gratuite
-        total: parseFloat(totalPrice),
-        currency: "EUR",
-
-        // Timestamps
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      };
-
-      // Enregistrer la commande dans Firestore
-      const ordersCollection = collection(db, cmsConfig.collections.orders);
-      const docRef = await addDoc(ordersCollection, orderData);
-
-      console.log("Commande enregistrée avec succès:", docRef.id);
-
-      // Préparer les données pour l'email (sans serverTimestamp qui n'est pas sérialisable)
-      const emailOrderData = {
-        ...orderData,
-        createdAt: new Date(), // Remplacer serverTimestamp par Date pour la sérialisation JSON
-        updatedAt: new Date(),
-      };
-
-      // Envoyer l'email de confirmation (ne pas attendre - en background)
-      console.log("📧 Tentative d'envoi de l'email de confirmation...");
-      console.log("📧 Destinataire:", emailOrderData.customer.email);
-      console.log("📧 Commande ID:", emailOrderData.orderId);
-
-      fetch("/api/send-order-confirmation", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ orderData: emailOrderData }),
-      })
-        .then((response) => {
-          console.log("📧 Réponse HTTP:", response.status);
-          return response.json();
-        })
-        .then((data) => {
-          if (data.success) {
-            console.log("✅ Email envoyé avec succès!", data);
-          } else {
-            console.error("❌ Échec de l'envoi de l'email:", data);
-          }
-        })
-        .catch((err) => {
-          // Log l'erreur mais ne pas bloquer la redirection
-          console.error("❌ Erreur lors de l'envoi de l'email:", err);
-          console.error("❌ Détails:", err.message);
-        });
-
-      // Rediriger vers la page de confirmation avec l'ID de la commande
-      // Note: Le panier sera vidé sur la page de confirmation pour éviter les conflits de redirection
-      router.push(
-        `/order-confirmation?order_id=${docRef.id}&payment_intent=${paymentIntent.id}`
-      );
+      if (orderDocId) {
+        router.push(
+          `/order-confirmation?order_id=${orderDocId}&payment_intent=${paymentIntent.id}`
+        );
+      } else {
+        router.push(`/order-confirmation?payment_intent=${paymentIntent.id}`);
+      }
     } catch (error) {
-      console.error("Erreur lors de l'enregistrement de la commande:", error);
-
-      // Même en cas d'erreur, on redirige vers la confirmation
-      // car le paiement a réussi
+      console.error("Erreur lors de la redirection après paiement:", error);
       router.push(`/order-confirmation?payment_intent=${paymentIntent.id}`);
     }
   };
@@ -827,7 +743,24 @@ export default function CheckoutPage() {
                   <StripePaymentForm
                     amount={totalPrice * 100} // Convertir en centimes
                     customerEmail={guestForm.email}
-                    orderId={`ORDER-${Date.now()}`}
+                    orderId={orderReference}
+                    items={cart.map((item) => ({
+                      id: item.id,
+                      quantity: item.quantity,
+                    }))}
+                    customer={{
+                      email: guestForm.email,
+                      firstName: guestForm.firstName,
+                      lastName: guestForm.lastName,
+                      phone: guestForm.phone || "",
+                      userId: user?.uid || null,
+                    }}
+                    shippingAddress={{
+                      address: guestForm.address,
+                      city: guestForm.city,
+                      postalCode: guestForm.postalCode,
+                      country: guestForm.country,
+                    }}
                     onSuccess={handlePaymentSuccess}
                     onError={handlePaymentError}
                   />
