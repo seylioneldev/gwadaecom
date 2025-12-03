@@ -69,48 +69,53 @@ export default function SupportPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
+    <div className="min-h-screen bg-gray-50 py-4 md:py-12 px-3 md:px-4">
       <div className="max-w-4xl mx-auto">
         {/* En-tête */}
-        <div className="flex items-center gap-4 mb-8">
-          <Link href="/" className="p-2 hover:bg-white rounded-full transition">
-            <ArrowLeft size={24} className="text-gray-600" />
+        <div className="flex items-center gap-3 md:gap-4 mb-4 md:mb-8">
+          <Link
+            href="/"
+            className="p-1.5 md:p-2 hover:bg-white rounded-full transition"
+          >
+            <ArrowLeft size={20} className="md:w-6 md:h-6 text-gray-600" />
           </Link>
           <div>
-            <h1 className="text-3xl font-serif text-gray-800 mb-2">
+            <h1 className="text-xl md:text-3xl font-serif text-gray-800 mb-1 md:mb-2">
               Contact & Support
             </h1>
-            <p className="text-sm text-gray-500">
+            <p className="text-xs md:text-sm text-gray-500">
               Nous sommes là pour vous aider
             </p>
           </div>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-3 gap-4 md:gap-8">
           {/* Colonne gauche - Informations */}
-          <div className="md:col-span-1 space-y-6">
+          <div className="md:col-span-1 space-y-3 md:space-y-6">
             {/* Contact Email */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <Mail className="text-[#5d6e64]" size={24} />
-                <h2 className="font-semibold text-gray-800">
+            <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
+              <div className="flex items-center gap-2 md:gap-3 mb-3 md:mb-4">
+                <Mail className="text-[#5d6e64]" size={20} />
+                <h2 className="text-sm md:text-base font-semibold text-gray-800">
                   Email de contact
                 </h2>
               </div>
               <a
                 href="mailto:seymlionel@gmail.com"
-                className="text-[#5d6e64] hover:underline font-medium"
+                className="text-sm md:text-base text-[#5d6e64] hover:underline font-medium break-all"
               >
                 seymlionel@gmail.com
               </a>
-              <p className="text-sm text-gray-500 mt-2">
+              <p className="text-xs md:text-sm text-gray-500 mt-2">
                 Réponse sous 24h ouvrées
               </p>
             </div>
 
             {/* Liens rapides */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="font-semibold text-gray-800 mb-4">Liens utiles</h2>
+            <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
+              <h2 className="text-sm md:text-base font-semibold text-gray-800 mb-3 md:mb-4">
+                Liens utiles
+              </h2>
               <ul className="space-y-2 text-sm">
                 <li>
                   <Link
@@ -139,8 +144,8 @@ export default function SupportPage() {
 
           {/* Colonne droite - Formulaire */}
           <div className="md:col-span-2">
-            <div className="bg-white rounded-lg shadow-md p-8">
-              <h2 className="text-2xl font-serif text-gray-800 mb-6">
+            <div className="bg-white rounded-lg shadow-md p-4 md:p-8">
+              <h2 className="text-lg md:text-2xl font-serif text-gray-800 mb-4 md:mb-6">
                 Formulaire de contact
               </h2>
 
@@ -158,12 +163,15 @@ export default function SupportPage() {
                   </p>
                 </div>
               ) : (
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form
+                  onSubmit={handleSubmit}
+                  className="space-y-4 md:space-y-6"
+                >
                   {/* Nom */}
                   <div>
                     <label
                       htmlFor="name"
-                      className="block text-sm font-medium text-gray-700 mb-2"
+                      className="block text-xs md:text-sm font-medium text-gray-700 mb-1.5 md:mb-2"
                     >
                       Nom complet *
                     </label>
@@ -174,7 +182,7 @@ export default function SupportPage() {
                       required
                       value={formData.name}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#5d6e64] focus:border-transparent outline-none"
+                      className="w-full px-3 md:px-4 py-2 text-sm md:text-base border border-gray-300 rounded focus:ring-2 focus:ring-[#5d6e64] focus:border-transparent outline-none"
                       placeholder="Votre nom"
                     />
                   </div>
@@ -183,7 +191,7 @@ export default function SupportPage() {
                   <div>
                     <label
                       htmlFor="email"
-                      className="block text-sm font-medium text-gray-700 mb-2"
+                      className="block text-xs md:text-sm font-medium text-gray-700 mb-1.5 md:mb-2"
                     >
                       Email *
                     </label>
@@ -194,7 +202,7 @@ export default function SupportPage() {
                       required
                       value={formData.email}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#5d6e64] focus:border-transparent outline-none"
+                      className="w-full px-3 md:px-4 py-2 text-sm md:text-base border border-gray-300 rounded focus:ring-2 focus:ring-[#5d6e64] focus:border-transparent outline-none"
                       placeholder="votre@email.com"
                     />
                   </div>
@@ -203,7 +211,7 @@ export default function SupportPage() {
                   <div>
                     <label
                       htmlFor="orderNumber"
-                      className="block text-sm font-medium text-gray-700 mb-2"
+                      className="block text-xs md:text-sm font-medium text-gray-700 mb-1.5 md:mb-2"
                     >
                       Numéro de commande
                     </label>
@@ -213,7 +221,7 @@ export default function SupportPage() {
                       name="orderNumber"
                       value={formData.orderNumber}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#5d6e64] focus:border-transparent outline-none"
+                      className="w-full px-3 md:px-4 py-2 text-sm md:text-base border border-gray-300 rounded focus:ring-2 focus:ring-[#5d6e64] focus:border-transparent outline-none"
                       placeholder="Ex: CMD-123456"
                     />
                     <p className="text-xs text-gray-500 mt-1">
@@ -225,7 +233,7 @@ export default function SupportPage() {
                   <div>
                     <label
                       htmlFor="subject"
-                      className="block text-sm font-medium text-gray-700 mb-2"
+                      className="block text-xs md:text-sm font-medium text-gray-700 mb-1.5 md:mb-2"
                     >
                       Sujet *
                     </label>
@@ -235,7 +243,7 @@ export default function SupportPage() {
                       required
                       value={formData.subject}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#5d6e64] focus:border-transparent outline-none"
+                      className="w-full px-3 md:px-4 py-2 text-sm md:text-base border border-gray-300 rounded focus:ring-2 focus:ring-[#5d6e64] focus:border-transparent outline-none"
                     >
                       <option value="refund">Demande de remboursement</option>
                       <option value="return">Retour de produit</option>
@@ -249,7 +257,7 @@ export default function SupportPage() {
                   <div>
                     <label
                       htmlFor="message"
-                      className="block text-sm font-medium text-gray-700 mb-2"
+                      className="block text-xs md:text-sm font-medium text-gray-700 mb-1.5 md:mb-2"
                     >
                       Message *
                     </label>
@@ -257,10 +265,10 @@ export default function SupportPage() {
                       id="message"
                       name="message"
                       required
-                      rows="6"
+                      rows="4"
                       value={formData.message}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#5d6e64] focus:border-transparent outline-none resize-none"
+                      className="w-full px-3 md:px-4 py-2 text-sm md:text-base border border-gray-300 rounded focus:ring-2 focus:ring-[#5d6e64] focus:border-transparent outline-none resize-none md:rows-6"
                       placeholder="Décrivez votre demande en détail..."
                     />
                   </div>
@@ -289,7 +297,7 @@ export default function SupportPage() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-[#5d6e64] text-white py-3 rounded hover:bg-[#4a5850] transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full bg-[#5d6e64] text-white py-2.5 md:py-3 text-sm md:text-base rounded hover:bg-[#4a5850] transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {isSubmitting ? (
                       <>
@@ -308,15 +316,17 @@ export default function SupportPage() {
             </div>
 
             {/* Section Retours et Remboursements */}
-            <div className="bg-white rounded-lg shadow-md p-8 mt-6">
-              <h2 className="text-2xl font-serif text-gray-800 mb-4">
+            <div className="bg-white rounded-lg shadow-md p-4 md:p-8 mt-4 md:mt-6">
+              <h2 className="text-lg md:text-2xl font-serif text-gray-800 mb-3 md:mb-4">
                 Retours et Remboursements
               </h2>
 
-              <div className="space-y-4 text-gray-700">
+              <div className="space-y-3 md:space-y-4 text-gray-700">
                 <div>
-                  <h3 className="font-semibold mb-2">Délai de rétractation</h3>
-                  <p className="text-sm">
+                  <h3 className="text-sm md:text-base font-semibold mb-1.5 md:mb-2">
+                    Délai de rétractation
+                  </h3>
+                  <p className="text-xs md:text-sm">
                     Vous disposez de <strong>14 jours</strong> à compter de la
                     réception de votre commande pour nous retourner un produit.
                     Le produit doit être non porté et dans son emballage
@@ -325,10 +335,10 @@ export default function SupportPage() {
                 </div>
 
                 <div>
-                  <h3 className="font-semibold mb-2">
+                  <h3 className="text-sm md:text-base font-semibold mb-1.5 md:mb-2">
                     Comment demander un remboursement ?
                   </h3>
-                  <ol className="text-sm space-y-1 list-decimal list-inside">
+                  <ol className="text-xs md:text-sm space-y-1 list-decimal list-inside">
                     <li>
                       Envoyez un email à{" "}
                       <a
@@ -345,8 +355,10 @@ export default function SupportPage() {
                 </div>
 
                 <div>
-                  <h3 className="font-semibold mb-2">Délai de remboursement</h3>
-                  <ul className="text-sm space-y-1">
+                  <h3 className="text-sm md:text-base font-semibold mb-1.5 md:mb-2">
+                    Délai de remboursement
+                  </h3>
+                  <ul className="text-xs md:text-sm space-y-1">
                     <li>• Traitement de votre demande : 2-3 jours ouvrés</li>
                     <li>
                       • Remboursement sur votre compte : 5-10 jours ouvrés
@@ -354,8 +366,8 @@ export default function SupportPage() {
                   </ul>
                 </div>
 
-                <div className="bg-yellow-50 border border-yellow-200 rounded p-4 mt-4">
-                  <p className="text-sm text-gray-700">
+                <div className="bg-yellow-50 border border-yellow-200 rounded p-3 md:p-4 mt-3 md:mt-4">
+                  <p className="text-xs md:text-sm text-gray-700">
                     <strong>Note :</strong> Les frais de retour sont à la charge
                     du client, sauf en cas de produit défectueux ou d'erreur de
                     notre part.

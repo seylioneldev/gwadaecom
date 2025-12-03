@@ -23,15 +23,15 @@ export default function Header() {
   // ==========================================================
   // 1. GESTION DES ÉTATS (STATE)
   // ==========================================================
-  const [searchTerm, setSearchTerm] = useState("");           // Ce que l'utilisateur tape
-  const [suggestions, setSuggestions] = useState([]);         // Liste des produits suggérés
+  const [searchTerm, setSearchTerm] = useState(""); // Ce que l'utilisateur tape
+  const [suggestions, setSuggestions] = useState([]); // Liste des produits suggérés
   const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false); // Panneau de suggestions visible ?
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false); // Barre ouverte sur mobile ?
 
   // Outils de navigation et références DOM
   const router = useRouter();
   const searchContainerRef = useRef(null); // Sert à détecter un clic "en dehors" de la barre
-  const searchInputRef = useRef(null);     // Sert à mettre le focus (curseur) dans le champ
+  const searchInputRef = useRef(null); // Sert à mettre le focus (curseur) dans le champ
 
   // Ouvre le panier latéral
   const handleCartClick = () => {
@@ -73,7 +73,7 @@ export default function Header() {
         setIsSuggestionsOpen(false);
         // Sur mobile, si le champ est vide et qu'on clique ailleurs, on le referme pour gagner de la place
         if (window.innerWidth < 768 && searchTerm === "") {
-            setIsMobileSearchOpen(false);
+          setIsMobileSearchOpen(false);
         }
       }
     }
@@ -93,13 +93,13 @@ export default function Header() {
       // Petit délai pour laisser le temps à l'élément de s'afficher avant de mettre le focus
       setTimeout(() => {
         searchInputRef.current?.focus();
-      }, 100); 
+      }, 100);
     }
   };
 
   // Lance la recherche et redirige vers la page de résultats
   const handleSearch = (e) => {
-    e.preventDefault(); 
+    e.preventDefault();
     if (searchTerm.trim()) {
       router.push(`/search?q=${encodeURIComponent(searchTerm)}`);
       setIsSuggestionsOpen(false); // Ferme les suggestions après validation
@@ -120,18 +120,17 @@ export default function Header() {
   const handleSignOut = async () => {
     try {
       await signOut();
-      router.push('/'); // Redirige vers l'accueil après déconnexion
+      router.push("/"); // Redirige vers l'accueil après déconnexion
     } catch (error) {
-      console.error('Erreur lors de la déconnexion:', error);
+      console.error("Erreur lors de la déconnexion:", error);
     }
   };
 
   return (
     <header className="w-full font-sans text-gray-800 sticky top-0 z-30 bg-white shadow-sm">
-      
       {/* --- BANDEAU SUPÉRIEUR (Promo) --- */}
-      <div className="bg-[#5d6e64] text-white text-xs py-2 px-4 flex justify-between items-center">
-        <div className="hidden md:flex tracking-widest italic">carte cadeau</div>
+      <div className="hidden md:flex bg-[#5d6e64] text-white text-xs py-2 px-4 justify-between items-center">
+        <div className="tracking-widest italic">carte cadeau</div>
         <div className="flex-1 text-center font-light">
           Looking for the perfect gift? A gift card is the perfect solution.
         </div>
@@ -141,30 +140,35 @@ export default function Header() {
       </div>
 
       {/* --- ZONE PRINCIPALE --- */}
-      <div className="bg-[#6B7A6E] text-white py-6 px-8">
+      <div className="bg-[#6B7A6E] text-white py-3 md:py-6 px-4 md:px-8">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-
           {/* Logo */}
-          <Link href="/" className="text-3xl md:text-5xl font-serif tracking-widest text-center flex-1 cursor-pointer hover:opacity-90">
+          <Link
+            href="/"
+            className="text-xl md:text-5xl font-serif tracking-widest text-center flex-1 cursor-pointer hover:opacity-90"
+          >
             {settings?.siteName ? (
-              settings.siteName.split(' et ').length === 2 ? (
+              settings.siteName.split(" et ").length === 2 ? (
                 <>
-                  {settings.siteName.split(' et ')[0].toUpperCase()} <span className="text-lg italic mx-1 font-serif">et</span> {settings.siteName.split(' et ')[1].toUpperCase()}
+                  {settings.siteName.split(" et ")[0].toUpperCase()}{" "}
+                  <span className="text-lg italic mx-1 font-serif">et</span>{" "}
+                  {settings.siteName.split(" et ")[1].toUpperCase()}
                 </>
               ) : (
                 settings.siteName.toUpperCase()
               )
             ) : (
-              'VIVI et MARGOT'
+              "VIVI et MARGOT"
             )}
           </Link>
 
           {/* --- ZONE ICÔNES & RECHERCHE --- */}
-          <div className="flex items-center gap-6">
-            
+          <div className="flex items-center gap-3 md:gap-6">
             {/* Conteneur Recherche (Relatif pour positionner les suggestions) */}
-            <div ref={searchContainerRef} className="flex items-center relative">
-              
+            <div
+              ref={searchContainerRef}
+              className="flex items-center relative"
+            >
               {/* Barre de recherche animée */}
               {/* Sur mobile : s'agrandit au clic grâce aux classes conditionnelles */}
               <div className="flex items-center border border-white/50 px-3 py-1.5 gap-2 bg-[#6B7A6E] z-10 rounded-full md:rounded-none">
@@ -173,7 +177,8 @@ export default function Header() {
                   className="cursor-pointer hover:text-gray-200"
                   onClick={(e) => {
                     handleMobileSearchToggle(); // Ouvre sur mobile
-                    if(isMobileSearchOpen || window.innerWidth >= 768) handleSearch(e); // Cherche si déjà ouvert ou sur PC
+                    if (isMobileSearchOpen || window.innerWidth >= 768)
+                      handleSearch(e); // Cherche si déjà ouvert ou sur PC
                   }}
                 />
                 <input
@@ -191,11 +196,12 @@ export default function Header() {
                   onFocus={() => setIsSuggestionsOpen(suggestions.length > 0)}
                   onKeyDown={handleKeyDown}
                   onBlur={() => {
-                      // Petite tempo pour ne pas fermer si on clique sur une suggestion
-                      setTimeout(() => {
-                          if (window.innerWidth < 768 && searchTerm === "") setIsMobileSearchOpen(false)
-                      }, 200)
-                  }} 
+                    // Petite tempo pour ne pas fermer si on clique sur une suggestion
+                    setTimeout(() => {
+                      if (window.innerWidth < 768 && searchTerm === "")
+                        setIsMobileSearchOpen(false);
+                    }, 200);
+                  }}
                 />
               </div>
 
@@ -215,10 +221,16 @@ export default function Header() {
                           className="flex items-center gap-3 p-3 hover:bg-gray-100 transition text-gray-700 border-b border-gray-50 last:border-0"
                         >
                           {/* Miniature image */}
-                          <div className={`w-10 h-12 ${product.image} bg-cover bg-center flex-shrink-0`}></div>
+                          <div
+                            className={`w-10 h-12 ${product.image} bg-cover bg-center flex-shrink-0`}
+                          ></div>
                           <div className="flex flex-col">
-                             <span className="text-xs font-serif font-bold">{product.name}</span>
-                             <span className="text-[10px] text-gray-500">${product.price}</span>
+                            <span className="text-xs font-serif font-bold">
+                              {product.name}
+                            </span>
+                            <span className="text-[10px] text-gray-500">
+                              ${product.price}
+                            </span>
                           </div>
                         </Link>
                       </li>
@@ -229,9 +241,18 @@ export default function Header() {
             </div>
 
             {/* Bouton Panier */}
-            <button onClick={handleCartClick} className="flex flex-col items-center cursor-pointer hover:opacity-80 transition relative bg-transparent border-none p-0 text-white">
-              <ShoppingBasket size={22} strokeWidth={1.5} />
-              <span className="text-[10px] italic mt-1 font-serif">panier</span>
+            <button
+              onClick={handleCartClick}
+              className="flex flex-col items-center cursor-pointer hover:opacity-80 transition relative bg-transparent border-none p-0 text-white"
+            >
+              <ShoppingBasket
+                size={20}
+                className="md:w-[22px] md:h-[22px]"
+                strokeWidth={1.5}
+              />
+              <span className="hidden md:block text-[10px] italic mt-1 font-serif">
+                panier
+              </span>
               {totalItems > 0 && (
                 <span className="absolute -top-1 -right-2 w-4 h-4 bg-red-500 text-white rounded-full text-[10px] flex items-center justify-center font-bold">
                   {totalItems}
@@ -264,9 +285,18 @@ export default function Header() {
               </div>
             ) : (
               // Utilisateur non connecté - Afficher lien vers connexion
-              <Link href="/mon-compte" className="flex flex-col items-center cursor-pointer hover:opacity-80 transition relative bg-transparent border-none p-0 text-white">
-                <User size={22} strokeWidth={1.5} />
-                <span className="text-[10px] italic mt-1 font-serif">compte</span>
+              <Link
+                href="/mon-compte"
+                className="flex flex-col items-center cursor-pointer hover:opacity-80 transition relative bg-transparent border-none p-0 text-white"
+              >
+                <User
+                  size={20}
+                  className="md:w-[22px] md:h-[22px]"
+                  strokeWidth={1.5}
+                />
+                <span className="hidden md:block text-[10px] italic mt-1 font-serif">
+                  compte
+                </span>
               </Link>
             )}
           </div>
@@ -274,18 +304,23 @@ export default function Header() {
 
         {/* --- MENU DE NAVIGATION --- */}
         {/* ✨ NOUVEAU : Menu dynamique depuis Firestore */}
-        <nav className="mt-8 border-t border-white/20 pt-5">
-          <ul className="flex flex-wrap justify-center gap-8 text-[11px] md:text-xs uppercase tracking-[0.15em] font-medium">
+        <nav className="mt-4 md:mt-8 border-t border-white/20 pt-3 md:pt-5">
+          <ul className="flex flex-wrap justify-center gap-3 md:gap-8 text-[9px] md:text-xs uppercase tracking-[0.15em] font-medium">
             {categoriesLoading ? (
               // Message de chargement pendant la récupération des catégories
               <li className="text-white/50 text-xs">Chargement du menu...</li>
             ) : categories.length === 0 ? (
               // Si aucune catégorie n'est trouvée
-              <li className="text-white/50 text-xs">Aucune catégorie disponible</li>
+              <li className="text-white/50 text-xs">
+                Aucune catégorie disponible
+              </li>
             ) : (
               // Affichage des catégories dynamiques depuis Firestore
               categories.map((category) => (
-                <li key={category.id} className="cursor-pointer hover:text-gray-200 transition relative group">
+                <li
+                  key={category.id}
+                  className="cursor-pointer hover:text-gray-200 transition relative group"
+                >
                   <Link href={`/category/${category.slug}`} className="block">
                     {category.name}
                   </Link>
