@@ -154,13 +154,14 @@ export default function Footer() {
         {/* ========================================================== */}
         <div className="flex flex-wrap justify-center gap-6 text-[10px] uppercase tracking-widest text-gray-500 mb-8">
           <Link href="/support" className="hover:underline">
-            Contact & Support
+            {settings?.footerContent?.supportLinkLabel || "Contact & Support"}
           </Link>
           <Link href="/politique-remboursement" className="hover:underline">
-            Politique de Remboursement
+            {settings?.footerContent?.refundPolicyLinkLabel ||
+              "Politique de Remboursement"}
           </Link>
           <Link href="/compte/commandes" className="hover:underline">
-            Mes Commandes
+            {settings?.footerContent?.ordersLinkLabel || "Mes Commandes"}
           </Link>
         </div>
 

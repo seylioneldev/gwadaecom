@@ -138,9 +138,70 @@ const cmsConfig = {
       heroSubtitle: "Découvrez notre collection de bijoux artisanaux",
       showNewArrivals: true,
       productsPerPage: 9,
+      newArrivalsTitle: "NEW ARRIVALS",
+      newArrivalsSubtitle: "",
+      layout: [
+        { id: "hero", type: "hero", enabled: true },
+        { id: "infoStrip", type: "infoStrip", enabled: true },
+        { id: "story", type: "story", enabled: true },
+        { id: "newsletter", type: "newsletter", enabled: true },
+        { id: "productGrid", type: "productGrid", enabled: true },
+      ],
     },
 
-    // 🎨 PERSONNALISATION CSS
+    // Textes du header (bandeau promo)
+    headerContent: {
+      promoBarLabel: "carte cadeau",
+      promoBarText:
+        "Looking for the perfect gift? A gift card is the perfect solution.",
+      promoBarButtonLabel: "Shop Gift Cards",
+    },
+
+    // Textes du footer
+    footerContent: {
+      supportLinkLabel: "Contact & Support",
+      refundPolicyLinkLabel: "Politique de Remboursement",
+      ordersLinkLabel: "Mes Commandes",
+    },
+
+    // Textes de la page Panier
+    cartPage: {
+      title: "Mon Panier",
+      continueShoppingLinkLabel: "Continuer mes achats",
+      emptyShortText: "Votre panier est vide",
+      emptyTitle: "Votre panier est vide",
+      emptySubtitle: "Découvrez nos produits et ajoutez-les à votre panier",
+      emptyCtaLabel: "Retour à l'accueil",
+      summaryTitle: "Récapitulatif",
+      subtotalLabel: "Sous-total",
+      shippingLabel: "Livraison",
+      shippingNote: "Calculée à l'étape suivante",
+      checkoutButtonLabel: "Passer commande",
+      bottomContinueShoppingLabel: "Continuer mes achats",
+      benefitFreeShipping: "Livraison gratuite à partir de 50€",
+      benefitFreeReturns: "Retours gratuits sous 30 jours",
+      benefitSecurePayment: "Paiement sécurisé",
+    },
+
+    // Textes de la page Checkout
+    checkoutPage: {
+      title: "Finaliser ma commande",
+      choiceTitle: "Comment souhaitez-vous commander ?",
+      guestTitle: "Continuer en tant qu'invité",
+      guestSubtitle: "Commandez rapidement sans créer de compte",
+      loginTitle: "J'ai déjà un compte",
+      loginSubtitle: "Connectez-vous pour accéder à votre historique",
+      signupTitle: "Créer un compte",
+      signupSubtitle: "Suivez vos commandes et bénéficiez d'avantages",
+      loginFormTitle: "Connexion",
+      signupFormTitle: "Créer un compte",
+      shippingFormTitle: "Informations de livraison",
+      shippingSummaryTitle: "Informations de livraison",
+      summaryTitle: "Récapitulatif",
+      proceedToPaymentButtonLabel: "Procéder au paiement",
+    },
+
+    // PERSONNALISATION CSS
     // Paramètres de style modifiables depuis l'interface admin
     customStyles: {
       // Header

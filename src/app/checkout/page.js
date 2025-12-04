@@ -32,11 +32,14 @@ import StripePaymentForm from "@/components/StripePaymentForm";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import cmsConfig from "../../../cms.config";
+import { useSettings } from "@/context/SettingsContext";
 
 export default function CheckoutPage() {
   const { cart, totalPrice, clearCart } = useCart();
   const { user, signIn, signUp } = useAuth();
   const router = useRouter();
+  const { settings } = useSettings();
+  const checkoutTexts = settings?.checkoutPage || {};
 
   // État du mode de checkout
   const [checkoutMode, setCheckoutMode] = useState(null); // null | 'guest' | 'login' | 'signup'
@@ -236,7 +239,7 @@ export default function CheckoutPage() {
             </Link>
             <h1 className="text-3xl font-serif text-gray-800 flex items-center gap-3">
               <CreditCard size={32} className="text-[#5d6e64]" />
-              Finaliser ma commande
+              {checkoutTexts.title || "Finaliser ma commande"}
             </h1>
           </div>
 
@@ -247,7 +250,8 @@ export default function CheckoutPage() {
               {checkoutMode === null && !user && (
                 <div className="bg-white rounded-lg shadow-md p-8">
                   <h2 className="text-2xl font-serif text-gray-800 mb-6 text-center">
-                    Comment souhaitez-vous commander ?
+                    {checkoutTexts.choiceTitle ||
+                      "Comment souhaitez-vous commander ?"}
                   </h2>
 
                   <div className="space-y-4">
@@ -262,10 +266,12 @@ export default function CheckoutPage() {
                         </div>
                         <div className="flex-1">
                           <h3 className="text-lg font-semibold text-gray-800 mb-1">
-                            Continuer en tant qu'invité
+                            {checkoutTexts.guestTitle ||
+                              "Continuer en tant qu'invité"}
                           </h3>
                           <p className="text-sm text-gray-600">
-                            Commandez rapidement sans créer de compte
+                            {checkoutTexts.guestSubtitle ||
+                              "Commandez rapidement sans créer de compte"}
                           </p>
                         </div>
                         <ArrowRight size={20} className="text-gray-400" />
@@ -283,10 +289,11 @@ export default function CheckoutPage() {
                         </div>
                         <div className="flex-1">
                           <h3 className="text-lg font-semibold text-gray-800 mb-1">
-                            J'ai déjà un compte
+                            {checkoutTexts.loginTitle || "J'ai déjà un compte"}
                           </h3>
                           <p className="text-sm text-gray-600">
-                            Connectez-vous pour accéder à votre historique
+                            {checkoutTexts.loginSubtitle ||
+                              "Connectez-vous pour accéder à votre historique"}
                           </p>
                         </div>
                         <ArrowRight size={20} className="text-gray-400" />
@@ -304,10 +311,11 @@ export default function CheckoutPage() {
                         </div>
                         <div className="flex-1">
                           <h3 className="text-lg font-semibold text-gray-800 mb-1">
-                            Créer un compte
+                            {checkoutTexts.signupTitle || "Créer un compte"}
                           </h3>
                           <p className="text-sm text-gray-600">
-                            Suivez vos commandes et bénéficiez d'avantages
+                            {checkoutTexts.signupSubtitle ||
+                              "Suivez vos commandes et bénéficiez d'avantages"}
                           </p>
                         </div>
                         <ArrowRight size={20} className="text-gray-400" />
@@ -321,7 +329,7 @@ export default function CheckoutPage() {
               {checkoutMode === "login" && (
                 <div className="bg-white rounded-lg shadow-md p-8">
                   <h2 className="text-2xl font-serif text-gray-800 mb-6">
-                    Connexion
+                    {checkoutTexts.loginFormTitle || "Connexion"}
                   </h2>
 
                   {error && (
@@ -387,7 +395,7 @@ export default function CheckoutPage() {
               {checkoutMode === "signup" && (
                 <div className="bg-white rounded-lg shadow-md p-8">
                   <h2 className="text-2xl font-serif text-gray-800 mb-6">
-                    Créer un compte
+                    {checkoutTexts.signupFormTitle || "Créer un compte"}
                   </h2>
 
                   {error && (
@@ -518,7 +526,8 @@ export default function CheckoutPage() {
               {checkoutMode === "guest" && !showPayment && (
                 <div className="bg-white rounded-lg shadow-md p-8">
                   <h2 className="text-2xl font-serif text-gray-800 mb-6">
-                    Informations de livraison
+                    {checkoutTexts.shippingFormTitle ||
+                      "Informations de livraison"}
                   </h2>
 
                   {error && (
@@ -691,7 +700,8 @@ export default function CheckoutPage() {
                         type="submit"
                         className="w-full bg-[#5d6e64] text-white py-3 rounded font-medium hover:bg-[#4a5850] transition flex items-center justify-center gap-2"
                       >
-                        Procéder au paiement
+                        {checkoutTexts.proceedToPaymentButtonLabel ||
+                          "Procéder au paiement"}
                         <ArrowRight size={20} />
                       </button>
                     </div>
@@ -716,7 +726,8 @@ export default function CheckoutPage() {
                   <div className="bg-white rounded-lg shadow-md p-6">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-lg font-serif text-gray-800">
-                        Informations de livraison
+                        {checkoutTexts.shippingSummaryTitle ||
+                          "Informations de livraison"}
                       </h3>
                       <button
                         onClick={() => setShowPayment(false)}
@@ -772,7 +783,7 @@ export default function CheckoutPage() {
             <div className="lg:col-span-1">
               <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
                 <h2 className="text-xl font-serif text-gray-800 mb-4">
-                  Récapitulatif
+                  {checkoutTexts.summaryTitle || "Récapitulatif"}
                 </h2>
 
                 {/* Liste des produits */}

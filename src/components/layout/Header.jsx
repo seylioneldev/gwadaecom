@@ -134,12 +134,15 @@ export default function Header() {
     <header className="w-full font-sans text-gray-800 sticky top-0 z-30 bg-white shadow-sm">
       {/* --- BANDEAU SUPÉRIEUR (Promo) --- */}
       <div className="hidden md:flex bg-[#5d6e64] text-white text-xs py-2 px-4 justify-between items-center">
-        <div className="tracking-widest italic">carte cadeau</div>
+        <div className="tracking-widest italic">
+          {settings?.headerContent?.promoBarLabel || "carte cadeau"}
+        </div>
         <div className="flex-1 text-center font-light">
-          Looking for the perfect gift? A gift card is the perfect solution.
+          {settings?.headerContent?.promoBarText ||
+            "Looking for the perfect gift? A gift card is the perfect solution."}
         </div>
         <button className="border border-white px-4 py-1 uppercase text-[10px] hover:bg-white hover:text-[#5d6e64] transition duration-300">
-          Shop Gift Cards
+          {settings?.headerContent?.promoBarButtonLabel || "Shop Gift Cards"}
         </button>
       </div>
 

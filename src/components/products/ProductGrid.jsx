@@ -17,6 +17,7 @@ import { ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import Price from "@/components/Price";
 import { useProducts } from "@/hooks/useProducts"; // Nouveau : récupère depuis Firestore
+import { useSettings } from "@/context/SettingsContext";
 
 function getStockStatus(stock) {
   if (typeof stock !== "number" || Number.isNaN(stock) || stock < 0) {
@@ -53,14 +54,33 @@ function getStockStatus(stock) {
 export default function ProductGrid() {
   // Récupération des produits depuis Firestore
   const { products, loading, error } = useProducts();
+  const { settings } = useSettings();
+
+  const showNewArrivals =
+    settings?.homepage?.showNewArrivals !== undefined
+      ? settings.homepage.showNewArrivals
+      : true;
+
+  if (!showNewArrivals) {
+    return null;
+  }
+
+  const newArrivalsTitle =
+    settings?.homepage?.newArrivalsTitle || "NEW ARRIVALS";
+  const newArrivalsSubtitle = settings?.homepage?.newArrivalsSubtitle || "";
 
   return (
     <section className="py-16 px-4 md:px-8 bg-white text-gray-800">
       {/* En-tête de section */}
       <div className="text-center mb-12">
         <h2 className="text-2xl md:text-3xl font-serif tracking-widest text-[#5d6e64] mb-2">
-          NEW ARRIVALS
+          {newArrivalsTitle}
         </h2>
+        {newArrivalsSubtitle && (
+          <p className="text-xs md:text-sm text-gray-500 mb-4">
+            {newArrivalsSubtitle}
+          </p>
+        )}
         <div className="w-16 h-0.5 bg-[#5d6e64] mx-auto opacity-50"></div>
       </div>
 
