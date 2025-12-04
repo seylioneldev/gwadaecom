@@ -5,6 +5,13 @@ import { useSettings } from "@/context/SettingsContext";
 
 export default function Hero() {
   const { settings } = useSettings();
+
+  const heroSubtitle =
+    settings?.homepage?.heroSubtitle || "Authentic French Lifestyle";
+  const heroTitle = settings?.homepage?.heroTitle || "SPRING COLLECTION";
+  const heroCtaLabel = settings?.homepage?.heroCtaLabel || "Discover Now";
+  const heroCtaLink = settings?.homepage?.heroCtaLink || "/category/shop-brand";
+
   return (
     // ==========================================================
     // 1. BLOC CONTENEUR (Arrière-plan, taille et centrage)
@@ -26,20 +33,20 @@ export default function Hero() {
       <div className="bg-white/90 p-10 md:p-16 max-w-2xl shadow-sm z-10 mx-4">
         {/* SOUS-TITRE (P) - Texte facilement modifiable */}
         <p className="text-xs md:text-sm uppercase tracking-[0.25em] text-gray-500 mb-4">
-          {settings?.homepage?.heroSubtitle || "Authentic French Lifestyle"}
+          {heroSubtitle}
         </p>
 
         {/* TITRE PRINCIPAL (H1) - Texte facilement modifiable */}
         <h1 className="font-serif text-3xl md:text-5xl text-[#5d6e64] tracking-widest mb-8">
-          {settings?.homepage?.heroTitle || "SPRING COLLECTION"}
+          {heroTitle}
         </h1>
 
         {/* BOUTON D'ACTION - À remplacer par <Link> si tu veux naviguer */}
         <Link
-          href="/category/shop-brand"
+          href={heroCtaLink}
           className="border border-[#5d6e64] text-[#5d6e64] px-8 py-3 text-[10px] md:text-xs uppercase tracking-[0.2em] hover:bg-[#5d6e64] hover:text-white transition duration-300 cursor-pointer"
         >
-          Discover Now
+          {heroCtaLabel}
         </Link>
       </div>
     </div>

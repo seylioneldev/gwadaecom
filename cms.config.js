@@ -136,10 +136,22 @@ const cmsConfig = {
     homepage: {
       heroTitle: "Bienvenue aux Bijoux de Guadeloupe",
       heroSubtitle: "Découvrez notre collection de bijoux artisanaux",
+      heroCtaLabel: "Discover Now",
+      heroCtaLink: "/category/shop-brand",
       showNewArrivals: true,
       productsPerPage: 9,
       newArrivalsTitle: "NEW ARRIVALS",
       newArrivalsSubtitle: "",
+      infoStripText:
+        "Livraison offerte dès 50€ • Retours sous 30 jours • Paiement sécurisé",
+      storyTitle: "L'artisanat de Guadeloupe",
+      storyText:
+        "Chaque pièce est imaginée et fabriquée avec soin sur l'île, en petites séries, pour mettre en valeur le savoir-faire local et les matières naturelles.",
+      newsletterTitle: "Rester informé des nouveautés",
+      newsletterSubtitle:
+        "Recevez en avant-première les nouvelles collections et les ventes privées.",
+      newsletterCtaLabel: "S'inscrire",
+      newsletterPlaceholder: "Votre email",
       layout: [
         { id: "hero", type: "hero", enabled: true },
         { id: "infoStrip", type: "infoStrip", enabled: true },

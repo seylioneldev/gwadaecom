@@ -27,55 +27,65 @@ export default function Home() {
 
   const layoutFromSettings = settings?.homepage?.layout;
   const buildHomepageLayout = (savedLayout) => {
-    const existingMap = new Map();
-
-    if (Array.isArray(savedLayout)) {
-      savedLayout.forEach((block) => {
-        if (!block || !block.type) return;
-        if (existingMap.has(block.type)) return;
-        existingMap.set(block.type, {
-          ...block,
-          enabled: block.enabled === false ? false : true,
-        });
-      });
+    if (!Array.isArray(savedLayout) || savedLayout.length === 0) {
+      return defaultLayout;
     }
 
-    const merged = defaultLayout.map((defaultBlock) => {
-      const existing = existingMap.get(defaultBlock.type);
-      if (!existing) {
-        return defaultBlock;
-      }
+    const defaultByType = new Map(
+      defaultLayout.map((block) => [block.type, block])
+    );
 
-      return {
-        ...defaultBlock,
-        ...existing,
-        enabled: existing.enabled === false ? false : true,
+    const seenTypes = new Set();
+    const normalized = [];
+
+    savedLayout.forEach((block) => {
+      if (!block || !block.type) return;
+      if (seenTypes.has(block.type)) return;
+
+      const defaultBlock = defaultByType.get(block.type) || {
+        id: block.id || block.type,
+        type: block.type,
+        enabled: true,
       };
+
+      normalized.push({
+        ...defaultBlock,
+        ...block,
+        id: block.id || defaultBlock.id || block.type,
+        enabled: block.enabled === false ? false : true,
+      });
+
+      seenTypes.add(block.type);
     });
 
-    if (Array.isArray(savedLayout)) {
-      savedLayout.forEach((block) => {
-        if (!block || !block.type) return;
+    defaultLayout.forEach((defaultBlock) => {
+      if (!seenTypes.has(defaultBlock.type)) {
+        normalized.push(defaultBlock);
+      }
+    });
 
-        const alreadyInMerged = merged.some(
-          (b) =>
-            b.type === block.type &&
-            (b.id || b.type) === (block.id || block.type)
-        );
-
-        if (!alreadyInMerged) {
-          merged.push({
-            ...block,
-            enabled: block.enabled === false ? false : true,
-          });
-        }
-      });
-    }
-
-    return merged;
+    return normalized;
   };
 
   const layout = buildHomepageLayout(layoutFromSettings);
+
+  const infoStripText =
+    settings?.homepage?.infoStripText ||
+    "Livraison offerte dès 50€ • Retours sous 30 jours • Paiement sécurisé";
+  const storyTitle =
+    settings?.homepage?.storyTitle || "L'artisanat de Guadeloupe";
+  const storyText =
+    settings?.homepage?.storyText ||
+    "Chaque pièce est imaginée et fabriquée avec soin sur l'île, en petites séries, pour mettre en valeur le savoir-faire local et les matières naturelles.";
+  const newsletterTitle =
+    settings?.homepage?.newsletterTitle || "Rester informé des nouveautés";
+  const newsletterSubtitle =
+    settings?.homepage?.newsletterSubtitle ||
+    "Recevez en avant-première les nouvelles collections et les ventes privées.";
+  const newsletterCtaLabel =
+    settings?.homepage?.newsletterCtaLabel || "S'inscrire";
+  const newsletterPlaceholder =
+    settings?.homepage?.newsletterPlaceholder || "Votre email";
 
   const renderBlock = (block) => {
     if (block.enabled === false) {
@@ -93,15 +103,23 @@ export default function Home() {
     }
 
     if (block.type === "infoStrip") {
-      return <InfoStrip key={key} />;
+      return <InfoStrip key={key} text={infoStripText} />;
     }
 
     if (block.type === "story") {
-      return <StorySection key={key} />;
+      return <StorySection key={key} title={storyTitle} text={storyText} />;
     }
 
     if (block.type === "newsletter") {
-      return <NewsletterBlock key={key} />;
+      return (
+        <NewsletterBlock
+          key={key}
+          title={newsletterTitle}
+          subtitle={newsletterSubtitle}
+          ctaLabel={newsletterCtaLabel}
+          placeholder={newsletterPlaceholder}
+        />
+      );
     }
 
     return null;
@@ -127,47 +145,44 @@ export default function Home() {
   );
 }
 
-function InfoStrip() {
+function InfoStrip({ text }) {
   return (
     <section className="py-4 px-4 md:px-8 bg-[#f5f5f5] text-xs text-center tracking-[0.2em] text-gray-600 uppercase">
-      Livraison offerte dès 50€ • Retours sous 30 jours • Paiement sécurisé
+      {text}
     </section>
   );
 }
 
-function StorySection() {
+function StorySection({ title, text }) {
   return (
     <section className="py-12 px-4 md:px-8 bg-white text-center text-gray-800">
       <h2 className="text-2xl md:text-3xl font-serif mb-4 tracking-widest text-[#5d6e64]">
-        L'artisanat de Guadeloupe
+        {title}
       </h2>
       <p className="max-w-2xl mx-auto text-sm md:text-base text-gray-600 leading-relaxed">
-        Chaque pièce est imaginée et fabriquée avec soin sur l'île, en petites
-        séries, pour mettre en valeur le savoir-faire local et les matières
-        naturelles.
+        {text}
       </p>
     </section>
   );
 }
 
-function NewsletterBlock() {
+function NewsletterBlock({ title, subtitle, ctaLabel, placeholder }) {
   return (
     <section className="py-12 px-4 md:px-8 bg-[#f7f3ec] text-center text-gray-800">
       <h2 className="text-xl md:text-2xl font-serif mb-3 tracking-widest text-[#5d6e64]">
-        Rester informé des nouveautés
+        {title}
       </h2>
       <p className="max-w-xl mx-auto text-sm md:text-base text-gray-600 mb-4">
-        Recevez en avant-première les nouvelles collections et les ventes
-        privées.
+        {subtitle}
       </p>
       <div className="flex flex-col sm:flex-row justify-center gap-3 max-w-md mx-auto">
         <input
           type="email"
           className="flex-1 border border-gray-300 px-4 py-2 text-sm"
-          placeholder="Votre email"
+          placeholder={placeholder}
         />
         <button className="px-6 py-2 bg-[#5d6e64] text-white text-xs uppercase tracking-[0.2em] hover:bg-[#4a5850] transition">
-          S'inscrire
+          {ctaLabel}
         </button>
       </div>
     </section>

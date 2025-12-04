@@ -168,56 +168,48 @@ export default function AdminSettingsPage() {
     { id: "productGrid", type: "productGrid", enabled: true },
   ];
 
-  const mergeHomepageLayout = (savedLayout) => {
-    const existingMap = new Map();
-
-    if (Array.isArray(savedLayout)) {
-      savedLayout.forEach((block) => {
-        if (!block || !block.type) return;
-        if (existingMap.has(block.type)) return;
-        existingMap.set(block.type, {
-          ...block,
-          enabled: block.enabled === false ? false : true,
-        });
-      });
+  const normalizeHomepageLayout = (savedLayout) => {
+    if (!Array.isArray(savedLayout) || savedLayout.length === 0) {
+      return defaultHomepageLayout;
     }
 
-    const merged = defaultHomepageLayout.map((defaultBlock) => {
-      const existing = existingMap.get(defaultBlock.type);
-      if (!existing) {
-        return defaultBlock;
-      }
+    const defaultByType = new Map(
+      defaultHomepageLayout.map((block) => [block.type, block])
+    );
 
-      return {
-        ...defaultBlock,
-        ...existing,
-        enabled: existing.enabled === false ? false : true,
+    const seenTypes = new Set();
+    const normalized = [];
+
+    savedLayout.forEach((block) => {
+      if (!block || !block.type) return;
+      if (seenTypes.has(block.type)) return;
+
+      const defaultBlock = defaultByType.get(block.type) || {
+        id: block.id || block.type,
+        type: block.type,
+        enabled: true,
       };
+
+      normalized.push({
+        ...defaultBlock,
+        ...block,
+        id: block.id || defaultBlock.id || block.type,
+        enabled: block.enabled === false ? false : true,
+      });
+
+      seenTypes.add(block.type);
     });
 
-    if (Array.isArray(savedLayout)) {
-      savedLayout.forEach((block) => {
-        if (!block || !block.type) return;
+    defaultHomepageLayout.forEach((defaultBlock) => {
+      if (!seenTypes.has(defaultBlock.type)) {
+        normalized.push(defaultBlock);
+      }
+    });
 
-        const alreadyInMerged = merged.some(
-          (b) =>
-            b.type === block.type &&
-            (b.id || b.type) === (block.id || block.type)
-        );
-
-        if (!alreadyInMerged) {
-          merged.push({
-            ...block,
-            enabled: block.enabled === false ? false : true,
-          });
-        }
-      });
-    }
-
-    return merged;
+    return normalized;
   };
 
-  const homepageLayout = mergeHomepageLayout(formData.homepage?.layout);
+  const homepageLayout = normalizeHomepageLayout(formData.homepage?.layout);
 
   const handleHomepageLayoutUpdate = (newLayout) => {
     setFormData((prev) => ({
@@ -229,7 +221,17 @@ export default function AdminSettingsPage() {
     }));
   };
 
-  const handleHomepageLayoutDragStart = (index) => {
+  const handleHomepageLayoutDragStart = (event, index) => {
+    try {
+      if (event?.dataTransfer) {
+        event.dataTransfer.effectAllowed = "move";
+        // Certaines implémentations exigent au moins un setData pour activer le drop
+        event.dataTransfer.setData("text/plain", String(index));
+      }
+    } catch (e) {
+      // Sécurité : ne pas casser le drag si dataTransfer n'est pas disponible
+    }
+
     setHomepageLayoutDragIndex(index);
   };
 
@@ -258,6 +260,32 @@ export default function AdminSettingsPage() {
     );
 
     handleHomepageLayoutUpdate(updated);
+  };
+
+  const moveHomepageLayout = (fromIndex, toIndex) => {
+    if (
+      fromIndex === toIndex ||
+      fromIndex < 0 ||
+      toIndex < 0 ||
+      fromIndex >= homepageLayout.length ||
+      toIndex >= homepageLayout.length
+    ) {
+      return;
+    }
+
+    const updated = [...homepageLayout];
+    const [moved] = updated.splice(fromIndex, 1);
+    updated.splice(toIndex, 0, moved);
+
+    handleHomepageLayoutUpdate(updated);
+  };
+
+  const moveHomepageLayoutUp = (index) => {
+    moveHomepageLayout(index, index - 1);
+  };
+
+  const moveHomepageLayoutDown = (index) => {
+    moveHomepageLayout(index, index + 1);
   };
 
   return (
@@ -561,6 +589,34 @@ export default function AdminSettingsPage() {
                 />
               </div>
 
+              <div className="md:col-span-2">
+                <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
+                  Texte du bouton Hero
+                </label>
+                <input
+                  type="text"
+                  name="homepage.heroCtaLabel"
+                  value={formData.homepage?.heroCtaLabel || ""}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 px-4 py-2 text-sm"
+                  placeholder="Discover Now"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
+                  Lien du bouton Hero
+                </label>
+                <input
+                  type="text"
+                  name="homepage.heroCtaLink"
+                  value={formData.homepage?.heroCtaLink || ""}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 px-4 py-2 text-sm"
+                  placeholder="/category/shop-brand"
+                />
+              </div>
+
               <div>
                 <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
                   Produits par Page
@@ -603,7 +659,7 @@ export default function AdminSettingsPage() {
                   <div
                     key={block.id || block.type}
                     draggable
-                    onDragStart={() => handleHomepageLayoutDragStart(index)}
+                    onDragStart={(e) => handleHomepageLayoutDragStart(e, index)}
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={(e) => {
                       e.preventDefault();
@@ -629,16 +685,36 @@ export default function AdminSettingsPage() {
                           : block.type}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={block.enabled !== false}
-                        onChange={() => toggleHomepageLayoutEnabled(index)}
-                        className="w-4 h-4"
-                      />
-                      <span className="text-xs text-gray-500">
-                        {block.enabled === false ? "Masqué" : "Visible"}
-                      </span>
+                    <div className="flex items-center gap-3">
+                      <div className="flex flex-col gap-1">
+                        <button
+                          type="button"
+                          onClick={() => moveHomepageLayoutUp(index)}
+                          disabled={index === 0}
+                          className="text-xs text-gray-400 hover:text-gray-700 disabled:opacity-30"
+                        >
+                          ↑
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveHomepageLayoutDown(index)}
+                          disabled={index === homepageLayout.length - 1}
+                          className="text-xs text-gray-400 hover:text-gray-700 disabled:opacity-30"
+                        >
+                          ↓
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={block.enabled !== false}
+                          onChange={() => toggleHomepageLayoutEnabled(index)}
+                          className="w-4 h-4"
+                        />
+                        <span className="text-xs text-gray-500">
+                          {block.enabled === false ? "Masqué" : "Visible"}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 ))}
