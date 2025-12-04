@@ -24,6 +24,7 @@ import {
   createUserWithEmailAndPassword,
   updateProfile,
   deleteUser,
+  sendPasswordResetEmail,
 } from "firebase/auth";
 import {
   doc,
@@ -300,6 +301,21 @@ export const AuthProvider = ({ children }) => {
   };
 
   /**
+   * RÉINITIALISATION DU MOT DE PASSE
+   * ================================
+   * Envoie un email de réinitialisation via Firebase Auth.
+   * Message générique côté UI pour éviter de révéler si l'email existe.
+   */
+  const resetPassword = async (email) => {
+    try {
+      await sendPasswordResetEmail(auth, email);
+    } catch (error) {
+      console.error("Erreur de réinitialisation du mot de passe:", error);
+      throw error;
+    }
+  };
+
+  /**
    * CRÉER UN COMPTE ADMIN (À UTILISER UNE SEULE FOIS)
    */
   const createAdminAccount = async (email, password) => {
@@ -476,6 +492,7 @@ export const AuthProvider = ({ children }) => {
     createAdminAccount,
     softDeleteUser,
     restoreUser,
+    resetPassword,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

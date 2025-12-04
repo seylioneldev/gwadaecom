@@ -13,32 +13,38 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, LogIn, UserPlus, Mail, Lock, User } from 'lucide-react';
-import Link from 'next/link';
+import { useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+import { Eye, EyeOff, LogIn, UserPlus, Mail, Lock, User } from "lucide-react";
+import Link from "next/link";
 
 export default function MonComptePage() {
-  const { user, isAdmin, userRole, loading, signIn, signUp } = useAuth();
+  const { user, isAdmin, userRole, loading, signIn, signUp, resetPassword } =
+    useAuth();
   const router = useRouter();
 
   // État de l'interface
-  const [activeTab, setActiveTab] = useState('login'); // 'login' ou 'signup'
+  const [activeTab, setActiveTab] = useState("login"); // 'login' ou 'signup'
   const [showPassword, setShowPassword] = useState(false);
 
   // État du formulaire de connexion
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-  const [loginError, setLoginError] = useState('');
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
 
+  // État du flux mot de passe oublié
+  const [resetMessage, setResetMessage] = useState("");
+  const [resetError, setResetError] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
+
   // État du formulaire d'inscription
-  const [signupEmail, setSignupEmail] = useState('');
-  const [signupPassword, setSignupPassword] = useState('');
-  const [signupConfirmPassword, setSignupConfirmPassword] = useState('');
-  const [signupDisplayName, setSignupDisplayName] = useState('');
-  const [signupError, setSignupError] = useState('');
+  const [signupEmail, setSignupEmail] = useState("");
+  const [signupPassword, setSignupPassword] = useState("");
+  const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
+  const [signupDisplayName, setSignupDisplayName] = useState("");
+  const [signupError, setSignupError] = useState("");
   const [signupLoading, setSignupLoading] = useState(false);
 
   /**
@@ -47,9 +53,9 @@ export default function MonComptePage() {
   useEffect(() => {
     if (!loading && user && userRole) {
       if (isAdmin) {
-        router.push('/admin');
+        router.push("/admin");
       } else {
-        router.push('/compte');
+        router.push("/compte");
       }
     }
   }, [user, userRole, isAdmin, loading, router]);
@@ -59,28 +65,71 @@ export default function MonComptePage() {
    */
   const handleLogin = async (e) => {
     e.preventDefault();
-    setLoginError('');
+    setLoginError("");
     setLoginLoading(true);
 
     try {
       await signIn(loginEmail, loginPassword);
       // La redirection se fera automatiquement via useEffect
     } catch (err) {
-      console.error('Erreur de connexion:', err);
+      console.error("Erreur de connexion:", err);
 
-      if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password') {
-        setLoginError('Email ou mot de passe incorrect');
-      } else if (err.code === 'auth/user-not-found') {
-        setLoginError('Aucun compte trouvé avec cet email');
-      } else if (err.code === 'auth/invalid-email') {
-        setLoginError('Email invalide');
-      } else if (err.code === 'auth/too-many-requests') {
-        setLoginError('Trop de tentatives. Veuillez réessayer plus tard.');
+      if (
+        err.code === "auth/invalid-credential" ||
+        err.code === "auth/wrong-password"
+      ) {
+        setLoginError("Email ou mot de passe incorrect");
+      } else if (err.code === "auth/user-not-found") {
+        setLoginError("Aucun compte trouvé avec cet email");
+      } else if (err.code === "auth/invalid-email") {
+        setLoginError("Email invalide");
+      } else if (err.code === "auth/too-many-requests") {
+        setLoginError("Trop de tentatives. Veuillez réessayer plus tard.");
       } else {
-        setLoginError(err.message || 'Erreur lors de la connexion');
+        setLoginError(err.message || "Erreur lors de la connexion");
       }
     } finally {
       setLoginLoading(false);
+    }
+  };
+
+  /**
+   * MOT DE PASSE OUBLIÉ
+   */
+  const handleForgotPassword = async () => {
+    setResetMessage("");
+    setResetError("");
+
+    if (!loginEmail) {
+      setResetError("Veuillez entrer votre email dans le champ ci-dessus.");
+      return;
+    }
+
+    setResetLoading(true);
+
+    try {
+      await resetPassword(loginEmail);
+
+      setResetMessage(
+        "Si un compte existe pour cet email, vous recevrez un lien de réinitialisation dans quelques minutes."
+      );
+    } catch (err) {
+      console.error("Erreur mot de passe oublié:", err);
+
+      if (err.code === "auth/invalid-email") {
+        setResetError("Email invalide");
+      } else if (err.code === "auth/user-not-found") {
+        // Ne pas révéler si le compte existe ou non
+        setResetMessage(
+          "Si un compte existe pour cet email, vous recevrez un lien de réinitialisation dans quelques minutes."
+        );
+      } else {
+        setResetError(
+          "Impossible d'envoyer l'email de réinitialisation. Veuillez réessayer plus tard."
+        );
+      }
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -89,18 +138,18 @@ export default function MonComptePage() {
    */
   const handleSignup = async (e) => {
     e.preventDefault();
-    setSignupError('');
+    setSignupError("");
     setSignupLoading(true);
 
     // Validation des mots de passe
     if (signupPassword !== signupConfirmPassword) {
-      setSignupError('Les mots de passe ne correspondent pas');
+      setSignupError("Les mots de passe ne correspondent pas");
       setSignupLoading(false);
       return;
     }
 
     if (signupPassword.length < 6) {
-      setSignupError('Le mot de passe doit contenir au moins 6 caractères');
+      setSignupError("Le mot de passe doit contenir au moins 6 caractères");
       setSignupLoading(false);
       return;
     }
@@ -109,16 +158,16 @@ export default function MonComptePage() {
       await signUp(signupEmail, signupPassword, signupDisplayName);
       // La redirection se fera automatiquement via useEffect
     } catch (err) {
-      console.error('Erreur d\'inscription:', err);
+      console.error("Erreur d'inscription:", err);
 
-      if (err.code === 'auth/email-already-in-use') {
-        setSignupError('Cet email est déjà utilisé');
-      } else if (err.code === 'auth/invalid-email') {
-        setSignupError('Email invalide');
-      } else if (err.code === 'auth/weak-password') {
-        setSignupError('Mot de passe trop faible');
+      if (err.code === "auth/email-already-in-use") {
+        setSignupError("Cet email est déjà utilisé");
+      } else if (err.code === "auth/invalid-email") {
+        setSignupError("Email invalide");
+      } else if (err.code === "auth/weak-password") {
+        setSignupError("Mot de passe trop faible");
       } else {
-        setSignupError(err.message || 'Erreur lors de l\'inscription');
+        setSignupError(err.message || "Erreur lors de l'inscription");
       }
     } finally {
       setSignupLoading(false);
@@ -145,28 +194,28 @@ export default function MonComptePage() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-
         {/* Logo / Titre */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-serif text-gray-800 mb-2">Mon Compte</h1>
-          <p className="text-sm text-gray-600">Connectez-vous ou créez votre compte</p>
+          <p className="text-sm text-gray-600">
+            Connectez-vous ou créez votre compte
+          </p>
         </div>
 
         {/* Carte principale */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
-
           {/* Onglets */}
           <div className="flex border-b">
             <button
               onClick={() => {
-                setActiveTab('login');
-                setLoginError('');
-                setSignupError('');
+                setActiveTab("login");
+                setLoginError("");
+                setSignupError("");
               }}
               className={`flex-1 py-4 text-center font-medium transition ${
-                activeTab === 'login'
-                  ? 'text-[#5d6e64] border-b-2 border-[#5d6e64]'
-                  : 'text-gray-500 hover:text-gray-700'
+                activeTab === "login"
+                  ? "text-[#5d6e64] border-b-2 border-[#5d6e64]"
+                  : "text-gray-500 hover:text-gray-700"
               }`}
             >
               <LogIn size={20} className="inline mr-2" />
@@ -174,14 +223,14 @@ export default function MonComptePage() {
             </button>
             <button
               onClick={() => {
-                setActiveTab('signup');
-                setLoginError('');
-                setSignupError('');
+                setActiveTab("signup");
+                setLoginError("");
+                setSignupError("");
               }}
               className={`flex-1 py-4 text-center font-medium transition ${
-                activeTab === 'signup'
-                  ? 'text-[#5d6e64] border-b-2 border-[#5d6e64]'
-                  : 'text-gray-500 hover:text-gray-700'
+                activeTab === "signup"
+                  ? "text-[#5d6e64] border-b-2 border-[#5d6e64]"
+                  : "text-gray-500 hover:text-gray-700"
               }`}
             >
               <UserPlus size={20} className="inline mr-2" />
@@ -190,11 +239,9 @@ export default function MonComptePage() {
           </div>
 
           <div className="p-8">
-
             {/* ONGLET CONNEXION */}
-            {activeTab === 'login' && (
+            {activeTab === "login" && (
               <form onSubmit={handleLogin} className="space-y-6">
-
                 {/* Message d'erreur */}
                 {loginError && (
                   <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded text-sm">
@@ -227,7 +274,7 @@ export default function MonComptePage() {
                   </label>
                   <div className="relative">
                     <input
-                      type={showPassword ? 'text' : 'password'}
+                      type={showPassword ? "text" : "password"}
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
                       required
@@ -264,13 +311,36 @@ export default function MonComptePage() {
                   )}
                 </button>
 
+                <div className="flex flex-col items-start gap-2">
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    disabled={resetLoading || loginLoading}
+                    className="text-xs text-gray-600 hover:text-gray-800 underline"
+                  >
+                    {resetLoading
+                      ? "Envoi du lien..."
+                      : "Mot de passe oublié ?"}
+                  </button>
+
+                  {resetMessage && (
+                    <div className="bg-green-50 border border-green-200 text-green-800 px-3 py-2 rounded text-xs">
+                      {resetMessage}
+                    </div>
+                  )}
+
+                  {resetError && (
+                    <div className="bg-red-50 border border-red-200 text-red-800 px-3 py-2 rounded text-xs">
+                      {resetError}
+                    </div>
+                  )}
+                </div>
               </form>
             )}
 
             {/* ONGLET INSCRIPTION */}
-            {activeTab === 'signup' && (
+            {activeTab === "signup" && (
               <form onSubmit={handleSignup} className="space-y-6">
-
                 {/* Message d'erreur */}
                 {signupError && (
                   <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded text-sm">
@@ -319,7 +389,7 @@ export default function MonComptePage() {
                   </label>
                   <div className="relative">
                     <input
-                      type={showPassword ? 'text' : 'password'}
+                      type={showPassword ? "text" : "password"}
                       value={signupPassword}
                       onChange={(e) => setSignupPassword(e.target.value)}
                       required
@@ -345,7 +415,7 @@ export default function MonComptePage() {
                     Confirmer le mot de passe *
                   </label>
                   <input
-                    type={showPassword ? 'text' : 'password'}
+                    type={showPassword ? "text" : "password"}
                     value={signupConfirmPassword}
                     onChange={(e) => setSignupConfirmPassword(e.target.value)}
                     required
@@ -374,21 +444,20 @@ export default function MonComptePage() {
                     </>
                   )}
                 </button>
-
               </form>
             )}
-
           </div>
-
         </div>
 
         {/* Lien retour à l'accueil */}
         <div className="text-center mt-6">
-          <Link href="/" className="text-sm text-gray-600 hover:text-gray-800 transition">
+          <Link
+            href="/"
+            className="text-sm text-gray-600 hover:text-gray-800 transition"
+          >
             ← Retour à l'accueil
           </Link>
         </div>
-
       </div>
     </div>
   );

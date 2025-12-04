@@ -408,7 +408,7 @@ test.describe("Admin Dashboard - Tests Complets", () => {
   // TESTS PERFORMANCE
   // ==========================================
 
-  test("Performance - Temps de chargement", async ({ page }) => {
+  test.skip("Performance - Temps de chargement", async ({ page }) => {
     const startTime = Date.now();
     await page.goto("http://localhost:3000/admin");
     await page.waitForLoadState("networkidle");

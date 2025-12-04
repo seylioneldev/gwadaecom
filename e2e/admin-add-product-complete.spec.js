@@ -279,28 +279,20 @@ test.describe("Admin - Ajouter un Produit - Tests Complets", () => {
       const hasSuccess = await successMessage.isVisible().catch(() => false);
 
       if (hasSuccess) {
-    // Scroll vers le bas
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+        await expect(successMessage).toBeVisible();
 
-    const helpSection = page.locator("text=/conseils|aide|help|tips/i");
-    const hasHelp = await helpSection.isVisible().catch(() => false);
+        // Scroll vers le bas pour vérifier la section d'aide
+        await page.evaluate(() =>
+          window.scrollTo(0, document.body.scrollHeight)
+        );
 
-    if (hasHelp) {
-      await expect(helpSection).toBeVisible();
-    }
-  });
+        const helpSection = page.locator("text=/conseils|aide|help|tips/i");
+        const hasHelp = await helpSection.isVisible().catch(() => false);
 
-  // ==========================================
-  // TESTS NAVIGATION
-  // ==========================================
-
-  test("Navigation - Retour via bouton", async ({ page }) => {
-    const backButton = page.locator('a[href="/admin"]').first();
-    const hasButton = await backButton.isVisible().catch(() => false);
-
-    if (hasButton) {
-      await backButton.click();
-      await expect(page).toHaveURL("/admin");
+        if (hasHelp) {
+          await expect(helpSection).toBeVisible();
+        }
+      }
     }
   });
 

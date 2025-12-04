@@ -10,51 +10,95 @@
 
 "use client";
 
-import { useState } from 'react';
-import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'next/navigation';
-import { LogIn, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+import { LogIn, AlertCircle, Eye, EyeOff } from "lucide-react";
 
 export default function AdminLoginPage() {
-  const { signIn, loading: authLoading } = useAuth();
+  const { signIn, loading: authLoading, resetPassword } = useAuth();
   const router = useRouter();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const [resetMessage, setResetMessage] = useState("");
+  const [resetError, setResetError] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
 
   /**
    * GÉRER LA CONNEXION
    */
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
       await signIn(email, password);
 
       // Rediriger vers le dashboard admin
-      router.push('/admin');
+      router.push("/admin");
     } catch (err) {
       // Afficher un message d'erreur convivial
-      if (err.code === 'auth/invalid-credential') {
-        setError('Email ou mot de passe incorrect');
-      } else if (err.code === 'auth/user-not-found') {
-        setError('Aucun compte trouvé avec cet email');
-      } else if (err.code === 'auth/wrong-password') {
-        setError('Mot de passe incorrect');
-      } else if (err.code === 'auth/too-many-requests') {
-        setError('Trop de tentatives. Réessayez plus tard.');
-      } else if (err.message?.includes('Accès refusé')) {
-        setError('Accès refusé : vous n\'êtes pas administrateur');
+      if (err.code === "auth/invalid-credential") {
+        setError("Email ou mot de passe incorrect");
+      } else if (err.code === "auth/user-not-found") {
+        setError("Aucun compte trouvé avec cet email");
+      } else if (err.code === "auth/wrong-password") {
+        setError("Mot de passe incorrect");
+      } else if (err.code === "auth/too-many-requests") {
+        setError("Trop de tentatives. Réessayez plus tard.");
+      } else if (err.message?.includes("Accès refusé")) {
+        setError("Accès refusé : vous n'êtes pas administrateur");
       } else {
-        setError(err.message || 'Erreur de connexion');
+        setError(err.message || "Erreur de connexion");
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  /**
+   * MOT DE PASSE OUBLIÉ
+   */
+  const handleForgotPassword = async () => {
+    setResetMessage("");
+    setResetError("");
+
+    if (!email) {
+      setResetError("Veuillez entrer votre email dans le champ ci-dessus.");
+      return;
+    }
+
+    setResetLoading(true);
+
+    try {
+      await resetPassword(email);
+
+      setResetMessage(
+        "Si un compte administrateur existe pour cet email, vous recevrez un lien de réinitialisation dans quelques minutes."
+      );
+    } catch (err) {
+      console.error("Erreur mot de passe oublié (admin):", err);
+
+      if (err.code === "auth/invalid-email") {
+        setResetError("Email invalide");
+      } else if (err.code === "auth/user-not-found") {
+        // Ne pas révéler si le compte admin existe ou non
+        setResetMessage(
+          "Si un compte administrateur existe pour cet email, vous recevrez un lien de réinitialisation dans quelques minutes."
+        );
+      } else {
+        setResetError(
+          "Impossible d'envoyer l'email de réinitialisation. Veuillez réessayer plus tard."
+        );
+      }
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -69,20 +113,22 @@ export default function AdminLoginPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-
         {/* Logo / Titre */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-[#5d6e64] text-white rounded-full mb-4">
             <LogIn size={32} />
           </div>
-          <h1 className="text-3xl font-serif text-gray-800 mb-2">Admin Login</h1>
-          <p className="text-sm text-gray-500">Accédez au tableau de bord administrateur</p>
+          <h1 className="text-3xl font-serif text-gray-800 mb-2">
+            Admin Login
+          </h1>
+          <p className="text-sm text-gray-500">
+            Accédez au tableau de bord administrateur
+          </p>
         </div>
 
         {/* Formulaire */}
         <div className="bg-white rounded-lg shadow-md p-8">
           <form onSubmit={handleLogin} className="space-y-6">
-
             {/* Message d'erreur */}
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded flex items-start gap-3">
@@ -114,7 +160,7 @@ export default function AdminLoginPage() {
               </label>
               <div className="relative">
                 <input
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -150,6 +196,29 @@ export default function AdminLoginPage() {
                 </>
               )}
             </button>
+
+            <div className="flex flex-col items-start gap-2 mt-2">
+              <button
+                type="button"
+                onClick={handleForgotPassword}
+                disabled={resetLoading || loading}
+                className="text-xs text-gray-600 hover:text-gray-800 underline"
+              >
+                {resetLoading ? "Envoi du lien..." : "Mot de passe oublié ?"}
+              </button>
+
+              {resetMessage && (
+                <div className="bg-green-50 border border-green-200 text-green-800 px-3 py-2 rounded text-xs w-full">
+                  {resetMessage}
+                </div>
+              )}
+
+              {resetError && (
+                <div className="bg-red-50 border border-red-200 text-red-800 px-3 py-2 rounded text-xs w-full">
+                  {resetError}
+                </div>
+              )}
+            </div>
           </form>
 
           {/* Aide */}
@@ -162,7 +231,10 @@ export default function AdminLoginPage() {
 
         {/* Retour à l'accueil */}
         <div className="text-center mt-6">
-          <a href="/" className="text-sm text-gray-600 hover:text-gray-800 transition">
+          <a
+            href="/"
+            className="text-sm text-gray-600 hover:text-gray-800 transition"
+          >
             ← Retour à l'accueil
           </a>
         </div>
