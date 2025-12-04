@@ -163,14 +163,6 @@ export default function ProductGrid() {
                         amount={product.price}
                         className="text-xs text-gray-500 tracking-wider"
                       />
-
-                      {stockValue !== null && (
-                        <p className="text-[11px] text-gray-500">
-                          {stockValue > 0
-                            ? `${stockValue} en stock`
-                            : "Actuellement en rupture"}
-                        </p>
-                      )}
                     </div>
                   </>
                 );

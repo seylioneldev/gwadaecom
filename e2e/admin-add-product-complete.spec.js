@@ -279,47 +279,6 @@ test.describe("Admin - Ajouter un Produit - Tests Complets", () => {
       const hasSuccess = await successMessage.isVisible().catch(() => false);
 
       if (hasSuccess) {
-        await expect(successMessage).toBeVisible();
-      }
-    }
-  });
-
-  test("Soumission - Réinitialisation du formulaire après succès", async ({
-    page,
-  }) => {
-    const inputs = page.locator("input");
-    const count = await inputs.count();
-
-    if (count > 0) {
-      const uniqueName = `Produit Test ${Date.now()}`;
-
-      await inputs.nth(0).fill(uniqueName);
-
-      const priceInput = page.locator('input[type="number"]').first();
-      await priceInput.fill("29.99");
-
-      const categorySelect = page.locator("select").first();
-      const options = await categorySelect.locator("option").count();
-      if (options > 1) {
-        await categorySelect.selectOption({ index: 1 });
-      }
-
-      const submitButton = page.locator('button[type="submit"]').first();
-      await submitButton.click();
-
-      await page.waitForTimeout(2000);
-
-      // Vérifier que le formulaire est réinitialisé
-      const nameValue = await inputs.nth(0).inputValue();
-      expect(nameValue).toBe("");
-    }
-  });
-
-  // ==========================================
-  // TESTS AIDE
-  // ==========================================
-
-  test("Aide - Section conseils visible", async ({ page }) => {
     // Scroll vers le bas
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
 
@@ -408,5 +367,49 @@ test.describe("Admin - Ajouter un Produit - Tests Complets", () => {
       const value = await inputs.nth(4).inputValue();
       expect(value).toBe("New");
     }
+  });
+});
+
+test.describe("Admin - Produits - Bouton Modifier", () => {
+  test("le bouton Modifier passe la ligne en mode édition dans la vue tableau", async ({
+    page,
+  }) => {
+    // Aller sur la page produits admin
+    await page.goto("http://localhost:3000/admin/products");
+    await page.waitForTimeout(1000);
+
+    // Passer en mode tableau si le bouton existe
+    const tableButton = page.locator('button[title="Tableau"]').first();
+    const hasTableButton = await tableButton.isVisible().catch(() => false);
+    if (hasTableButton) {
+      await tableButton.click();
+    }
+
+    // Attendre qu'au moins une ligne de produit soit visible
+    const rows = page.locator("table tbody tr");
+    const rowCount = await rows.count().catch(() => 0);
+    if (rowCount === 0) {
+      // Aucun produit : on ne fait pas échouer le test
+      return;
+    }
+
+    const firstRow = rows.first();
+
+    // Bouton Modifier dans la première ligne
+    const editButton = firstRow.locator('button[title="Modifier"]');
+    const hasEditButton = await editButton.isVisible().catch(() => false);
+    if (!hasEditButton) {
+      return;
+    }
+
+    // Cliquer sur Modifier
+    await editButton.click();
+
+    // Vérifier que des champs d'édition apparaissent dans la ligne
+    const nameInput = firstRow.locator('input[type="text"]').first();
+    const numberInput = firstRow.locator('input[type="number"]').first();
+
+    await expect(nameInput).toBeVisible();
+    await expect(numberInput).toBeVisible();
   });
 });

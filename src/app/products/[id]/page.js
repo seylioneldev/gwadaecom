@@ -61,6 +61,7 @@ export default function ProductPage() {
 
   // État local pour gérer la quantité choisie par l'utilisateur
   const [quantity, setQuantity] = useState(1);
+  const [quantityAdjusted, setQuantityAdjusted] = useState(false);
 
   // Récupération de l'ID depuis l'URL
   const params = useParams();
@@ -115,23 +116,54 @@ export default function ProductPage() {
 
   // Fonction déclenchée au clic sur "Add to Cart"
   const handleAddToCart = () => {
-    const hasNumericStock =
-      typeof product.stock === "number" && !Number.isNaN(product.stock);
-    const stockValue = hasNumericStock ? product.stock : null;
-    const isOutOfStock = stockValue !== null && stockValue <= 0;
-
     if (isOutOfStock) {
       return;
     }
 
-    addItem(product, quantity);
+    let safeQuantity = quantity;
+
+    if (availableStock !== null && availableStock > 0) {
+      safeQuantity = Math.min(quantity, availableStock);
+    }
+
+    addItem(product, safeQuantity);
   };
 
   const hasNumericStock =
     typeof product.stock === "number" && !Number.isNaN(product.stock);
   const stockValue = hasNumericStock ? product.stock : null;
-  const isOutOfStock = stockValue !== null && stockValue <= 0;
-  const stockStatus = getStockStatus(stockValue);
+  const availableStock =
+    stockValue !== null ? Math.max(stockValue - 1, 0) : null;
+  const isOutOfStock = availableStock !== null && availableStock <= 0;
+
+  // Source unique de vérité pour le badge : on utilise le stock vendable quand il est connu,
+  // sinon on retombe sur la valeur brute (ou "En stock" si aucune info).
+  const stockLabelSource =
+    availableStock !== null ? availableStock : stockValue;
+  const stockStatus = getStockStatus(stockLabelSource);
+
+  const handleQuantityChange = (value) => {
+    if (!Number.isFinite(value)) {
+      setQuantity(1);
+      setQuantityAdjusted(false);
+      return;
+    }
+
+    let next = Math.max(1, value);
+    let adjusted = false;
+
+    if (
+      availableStock !== null &&
+      availableStock > 0 &&
+      next > availableStock
+    ) {
+      next = availableStock;
+      adjusted = true;
+    }
+
+    setQuantity(next);
+    setQuantityAdjusted(adjusted);
+  };
 
   return (
     <main className="min-h-screen bg-white">
@@ -189,20 +221,8 @@ export default function ProductPage() {
                 className={`w-2 h-2 rounded-full ${stockStatus.dotClass}`}
               ></span>
               {stockStatus.label}
-              {stockValue !== null && stockValue > 0 && (
-                <span className="ml-1 text-[10px] normal-case tracking-normal text-gray-500">
-                  ({stockValue} en stock)
-                </span>
-              )}
             </span>
           </div>
-
-          {isOutOfStock && (
-            <div className="mb-6 text-xs text-red-600 bg-red-50 border border-red-100 rounded px-3 py-2">
-              Ce produit est actuellement en rupture de stock et ne peut pas
-              être commandé.
-            </div>
-          )}
 
           <p className="text-xs leading-relaxed text-gray-500 mb-8 border-b border-gray-100 pb-8">
             {product.description}
@@ -210,25 +230,47 @@ export default function ProductPage() {
 
           {/* Sélecteur de Quantité */}
           {!isOutOfStock && (
-            <div className="flex items-center gap-4 mb-8">
-              <span className="text-xs uppercase tracking-widest text-gray-500">
-                Quantity
-              </span>
-              <div className="flex items-center border border-gray-300">
-                <button
-                  onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
-                  className="p-2 hover:bg-gray-100 text-gray-600"
-                >
-                  <Minus size={14} />
-                </button>
-                <span className="px-4 text-sm font-medium">{quantity}</span>
-                <button
-                  onClick={() => setQuantity((prev) => prev + 1)}
-                  className="p-2 hover:bg-gray-100 text-gray-600"
-                >
-                  <Plus size={14} />
-                </button>
+            <div className="flex flex-col gap-2 mb-8">
+              <div className="flex items-center gap-4">
+                <span className="text-xs uppercase tracking-widest text-gray-500">
+                  Quantity
+                </span>
+                <div className="flex items-center border border-gray-300">
+                  <button
+                    onClick={() => handleQuantityChange(quantity - 1)}
+                    className="p-2 hover:bg-gray-100 text-gray-600"
+                  >
+                    <Minus size={14} />
+                  </button>
+                  <input
+                    type="number"
+                    min={1}
+                    max={availableStock !== null ? availableStock : undefined}
+                    value={quantity}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value, 10);
+                      if (Number.isNaN(value)) {
+                        setQuantity(1);
+                        setQuantityAdjusted(false);
+                        return;
+                      }
+                      handleQuantityChange(value);
+                    }}
+                    className="w-16 text-center text-sm font-medium px-2 py-1 border-l border-r border-gray-300 outline-none"
+                  />
+                  <button
+                    onClick={() => handleQuantityChange(quantity + 1)}
+                    className="p-2 hover:bg-gray-100 text-gray-600"
+                  >
+                    <Plus size={14} />
+                  </button>
+                </div>
               </div>
+              {quantityAdjusted && (
+                <p className="text-[11px] text-amber-700">
+                  Quantité ajustée au stock maximal disponible.
+                </p>
+              )}
             </div>
           )}
 

@@ -5,7 +5,7 @@
 > Si vous créez un nouveau chat dans Cascade/Windsurf, **lisez OBLIGATOIREMENT ce fichier en premier** pour comprendre le contexte complet du projet, les fonctionnalités existantes, les bugs connus, et les décisions techniques prises.
 
 > **Dernière mise à jour** : 2025-12-03
-> **Version** : 2.3.1
+> **Version** : 2.3.2
 
 ---
 
@@ -199,9 +199,9 @@ gwadaecom/
   - Affichage du nom d'utilisateur ou email
   - ✅ **Badges de stock dynamiques** sur home, pages catégorie et fiche produit
     - Affichage du statut de stock : "En stock" (vert), "Bientôt épuisé" (orange), "Rupture" (noir)
-    - Affichage de la quantité restante lorsque le stock est connu
+    - Aucun affichage du nombre exact de pièces en stock côté client (la quantité reste gérée en interne)
     - Cartes produits en rupture non cliquables depuis les listes
-    - Blocage de l'ajout au panier et de la sélection de quantité sur la fiche produit quand stock = 0
+    - Blocage de l'ajout au panier et de la sélection de quantité sur la fiche produit quand le stock vendable est nul (règle de stock fantôme)
 
 #### 🔐 Authentification
 
@@ -634,21 +634,26 @@ service cloud.firestore {
 
 ## 📅 Historique des Modifications
 
-### 2025-12-03 - Session 9 : Gestion visuelle du stock (badges + blocage achat)
+### 2025-12-03 - Session 9 : Gestion visuelle du stock + règle de "stock fantôme"
 
 - ✅ Mise en place de **badges de statut de stock** sur les produits :
   - "En stock" (fond vert) pour les stocks > 10
   - "Bientôt épuisé" (fond orange) pour les stocks entre 1 et 10
-  - "Rupture" (fond noir) pour les stocks à 0
-- ✅ Affichage de la quantité disponible lorsque le champ `stock` est renseigné côté Firestore.
-- ✅ Blocage de l'ajout au panier sur la fiche produit lorsque le stock est à 0 :
-  - Bouton "Add to Cart" désactivé et grisé avec label "Indisponible".
-  - Sélecteur de quantité masqué.
-  - Message d'information indiquant que le produit est en rupture de stock.
-- ✅ Cartes produits en rupture non cliquables depuis les listes :
-  - Sur la page d'accueil (`ProductGrid.jsx`) et les pages catégorie (`/category/[slug]`),
-    les produits en rupture affichent un badge "Rupture" et un bandeau "Rupture de stock",
-    et ne redirigent plus vers la fiche produit.
+  - "Rupture" (fond noir) pour les stocks à 0 (ou stock vendable nul)
+- ✅ Suppression de l'affichage du nombre exact de produits en stock côté client :
+  - Plus de textes du type "4 en stock" ou "Actuellement en rupture" sous les prix
+  - Les utilisateurs ne voient que les labels qualitatifs (En stock / Bientôt épuisé / Rupture)
+- ✅ Mise en place de la règle de **stock fantôme** :
+  - Stock vendable = `max(stock - 1, 0)`
+  - On ne vend jamais la toute dernière pièce
+- ✅ Fiche produit (`src/app/products/[id]/page.js`) :
+  - Sélecteur de quantité basé sur le stock vendable (min 1, max = stock vendable)
+  - Saisie clavier auto-corrigée si l'utilisateur dépasse le stock disponible
+  - Message doux "Quantité ajustée au stock maximal disponible." au lieu d'un message d'erreur
+  - Bouton "Add to Cart" désactivé lorsque le stock vendable est nul (label "Indisponible")
+- ✅ Panier (`/cart`) et SideCart :
+  - `addItem` et `updateQuantity` dans `CartContext.jsx` respectent aussi le stock vendable
+  - Impossible d'augmenter la quantité au-delà du stock vendable via les boutons `+`
 - ✅ Harmonisation de l'UX de stock entre :
   - Grille d'accueil (`src/components/products/ProductGrid.jsx`)
   - Pages catégorie (`src/app/category/[slug]/page.js`)
