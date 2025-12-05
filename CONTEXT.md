@@ -4,8 +4,8 @@
 >
 > Si vous créez un nouveau chat dans Cascade/Windsurf, **lisez OBLIGATOIREMENT ce fichier en premier** pour comprendre le contexte complet du projet, les fonctionnalités existantes, les bugs connus, et les décisions techniques prises.
 
-> **Dernière mise à jour** : 2025-12-03
-> **Version** : 2.3.2
+> **Dernière mise à jour** : 2025-12-04
+> **Version** : 2.4.0
 
 ---
 
@@ -95,7 +95,8 @@ gwadaecom/
 │   │   └── AdminFloatingButton.jsx   # Bouton admin flottant
 │   ├── context/                      # React Context
 │   │   ├── AuthContext.jsx           # Authentification
-│   │   └── CartContext.jsx           # Panier (useCallback optimisé)
+│   │   ├── CartContext.jsx           # Panier (useCallback optimisé)
+│   │   └── SettingsContext.jsx       # Paramètres globaux + thème (customStyles)
 │   ├── hooks/                        # Hooks personnalisés
 │   │   ├── useProducts.js            # Récupération produits Firestore
 │   │   └── useMediaQuery.js          # Détection mobile sans bug hydration
@@ -140,7 +141,11 @@ gwadaecom/
 
 - **AuthContext** : Gestion auth Firebase (signIn, signUp, signOut, rôles)
 - **CartContext** : Gestion panier (addItem, removeItem, updateQuantity, clearCart)
+
   - ⚠️ **Important** : Utilise `useCallback` pour éviter les re-renders infinis
+
+- **SettingsContext** : Paramètres globaux du site (`settings` Firestore) + thème dynamique via `customStyles` (couleurs header/footer/page/boutons, blocs d'accueil, etc.).
+  - Initialise l'état avec des valeurs fournies côté serveur (`initialSettings`) pour éviter les flashes visuels.
 
 #### 2. Custom Hooks
 
@@ -197,11 +202,20 @@ gwadaecom/
   - Affichage conditionnel (connecté/non connecté)
   - Menu déroulant avec accès rapide (Mon compte, Mes commandes)
   - Affichage du nom d'utilisateur ou email
-  - ✅ **Badges de stock dynamiques** sur home, pages catégorie et fiche produit
-    - Affichage du statut de stock : "En stock" (vert), "Bientôt épuisé" (orange), "Rupture" (noir)
-    - Aucun affichage du nombre exact de pièces en stock côté client (la quantité reste gérée en interne)
-    - Cartes produits en rupture non cliquables depuis les listes
-    - Blocage de l'ajout au panier et de la sélection de quantité sur la fiche produit quand le stock vendable est nul (règle de stock fantôme)
+  - Nouvelle version avec icône utilisateur circulaire + dropdown moderne (Mon compte, Mes commandes, Déconnexion / Connexion)
+- ✅ **Badges de stock dynamiques** sur home, pages catégorie et fiche produit
+  - Affichage du statut de stock : "En stock" (vert), "Bientôt épuisé" (orange), "Rupture" (noir)
+  - Aucun affichage du nombre exact de pièces en stock côté client (la quantité reste gérée en interne)
+  - Cartes produits en rupture non cliquables depuis les listes
+  - Blocage de l'ajout au panier et de la sélection de quantité sur la fiche produit quand le stock vendable est nul (règle de stock fantôme)
+- ✅ **Personnalisation avancée du thème & de la home**
+  - Couleurs configurables via `/admin/settings` pour : header, footer, page (fond + texte), boutons principaux.
+  - Personnalisation des blocs d'accueil via `customStyles.homepageBlocks` :
+    - `hero`, `productGrid`, `infoStrip`, `story`, `newsletter` : couleur de fond par bloc.
+    - Image de fond par bloc + réglage de blur et de voile noir (overlay) pour un rendu moderne.
+    - Fond du bloc texte du Hero configurable (couleur + image + blur + voile noir).
+  - Menu utilisateur du header : couleurs du dropdown (fond + texte) configurables via `customStyles.header.userMenuBgColor` / `userMenuTextColor`.
+  - Thème (couleurs globales) appliqué **côté serveur** pour éviter les flashes : chargement de `settings/general` via Firebase Admin dans `src/app/layout.js`, génération du CSS dans une balise `<style id="dynamic-custom-styles">`, puis synchronisation avec le client via `SettingsProvider` (`initialSettings`).
 
 #### 🔐 Authentification
 
@@ -633,6 +647,46 @@ service cloud.firestore {
 ---
 
 ## 📅 Historique des Modifications
+
+### 2025-12-04 - Session 10 : Personnalisation avancée du thème + rendu serveur
+
+- ✅ **Extension de la personnalisation CSS via `/admin/settings`**
+
+  - Ajout d'une section "Blocs d'accueil" dans la personnalisation CSS pour contrôler les couleurs de fond des sections :
+    - `hero`, `productGrid`, `infoStrip`, `story`, `newsletter`.
+  - Ajout d'options d'image de fond par bloc avec :
+    - `BgImageUrl`, `BgBlur`, `BgDarken` (voile noir) pour chaque bloc.
+  - Fond du bloc texte du Hero :
+    - Couleur de fond + image de fond + blur + voile noir configurables via `customStyles.homepageBlocks.heroContentBg*`.
+
+- ✅ **Refonte visuelle du Header**
+
+  - Bouton texte "Search" remplacé par une icône de loupe (lucide-react) avec barre de recherche animée.
+  - Nouveau menu utilisateur basé sur une icône ronde :
+    - Affiche un dropdown moderne avec : "Mon compte", "Mes commandes", "Déconnexion" pour un utilisateur connecté.
+    - Affiche "Se connecter / Créer un compte" lorsqu'aucun utilisateur n'est connecté.
+    - Fermeture automatique du menu au clic extérieur et après déconnexion.
+  - Couleurs du dropdown utilisateur (fond + texte) rendues configurables via :
+    - `customStyles.header.userMenuBgColor`
+    - `customStyles.header.userMenuTextColor`.
+
+- ✅ **Thème dynamique rendu côté serveur (SSR)**
+
+  - Création de `src/context/SettingsContext.jsx` pour centraliser les paramètres du site :
+    - Chargement en temps réel depuis Firestore (`settings/general`).
+    - Sauvegarde des dernières valeurs dans `localStorage` (clé `gwadaecom-settings`).
+    - Nouveau paramètre `initialSettings` passé par le layout pour initialiser le state côté client avec les valeurs serveur.
+  - `src/app/layout.js` devient un composant serveur asynchrone qui :
+    - Lit `settings/general` via Firebase Admin (`adminDb`) et `cms.config`.
+    - Génère le CSS dynamique pour le thème (`customStyles`) via `generateCustomStylesCss`.
+    - Injecte ce CSS dans une balise `<style id="dynamic-custom-styles">` directement dans le HTML (SSR) pour éviter le flash de couleurs.
+    - Enveloppe l'application dans `SettingsProvider initialSettings={safeSettings}` afin que `useSettings()` voie les mêmes valeurs que le SSR dès le premier rendu.
+  - `DynamicStyles.jsx` reste disponible côté client pour une éventuelle évolution, mais la logique principale de thème est désormais gérée côté serveur.
+
+- ✅ **Ajustements de tests E2E autour du thème**
+  - Mise à jour du test Playwright `e2e/site-colors-settings.spec.js` pour :
+    - Se connecter en admin avant de modifier les couleurs dans `/admin/settings` (respect des règles Firestore).
+    - Vérifier les couleurs réelles appliquées via `expect(...).toHaveCSS` plutôt que via des `waitForFunction` fragiles.
 
 ### 2025-12-03 - Session 9 : Gestion visuelle du stock + règle de "stock fantôme"
 

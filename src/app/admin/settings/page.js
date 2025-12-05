@@ -427,6 +427,556 @@ export default function AdminSettingsPage() {
             </div>
           </div>
 
+          <div className="mb-6">
+            <h3 className="text-sm font-semibold text-gray-700 mb-4">
+              Blocs d'accueil
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
+                  Bannière Hero - fond
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="color"
+                    name="customStyles.homepageBlocks.heroBgColor"
+                    value={
+                      formData.customStyles?.homepageBlocks?.heroBgColor ||
+                      "#e0e0e0"
+                    }
+                    onChange={handleChange}
+                    className="w-16 h-10 border border-gray-300 rounded cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={
+                      formData.customStyles?.homepageBlocks?.heroBgColor ||
+                      "#e0e0e0"
+                    }
+                    onChange={(e) =>
+                      handleChange({
+                        target: {
+                          name: "customStyles.homepageBlocks.heroBgColor",
+                          value: e.target.value,
+                        },
+                      })
+                    }
+                    className="flex-1 border border-gray-300 px-4 py-2 text-sm font-mono"
+                    placeholder="#e0e0e0"
+                  />
+                </div>
+
+                <div className="mt-3 space-y-2">
+                  <label className="block text-xs uppercase tracking-wider text-gray-600">
+                    Image de fond (URL)
+                  </label>
+                  <input
+                    type="text"
+                    name="customStyles.homepageBlocks.heroBgImageUrl"
+                    value={
+                      formData.customStyles?.homepageBlocks?.heroBgImageUrl ||
+                      ""
+                    }
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 px-4 py-2 text-sm font-mono"
+                    placeholder="https://.../hero.webp"
+                  />
+
+                  <label className="block text-xs uppercase tracking-wider text-gray-600">
+                    Flou du fond
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="24"
+                    step="1"
+                    name="customStyles.homepageBlocks.heroBgBlur"
+                    value={
+                      formData.customStyles?.homepageBlocks?.heroBgBlur ?? 0
+                    }
+                    onChange={handleChange}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-[11px] text-gray-500">
+                    <span>0 px</span>
+                    <span>
+                      {(formData.customStyles?.homepageBlocks?.heroBgBlur ??
+                        0) + " px"}
+                    </span>
+                    <span>24 px</span>
+                  </div>
+
+                  <label className="block text-xs uppercase tracking-wider text-gray-600">
+                    Voile noir
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="80"
+                    step="5"
+                    name="customStyles.homepageBlocks.heroBgDarken"
+                    value={
+                      formData.customStyles?.homepageBlocks?.heroBgDarken ?? 0
+                    }
+                    onChange={handleChange}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-[11px] text-gray-500">
+                    <span>0%</span>
+                    <span>
+                      {(formData.customStyles?.homepageBlocks?.heroBgDarken ??
+                        0) + "%"}
+                    </span>
+                    <span>80%</span>
+                  </div>
+                </div>
+
+                <div className="mt-6 pt-4 border-t space-y-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+                    Bloc texte Hero
+                  </p>
+
+                  <label className="block text-xs uppercase tracking-wider text-gray-600 mb-1">
+                    Couleur de fond
+                  </label>
+                  <div className="flex gap-2 mb-2">
+                    <input
+                      type="color"
+                      name="customStyles.homepageBlocks.heroContentBgColor"
+                      value={
+                        formData.customStyles?.homepageBlocks
+                          ?.heroContentBgColor || "#ffffff"
+                      }
+                      onChange={handleChange}
+                      className="w-16 h-10 border border-gray-300 rounded cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={
+                        formData.customStyles?.homepageBlocks
+                          ?.heroContentBgColor || "#ffffff"
+                      }
+                      onChange={(e) =>
+                        handleChange({
+                          target: {
+                            name: "customStyles.homepageBlocks.heroContentBgColor",
+                            value: e.target.value,
+                          },
+                        })
+                      }
+                      className="flex-1 border border-gray-300 px-4 py-2 text-sm font-mono"
+                      placeholder="#ffffff"
+                    />
+                  </div>
+
+                  <label className="block text-xs uppercase tracking-wider text-gray-600">
+                    Image de fond (URL)
+                  </label>
+                  <input
+                    type="text"
+                    name="customStyles.homepageBlocks.heroContentBgImageUrl"
+                    value={
+                      formData.customStyles?.homepageBlocks
+                        ?.heroContentBgImageUrl || ""
+                    }
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 px-4 py-2 text-sm font-mono"
+                    placeholder="https://.../hero-content.webp"
+                  />
+
+                  <label className="block text-xs uppercase tracking-wider text-gray-600">
+                    Flou du fond
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="24"
+                    step="1"
+                    name="customStyles.homepageBlocks.heroContentBgBlur"
+                    value={
+                      formData.customStyles?.homepageBlocks
+                        ?.heroContentBgBlur ?? 0
+                    }
+                    onChange={handleChange}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-[11px] text-gray-500">
+                    <span>0 px</span>
+                    <span>
+                      {(formData.customStyles?.homepageBlocks
+                        ?.heroContentBgBlur ?? 0) + " px"}
+                    </span>
+                    <span>24 px</span>
+                  </div>
+
+                  <label className="block text-xs uppercase tracking-wider text-gray-600">
+                    Voile noir
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="80"
+                    step="5"
+                    name="customStyles.homepageBlocks.heroContentBgDarken"
+                    value={
+                      formData.customStyles?.homepageBlocks
+                        ?.heroContentBgDarken ?? 0
+                    }
+                    onChange={handleChange}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-[11px] text-gray-500">
+                    <span>0%</span>
+                    <span>
+                      {(formData.customStyles?.homepageBlocks
+                        ?.heroContentBgDarken ?? 0) + "%"}
+                    </span>
+                    <span>80%</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
+                  Section Nouveautés / Produits - fond
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="color"
+                    name="customStyles.homepageBlocks.productGridBgColor"
+                    value={
+                      formData.customStyles?.homepageBlocks
+                        ?.productGridBgColor || "#ffffff"
+                    }
+                    onChange={handleChange}
+                    className="w-16 h-10 border border-gray-300 rounded cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={
+                      formData.customStyles?.homepageBlocks
+                        ?.productGridBgColor || "#ffffff"
+                    }
+                    onChange={(e) =>
+                      handleChange({
+                        target: {
+                          name: "customStyles.homepageBlocks.productGridBgColor",
+                          value: e.target.value,
+                        },
+                      })
+                    }
+                    className="flex-1 border border-gray-300 px-4 py-2 text-sm font-mono"
+                    placeholder="#ffffff"
+                  />
+                </div>
+
+                <div className="mt-3 space-y-2">
+                  <label className="block text-xs uppercase tracking-wider text-gray-600">
+                    Image de fond (URL)
+                  </label>
+                  <input
+                    type="text"
+                    name="customStyles.homepageBlocks.productGridBgImageUrl"
+                    value={
+                      formData.customStyles?.homepageBlocks
+                        ?.productGridBgImageUrl || ""
+                    }
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 px-4 py-2 text-sm font-mono"
+                    placeholder="https://.../products-bg.webp"
+                  />
+
+                  <label className="block text-xs uppercase tracking-wider text-gray-600">
+                    Flou du fond
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="24"
+                    step="1"
+                    name="customStyles.homepageBlocks.productGridBgBlur"
+                    value={
+                      formData.customStyles?.homepageBlocks
+                        ?.productGridBgBlur ?? 0
+                    }
+                    onChange={handleChange}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-[11px] text-gray-500">
+                    <span>0 px</span>
+                    <span>
+                      {(formData.customStyles?.homepageBlocks
+                        ?.productGridBgBlur ?? 0) + " px"}
+                    </span>
+                    <span>24 px</span>
+                  </div>
+
+                  <label className="block text-xs uppercase tracking-wider text-gray-600">
+                    Voile noir
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="80"
+                    step="5"
+                    name="customStyles.homepageBlocks.productGridBgDarken"
+                    value={
+                      formData.customStyles?.homepageBlocks
+                        ?.productGridBgDarken ?? 0
+                    }
+                    onChange={handleChange}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-[11px] text-gray-500">
+                    <span>0%</span>
+                    <span>
+                      {(formData.customStyles?.homepageBlocks
+                        ?.productGridBgDarken ?? 0) + "%"}
+                    </span>
+                    <span>80%</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
+                  Bandeau d'informations - fond
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="color"
+                    name="customStyles.homepageBlocks.infoStripBgColor"
+                    value={
+                      formData.customStyles?.homepageBlocks?.infoStripBgColor ||
+                      "#f5f5f5"
+                    }
+                    onChange={handleChange}
+                    className="w-16 h-10 border border-gray-300 rounded cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={
+                      formData.customStyles?.homepageBlocks?.infoStripBgColor ||
+                      "#f5f5f5"
+                    }
+                    onChange={(e) =>
+                      handleChange({
+                        target: {
+                          name: "customStyles.homepageBlocks.infoStripBgColor",
+                          value: e.target.value,
+                        },
+                      })
+                    }
+                    className="flex-1 border border-gray-300 px-4 py-2 text-sm font-mono"
+                    placeholder="#f5f5f5"
+                  />
+                </div>
+                <div className="mt-3 space-y-2">
+                  <label className="block text-xs uppercase tracking-wider text-gray-600">
+                    Image de fond (URL)
+                  </label>
+                  <input
+                    type="text"
+                    name="customStyles.homepageBlocks.infoStripBgImageUrl"
+                    value={
+                      formData.customStyles?.homepageBlocks
+                        ?.infoStripBgImageUrl || ""
+                    }
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 px-4 py-2 text-sm font-mono"
+                    placeholder="https://.../info-strip.webp"
+                  />
+
+                  <label className="block text-xs uppercase tracking-wider text-gray-600">
+                    Flou du fond
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="24"
+                    step="1"
+                    name="customStyles.homepageBlocks.infoStripBgBlur"
+                    value={
+                      formData.customStyles?.homepageBlocks?.infoStripBgBlur ??
+                      0
+                    }
+                    onChange={handleChange}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-[11px] text-gray-500">
+                    <span>0 px</span>
+                    <span>
+                      {(formData.customStyles?.homepageBlocks
+                        ?.infoStripBgBlur ?? 0) + " px"}
+                    </span>
+                    <span>24 px</span>
+                  </div>
+
+                  <label className="block text-xs uppercase tracking-wider text-gray-600">
+                    Voile noir
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="80"
+                    step="5"
+                    name="customStyles.homepageBlocks.infoStripBgDarken"
+                    value={
+                      formData.customStyles?.homepageBlocks
+                        ?.infoStripBgDarken ?? 0
+                    }
+                    onChange={handleChange}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-[11px] text-gray-500">
+                    <span>0%</span>
+                    <span>
+                      {(formData.customStyles?.homepageBlocks
+                        ?.infoStripBgDarken ?? 0) + "%"}
+                    </span>
+                    <span>80%</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
+                  Bloc histoire - fond
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="color"
+                    name="customStyles.homepageBlocks.storyBgColor"
+                    value={
+                      formData.customStyles?.homepageBlocks?.storyBgColor ||
+                      "#ffffff"
+                    }
+                    onChange={handleChange}
+                    className="w-16 h-10 border border-gray-300 rounded cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={
+                      formData.customStyles?.homepageBlocks?.storyBgColor ||
+                      "#ffffff"
+                    }
+                    onChange={(e) =>
+                      handleChange({
+                        target: {
+                          name: "customStyles.homepageBlocks.storyBgColor",
+                          value: e.target.value,
+                        },
+                      })
+                    }
+                    className="flex-1 border border-gray-300 px-4 py-2 text-sm font-mono"
+                    placeholder="#ffffff"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
+                  Bloc newsletter - fond
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="color"
+                    name="customStyles.homepageBlocks.newsletterBgColor"
+                    value={
+                      formData.customStyles?.homepageBlocks
+                        ?.newsletterBgColor || "#f7f3ec"
+                    }
+                    onChange={handleChange}
+                    className="w-16 h-10 border border-gray-300 rounded cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={
+                      formData.customStyles?.homepageBlocks
+                        ?.newsletterBgColor || "#f7f3ec"
+                    }
+                    onChange={(e) =>
+                      handleChange({
+                        target: {
+                          name: "customStyles.homepageBlocks.newsletterBgColor",
+                          value: e.target.value,
+                        },
+                      })
+                    }
+                    className="flex-1 border border-gray-300 px-4 py-2 text-sm font-mono"
+                    placeholder="#f7f3ec"
+                  />
+                </div>
+                <div className="mt-3 space-y-2">
+                  <label className="block text-xs uppercase tracking-wider text-gray-600">
+                    Image de fond (URL)
+                  </label>
+                  <input
+                    type="text"
+                    name="customStyles.homepageBlocks.newsletterBgImageUrl"
+                    value={
+                      formData.customStyles?.homepageBlocks
+                        ?.newsletterBgImageUrl || ""
+                    }
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 px-4 py-2 text-sm font-mono"
+                    placeholder="https://.../newsletter.webp"
+                  />
+
+                  <label className="block text-xs uppercase tracking-wider text-gray-600">
+                    Flou du fond
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="24"
+                    step="1"
+                    name="customStyles.homepageBlocks.newsletterBgBlur"
+                    value={
+                      formData.customStyles?.homepageBlocks?.newsletterBgBlur ??
+                      0
+                    }
+                    onChange={handleChange}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-[11px] text-gray-500">
+                    <span>0 px</span>
+                    <span>
+                      {(formData.customStyles?.homepageBlocks
+                        ?.newsletterBgBlur ?? 0) + " px"}
+                    </span>
+                    <span>24 px</span>
+                  </div>
+
+                  <label className="block text-xs uppercase tracking-wider text-gray-600">
+                    Voile noir
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="80"
+                    step="5"
+                    name="customStyles.homepageBlocks.newsletterBgDarken"
+                    value={
+                      formData.customStyles?.homepageBlocks
+                        ?.newsletterBgDarken ?? 0
+                    }
+                    onChange={handleChange}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-[11px] text-gray-500">
+                    <span>0%</span>
+                    <span>
+                      {(formData.customStyles?.homepageBlocks
+                        ?.newsletterBgDarken ?? 0) + "%"}
+                    </span>
+                    <span>80%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* SECTION 2 : RÉSEAUX SOCIAUX */}
           <div className="bg-white p-6 rounded-lg shadow-md">
             <div className="flex items-center gap-2 mb-6 pb-4 border-b">
@@ -1041,6 +1591,146 @@ export default function AdminSettingsPage() {
                       }
                       className="flex-1 border border-gray-300 px-4 py-2 text-sm font-mono"
                       placeholder="#FFFFFF"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
+                    Bandeau promo - fond
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      name="customStyles.header.promoBarBgColor"
+                      value={
+                        formData.customStyles?.header?.promoBarBgColor ||
+                        "#5d6e64"
+                      }
+                      onChange={handleChange}
+                      className="w-16 h-10 border border-gray-300 rounded cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={
+                        formData.customStyles?.header?.promoBarBgColor ||
+                        "#5d6e64"
+                      }
+                      onChange={(e) =>
+                        handleChange({
+                          target: {
+                            name: "customStyles.header.promoBarBgColor",
+                            value: e.target.value,
+                          },
+                        })
+                      }
+                      className="flex-1 border border-gray-300 px-4 py-2 text-sm font-mono"
+                      placeholder="#5d6e64"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
+                    Bandeau promo - texte
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      name="customStyles.header.promoBarTextColor"
+                      value={
+                        formData.customStyles?.header?.promoBarTextColor ||
+                        "#FFFFFF"
+                      }
+                      onChange={handleChange}
+                      className="w-16 h-10 border border-gray-300 rounded cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={
+                        formData.customStyles?.header?.promoBarTextColor ||
+                        "#FFFFFF"
+                      }
+                      onChange={(e) =>
+                        handleChange({
+                          target: {
+                            name: "customStyles.header.promoBarTextColor",
+                            value: e.target.value,
+                          },
+                        })
+                      }
+                      className="flex-1 border border-gray-300 px-4 py-2 text-sm font-mono"
+                      placeholder="#FFFFFF"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
+                    Menu utilisateur - fond
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      name="customStyles.header.userMenuBgColor"
+                      value={
+                        formData.customStyles?.header?.userMenuBgColor ||
+                        "#FFFFFF"
+                      }
+                      onChange={handleChange}
+                      className="w-16 h-10 border border-gray-300 rounded cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={
+                        formData.customStyles?.header?.userMenuBgColor ||
+                        "#FFFFFF"
+                      }
+                      onChange={(e) =>
+                        handleChange({
+                          target: {
+                            name: "customStyles.header.userMenuBgColor",
+                            value: e.target.value,
+                          },
+                        })
+                      }
+                      className="flex-1 border border-gray-300 px-4 py-2 text-sm font-mono"
+                      placeholder="#FFFFFF"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
+                    Menu utilisateur - texte
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      name="customStyles.header.userMenuTextColor"
+                      value={
+                        formData.customStyles?.header?.userMenuTextColor ||
+                        "#1F2933"
+                      }
+                      onChange={handleChange}
+                      className="w-16 h-10 border border-gray-300 rounded cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={
+                        formData.customStyles?.header?.userMenuTextColor ||
+                        "#1F2933"
+                      }
+                      onChange={(e) =>
+                        handleChange({
+                          target: {
+                            name: "customStyles.header.userMenuTextColor",
+                            value: e.target.value,
+                          },
+                        })
+                      }
+                      className="flex-1 border border-gray-300 px-4 py-2 text-sm font-mono"
+                      placeholder="#1F2933"
                     />
                   </div>
                 </div>

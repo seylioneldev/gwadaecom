@@ -31,11 +31,13 @@ export default function Header() {
   const [suggestions, setSuggestions] = useState([]); // Liste des produits suggérés
   const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false); // Panneau de suggestions visible ?
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false); // Barre ouverte sur mobile ?
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false); // Menu utilisateur ouvert ?
 
   // Outils de navigation et références DOM
   const router = useRouter();
   const searchContainerRef = useRef(null); // Sert à détecter un clic "en dehors" de la barre
   const searchInputRef = useRef(null); // Sert à mettre le focus (curseur) dans le champ
+  const userMenuRef = useRef(null); // Sert à fermer le menu utilisateur au clic extérieur
 
   // Ouvre le panier latéral
   const handleCartClick = () => {
@@ -87,6 +89,20 @@ export default function Header() {
     };
   }, [searchContainerRef, searchTerm, isMobile]);
 
+  // Fermeture du menu utilisateur au clic en dehors
+  useEffect(() => {
+    function handleClickOutsideUserMenu(event) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setIsUserMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutsideUserMenu);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutsideUserMenu);
+    };
+  }, []);
+
   // ==========================================================
   // 4. GESTION RECHERCHE MOBILE
   // Animation d'ouverture et focus automatique
@@ -124,6 +140,7 @@ export default function Header() {
   const handleSignOut = async () => {
     try {
       await signOut();
+      setIsUserMenuOpen(false);
       router.push("/"); // Redirige vers l'accueil après déconnexion
     } catch (error) {
       console.error("Erreur lors de la déconnexion:", error);
@@ -147,7 +164,8 @@ export default function Header() {
       </div>
 
       {/* --- ZONE PRINCIPALE --- */}
-      <div className="bg-[#6B7A6E] text-white py-3 md:py-6 px-4 md:px-8">
+      {/* Le fond principal du header est géré par DynamicStyles via <header>. */}
+      <div className="text-white py-3 md:py-6 px-4 md:px-8">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           {/* Logo */}
           <Link
@@ -268,44 +286,69 @@ export default function Header() {
             </button>
 
             {/* Compte Utilisateur */}
-            {user ? (
-              // Utilisateur connecté - Afficher les liens directement
-              <div className="flex flex-col items-center gap-1 text-white">
-                <Link
-                  href="/compte"
-                  className="text-[10px] italic font-serif hover:opacity-80 transition"
-                >
-                  Mon compte
-                </Link>
-                <Link
-                  href="/compte/commandes"
-                  className="text-[10px] italic font-serif hover:opacity-80 transition"
-                >
-                  Mes commandes
-                </Link>
-                <button
-                  onClick={handleSignOut}
-                  className="text-[10px] italic font-serif hover:opacity-80 transition bg-transparent border-none p-0 text-white cursor-pointer"
-                >
-                  Déconnexion
-                </button>
-              </div>
-            ) : (
-              // Utilisateur non connecté - Afficher lien vers connexion
-              <Link
-                href="/mon-compte"
-                className="flex flex-col items-center cursor-pointer hover:opacity-80 transition relative bg-transparent border-none p-0 text-white"
+            <div ref={userMenuRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setIsUserMenuOpen((prev) => !prev)}
+                className="flex items-center justify-center w-8 h-8 md:w-9 md:h-9 rounded-full border border-white/60 bg-white/10 hover:bg-white/20 transition text-white"
+                aria-haspopup="menu"
+                aria-expanded={isUserMenuOpen}
               >
                 <User
-                  size={20}
-                  className="md:w-[22px] md:h-[22px]"
-                  strokeWidth={1.5}
+                  size={18}
+                  className="md:w-[20px] md:h-[20px]"
+                  strokeWidth={1.8}
                 />
-                <span className="hidden md:block text-[10px] italic mt-1 font-serif">
-                  compte
-                </span>
-              </Link>
-            )}
+              </button>
+
+              {isUserMenuOpen && (
+                <div className="user-menu-panel absolute right-0 mt-3 w-52 bg-white text-gray-800 rounded-lg shadow-lg py-2 text-sm z-40">
+                  {user ? (
+                    <>
+                      <div className="px-4 pb-2 mb-2 border-b border-gray-100 text-xs text-gray-500">
+                        Connecté en tant que{" "}
+                        <span className="font-medium">
+                          {user.email || "client"}
+                        </span>
+                      </div>
+
+                      <Link
+                        href="/compte"
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="flex items-center px-4 py-2 hover:bg-gray-50 transition"
+                      >
+                        Mon compte
+                      </Link>
+                      <Link
+                        href="/compte/commandes"
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="flex items-center px-4 py-2 hover:bg-gray-50 transition"
+                      >
+                        Mes commandes
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={handleSignOut}
+                        className="flex items-center w-full px-4 py-2 text-left hover:bg-gray-50 text-red-600 transition"
+                      >
+                        <LogOut size={14} className="mr-2" />
+                        Déconnexion
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <Link
+                        href="/mon-compte"
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="flex items-center px-4 py-2 hover:bg-gray-50 transition"
+                      >
+                        Se connecter / Créer un compte
+                      </Link>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

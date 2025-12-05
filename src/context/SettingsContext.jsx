@@ -12,28 +12,51 @@
 
 "use client";
 
-import { createContext, useContext, useState, useEffect } from 'react';
-import { db } from '@/lib/firebase';
-import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
-import cmsConfig from '../../cms.config';
+import { createContext, useContext, useState, useEffect } from "react";
+import { db } from "@/lib/firebase";
+import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
+import cmsConfig from "../../cms.config";
 
 // Créer le contexte
 const SettingsContext = createContext({});
+
+const SETTINGS_STORAGE_KEY = "gwadaecom-settings";
+
+const getInitialSettings = () => {
+  try {
+    if (typeof window !== "undefined") {
+      const stored = window.localStorage.getItem(SETTINGS_STORAGE_KEY);
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    }
+  } catch (e) {
+    console.error(
+      "Erreur lors du chargement des paramètres depuis localStorage:",
+      e
+    );
+  }
+  return cmsConfig.defaultSettings;
+};
 
 // Hook pour utiliser le contexte
 export const useSettings = () => {
   const context = useContext(SettingsContext);
   if (!context) {
-    throw new Error('useSettings doit être utilisé dans un SettingsProvider');
+    throw new Error("useSettings doit être utilisé dans un SettingsProvider");
   }
   return context;
 };
 
 /**
  * Provider des paramètres du site
+ * Peut recevoir des settings initiaux (SSR) via initialSettings pour
+ * éviter les divergences visuelles au premier rendu.
  */
-export const SettingsProvider = ({ children }) => {
-  const [settings, setSettings] = useState(null);
+export const SettingsProvider = ({ children, initialSettings }) => {
+  const [settings, setSettings] = useState(() => {
+    return initialSettings || getInitialSettings();
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -48,26 +71,68 @@ export const SettingsProvider = ({ children }) => {
         try {
           if (docSnapshot.exists()) {
             // Les paramètres existent, on les charge
-            setSettings(docSnapshot.data());
+            const data = docSnapshot.data();
+            setSettings(data);
             setError(null);
+            try {
+              if (typeof window !== "undefined") {
+                window.localStorage.setItem(
+                  SETTINGS_STORAGE_KEY,
+                  JSON.stringify(data)
+                );
+              }
+            } catch (e) {
+              console.error(
+                "Erreur lors de la sauvegarde des paramètres dans localStorage:",
+                e
+              );
+            }
           } else {
             // Si aucun paramètre n'existe, on crée les paramètres par défaut
-            console.log("Paramètres non trouvés. Initialisation avec les valeurs par défaut...");
+            console.log(
+              "Paramètres non trouvés. Initialisation avec les valeurs par défaut..."
+            );
 
             const defaultSettings = cmsConfig.defaultSettings;
             await setDoc(settingsDocRef, {
               ...defaultSettings,
               createdAt: new Date(),
-              updatedAt: new Date()
+              updatedAt: new Date(),
             });
 
             setSettings(defaultSettings);
+            try {
+              if (typeof window !== "undefined") {
+                window.localStorage.setItem(
+                  SETTINGS_STORAGE_KEY,
+                  JSON.stringify(defaultSettings)
+                );
+              }
+            } catch (e) {
+              console.error(
+                "Erreur lors de la sauvegarde des paramètres par défaut dans localStorage:",
+                e
+              );
+            }
           }
         } catch (err) {
           console.error("Erreur lors de la récupération des paramètres:", err);
           setError(err.message);
           // En cas d'erreur, utiliser les paramètres par défaut du config
           setSettings(cmsConfig.defaultSettings);
+          try {
+            if (typeof window !== "undefined") {
+              window.localStorage.setItem(
+                SETTINGS_STORAGE_KEY,
+                JSON.stringify(cmsConfig.defaultSettings)
+              );
+            }
+          } catch (e) {
+            console.error(
+              "Erreur lors de la sauvegarde des paramètres par défaut dans localStorage après erreur:",
+              e
+            );
+          }
         } finally {
           setLoading(false);
         }
@@ -76,6 +141,19 @@ export const SettingsProvider = ({ children }) => {
         console.error("Erreur Firestore onSnapshot:", err);
         setError(err.message);
         setSettings(cmsConfig.defaultSettings);
+        try {
+          if (typeof window !== "undefined") {
+            window.localStorage.setItem(
+              SETTINGS_STORAGE_KEY,
+              JSON.stringify(cmsConfig.defaultSettings)
+            );
+          }
+        } catch (e) {
+          console.error(
+            "Erreur lors de la sauvegarde des paramètres par défaut dans localStorage après erreur snapshot:",
+            e
+          );
+        }
         setLoading(false);
       }
     );
@@ -94,7 +172,7 @@ export const SettingsProvider = ({ children }) => {
       await setDoc(settingsDocRef, {
         ...settings,
         ...updates,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       });
 
       // Pas besoin de setSettings ici car onSnapshot va le faire automatiquement
@@ -113,7 +191,7 @@ export const SettingsProvider = ({ children }) => {
 
       await setDoc(settingsDocRef, {
         ...cmsConfig.defaultSettings,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       });
 
       // Pas besoin de setSettings ici car onSnapshot va le faire automatiquement

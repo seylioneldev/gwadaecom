@@ -69,6 +69,23 @@ export default function Home() {
 
   const layout = buildHomepageLayout(layoutFromSettings);
 
+  const homepageBlocksStyles = settings?.customStyles?.homepageBlocks || {};
+
+  const infoStripBgColor = homepageBlocksStyles.infoStripBgColor || "#f5f5f5";
+  const infoStripBgImageUrl = homepageBlocksStyles.infoStripBgImageUrl || "";
+  const infoStripBgBlur = homepageBlocksStyles.infoStripBgBlur ?? 0;
+  const infoStripBgDarken = homepageBlocksStyles.infoStripBgDarken ?? 0;
+
+  const storyBgColor = homepageBlocksStyles.storyBgColor || "#ffffff";
+  const storyBgImageUrl = homepageBlocksStyles.storyBgImageUrl || "";
+  const storyBgBlur = homepageBlocksStyles.storyBgBlur ?? 0;
+  const storyBgDarken = homepageBlocksStyles.storyBgDarken ?? 0;
+
+  const newsletterBgColor = homepageBlocksStyles.newsletterBgColor || "#f7f3ec";
+  const newsletterBgImageUrl = homepageBlocksStyles.newsletterBgImageUrl || "";
+  const newsletterBgBlur = homepageBlocksStyles.newsletterBgBlur ?? 0;
+  const newsletterBgDarken = homepageBlocksStyles.newsletterBgDarken ?? 0;
+
   const infoStripText =
     settings?.homepage?.infoStripText ||
     "Livraison offerte dès 50€ • Retours sous 30 jours • Paiement sécurisé";
@@ -103,11 +120,30 @@ export default function Home() {
     }
 
     if (block.type === "infoStrip") {
-      return <InfoStrip key={key} text={infoStripText} />;
+      return (
+        <InfoStrip
+          key={key}
+          text={infoStripText}
+          bgColor={infoStripBgColor}
+          bgImageUrl={infoStripBgImageUrl}
+          bgBlur={infoStripBgBlur}
+          bgDarken={infoStripBgDarken}
+        />
+      );
     }
 
     if (block.type === "story") {
-      return <StorySection key={key} title={storyTitle} text={storyText} />;
+      return (
+        <StorySection
+          key={key}
+          title={storyTitle}
+          text={storyText}
+          bgColor={storyBgColor}
+          bgImageUrl={storyBgImageUrl}
+          bgBlur={storyBgBlur}
+          bgDarken={storyBgDarken}
+        />
+      );
     }
 
     if (block.type === "newsletter") {
@@ -118,6 +154,10 @@ export default function Home() {
           subtitle={newsletterSubtitle}
           ctaLabel={newsletterCtaLabel}
           placeholder={newsletterPlaceholder}
+          bgColor={newsletterBgColor}
+          bgImageUrl={newsletterBgImageUrl}
+          bgBlur={newsletterBgBlur}
+          bgDarken={newsletterBgDarken}
         />
       );
     }
@@ -128,7 +168,8 @@ export default function Home() {
   return (
     // <main> est le conteneur principal de la page.
     // 'flex flex-col' assure que les éléments s'empilent verticalement.
-    <main className="min-h-screen bg-white flex flex-col">
+    // Le fond global est géré par DynamicStyles via la balise <body>.
+    <main className="min-h-screen flex flex-col">
       {/* 1. Haut de page - Affiche le composant Header */}
       <Header />
 
@@ -145,45 +186,160 @@ export default function Home() {
   );
 }
 
-function InfoStrip({ text }) {
+function InfoStrip({ text, bgColor, bgImageUrl, bgBlur, bgDarken }) {
+  const hasImage = typeof bgImageUrl === "string" && bgImageUrl.trim() !== "";
+  const blur = Number(bgBlur) || 0;
+  const darken = Number(bgDarken) || 0;
+  const overlayAlpha = Math.min(Math.max(darken / 100, 0), 0.85);
+
   return (
-    <section className="py-4 px-4 md:px-8 bg-[#f5f5f5] text-xs text-center tracking-[0.2em] text-gray-600 uppercase">
-      {text}
+    <section
+      className="relative overflow-hidden py-4 px-4 md:px-8 text-xs text-center tracking-[0.2em] text-gray-600 uppercase"
+      style={!hasImage ? { backgroundColor: bgColor } : undefined}
+    >
+      {hasImage && (
+        <>
+          <div
+            className="absolute inset-0"
+            aria-hidden="true"
+            style={{
+              backgroundImage: `url(${bgImageUrl})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+              filter: blur ? `blur(${blur}px)` : undefined,
+              transform: blur ? "scale(1.05)" : undefined,
+            }}
+          />
+          {overlayAlpha > 0 && (
+            <div
+              className="absolute inset-0"
+              aria-hidden="true"
+              style={{
+                backgroundColor: `rgba(0, 0, 0, ${overlayAlpha})`,
+              }}
+            />
+          )}
+        </>
+      )}
+
+      <div className="relative z-10">{text}</div>
     </section>
   );
 }
 
-function StorySection({ title, text }) {
+function StorySection({ title, text, bgColor, bgImageUrl, bgBlur, bgDarken }) {
+  const hasImage = typeof bgImageUrl === "string" && bgImageUrl.trim() !== "";
+  const blur = Number(bgBlur) || 0;
+  const darken = Number(bgDarken) || 0;
+  const overlayAlpha = Math.min(Math.max(darken / 100, 0), 0.85);
+
   return (
-    <section className="py-12 px-4 md:px-8 bg-white text-center text-gray-800">
-      <h2 className="text-2xl md:text-3xl font-serif mb-4 tracking-widest text-[#5d6e64]">
-        {title}
-      </h2>
-      <p className="max-w-2xl mx-auto text-sm md:text-base text-gray-600 leading-relaxed">
-        {text}
-      </p>
+    <section
+      className="relative overflow-hidden py-12 px-4 md:px-8 text-center text-gray-800"
+      style={!hasImage ? { backgroundColor: bgColor } : undefined}
+    >
+      {hasImage && (
+        <>
+          <div
+            className="absolute inset-0"
+            aria-hidden="true"
+            style={{
+              backgroundImage: `url(${bgImageUrl})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+              filter: blur ? `blur(${blur}px)` : undefined,
+              transform: blur ? "scale(1.05)" : undefined,
+            }}
+          />
+          {overlayAlpha > 0 && (
+            <div
+              className="absolute inset-0"
+              aria-hidden="true"
+              style={{
+                backgroundColor: `rgba(0, 0, 0, ${overlayAlpha})`,
+              }}
+            />
+          )}
+        </>
+      )}
+
+      <div className="relative z-10">
+        <h2 className="text-2xl md:text-3xl font-serif mb-4 tracking-widest text-[#5d6e64]">
+          {title}
+        </h2>
+        <p className="max-w-2xl mx-auto text-sm md:text-base text-gray-600 leading-relaxed">
+          {text}
+        </p>
+      </div>
     </section>
   );
 }
 
-function NewsletterBlock({ title, subtitle, ctaLabel, placeholder }) {
+function NewsletterBlock({
+  title,
+  subtitle,
+  ctaLabel,
+  placeholder,
+  bgColor,
+  bgImageUrl,
+  bgBlur,
+  bgDarken,
+}) {
+  const hasImage = typeof bgImageUrl === "string" && bgImageUrl.trim() !== "";
+  const blur = Number(bgBlur) || 0;
+  const darken = Number(bgDarken) || 0;
+  const overlayAlpha = Math.min(Math.max(darken / 100, 0), 0.85);
+
   return (
-    <section className="py-12 px-4 md:px-8 bg-[#f7f3ec] text-center text-gray-800">
-      <h2 className="text-xl md:text-2xl font-serif mb-3 tracking-widest text-[#5d6e64]">
-        {title}
-      </h2>
-      <p className="max-w-xl mx-auto text-sm md:text-base text-gray-600 mb-4">
-        {subtitle}
-      </p>
-      <div className="flex flex-col sm:flex-row justify-center gap-3 max-w-md mx-auto">
-        <input
-          type="email"
-          className="flex-1 border border-gray-300 px-4 py-2 text-sm"
-          placeholder={placeholder}
-        />
-        <button className="px-6 py-2 bg-[#5d6e64] text-white text-xs uppercase tracking-[0.2em] hover:bg-[#4a5850] transition">
-          {ctaLabel}
-        </button>
+    <section
+      className="relative overflow-hidden py-12 px-4 md:px-8 text-center text-gray-800"
+      style={!hasImage ? { backgroundColor: bgColor } : undefined}
+    >
+      {hasImage && (
+        <>
+          <div
+            className="absolute inset-0"
+            aria-hidden="true"
+            style={{
+              backgroundImage: `url(${bgImageUrl})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+              filter: blur ? `blur(${blur}px)` : undefined,
+              transform: blur ? "scale(1.05)" : undefined,
+            }}
+          />
+          {overlayAlpha > 0 && (
+            <div
+              className="absolute inset-0"
+              aria-hidden="true"
+              style={{
+                backgroundColor: `rgba(0, 0, 0, ${overlayAlpha})`,
+              }}
+            />
+          )}
+        </>
+      )}
+
+      <div className="relative z-10">
+        <h2 className="text-xl md:text-2xl font-serif mb-3 tracking-widest text-[#5d6e64]">
+          {title}
+        </h2>
+        <p className="max-w-xl mx-auto text-sm md:text-base text-gray-600 mb-4">
+          {subtitle}
+        </p>
+        <div className="flex flex-col sm:flex-row justify-center gap-3 max-w-md mx-auto">
+          <input
+            type="email"
+            className="flex-1 border border-gray-300 px-4 py-2 text-sm"
+            placeholder={placeholder}
+          />
+          <button className="px-6 py-2 bg-[#5d6e64] text-white text-xs uppercase tracking-[0.2em] hover:bg-[#4a5850] transition">
+            {ctaLabel}
+          </button>
+        </div>
       </div>
     </section>
   );

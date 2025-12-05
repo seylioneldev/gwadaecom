@@ -58,6 +58,7 @@ export const useAuth = () => {
  */
 const ADMIN_EMAILS = [
   "admin@gwadecom.com", // 👈 Email admin principal
+  "seymlionel@gmail.com",
   // Ajoutez d'autres emails admin de secours ici
 ];
 
