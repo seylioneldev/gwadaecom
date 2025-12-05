@@ -7,8 +7,8 @@ import { useAuth } from "../../context/AuthContext"; // Pour l'authentification
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation"; // Pour la redirection URL
 import { products } from "../../data/products"; // Source de données pour les suggestions
-import { useCategories } from "@/hooks/useCategories"; // Récupère les catégories depuis Firestore
 import { useSettings } from "@/context/SettingsContext"; // Récupère les paramètres du site (Context temps réel)
+import { useNavCategories } from "@/context/CategoriesContext"; // Catégories de navigation (menu principal)
 import { useIsMobile } from "@/hooks/useMediaQuery"; // Hook pour détecter mobile sans bug d'hydration
 
 export default function Header() {
@@ -16,7 +16,7 @@ export default function Header() {
   const { user, signOut } = useAuth(); // Récupération de l'utilisateur et de la fonction de déconnexion
 
   // Récupération des catégories depuis Firestore
-  const { categories, loading: categoriesLoading } = useCategories();
+  const { categories, loading: categoriesLoading } = useNavCategories();
 
   // Récupération des paramètres du site (nom du site, etc.)
   const { settings, loading: settingsLoading } = useSettings();

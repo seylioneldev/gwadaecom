@@ -16,8 +16,8 @@
 import { ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import Price from "@/components/Price";
-import { useProducts } from "@/hooks/useProducts"; // Nouveau : récupère depuis Firestore
 import { useSettings } from "@/context/SettingsContext";
+import { useHomeProducts } from "@/context/ProductsContext"; // Produits de la home pré-chargés côté serveur
 
 function getStockStatus(stock) {
   if (typeof stock !== "number" || Number.isNaN(stock) || stock < 0) {
@@ -52,8 +52,8 @@ function getStockStatus(stock) {
 }
 
 export default function ProductGrid() {
-  // Récupération des produits depuis Firestore
-  const { products, loading, error } = useProducts();
+  // Produits de la home, fournis par le contexte (chargés côté serveur)
+  const { products, loading, error } = useHomeProducts();
   const { settings } = useSettings();
 
   const showNewArrivals =

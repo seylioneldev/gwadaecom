@@ -8,6 +8,8 @@ import "./globals.css";
 import { CartProvider } from "../context/CartContext";
 import { AuthProvider } from "../context/AuthContext"; // Authentification Firebase
 import { SettingsProvider } from "../context/SettingsContext"; // Paramètres du site
+import { CategoriesProvider } from "../context/CategoriesContext"; // Catégories (menu principal)
+import { ProductsProvider } from "../context/ProductsContext"; // Produits de la home
 import SideCart from "../components/layout/SideCart";
 import cmsConfig from "../../cms.config";
 import { adminDb } from "@/lib/firebase-admin";
@@ -47,6 +49,66 @@ async function getServerSettings() {
       error
     );
     return cmsConfig.defaultSettings;
+  }
+}
+
+async function getServerHomeProducts() {
+  if (!adminDb) {
+    console.warn(
+      "⚠️ adminDb non initialisé, produits de la home non chargés côté serveur."
+    );
+    return [];
+  }
+
+  try {
+    const collectionName = cmsConfig.collections.products || "products";
+
+    const snapshot = await adminDb
+      .collection(collectionName)
+      .orderBy("createdAt", "desc")
+      .limit(12)
+      .get();
+
+    return snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+  } catch (error) {
+    console.error(
+      "Erreur lors du chargement des produits serveur pour la home:",
+      error
+    );
+    return [];
+  }
+}
+
+async function getServerCategories() {
+  if (!adminDb) {
+    console.warn(
+      "⚠️ adminDb non initialisé, catégories de navigation non chargées côté serveur."
+    );
+    return [];
+  }
+
+  try {
+    const collectionName = cmsConfig.collections.categories;
+
+    const snapshot = await adminDb
+      .collection(collectionName)
+      .where("visible", "==", true)
+      .orderBy("order", "asc")
+      .get();
+
+    return snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+  } catch (error) {
+    console.error(
+      "Erreur lors du chargement des catégories serveur pour le menu:",
+      error
+    );
+    return [];
   }
 }
 
@@ -185,10 +247,17 @@ export const metadata = {
 };
 
 export default async function RootLayout({ children }) {
-  const serverSettings = await getServerSettings();
+  const [serverSettings, serverCategories, serverHomeProducts] =
+    await Promise.all([
+      getServerSettings(),
+      getServerCategories(),
+      getServerHomeProducts(),
+    ]);
 
   // Nettoyer les données pour qu'elles soient sérialisables (timestamps, etc.)
   const safeSettings = JSON.parse(JSON.stringify(serverSettings));
+  const safeCategories = JSON.parse(JSON.stringify(serverCategories));
+  const safeHomeProducts = JSON.parse(JSON.stringify(serverHomeProducts));
   const css = generateCustomStylesCss(safeSettings?.customStyles);
 
   return (
@@ -206,14 +275,20 @@ export default async function RootLayout({ children }) {
         <AuthProvider>
           {/* Paramètres du site (nom, configuration...) */}
           <SettingsProvider initialSettings={safeSettings}>
-            {/* Le Fournisseur de données (Panier) */}
-            <CartProvider>
-              {/* Le contenu de la page (Accueil, Produit...) */}
-              {children}
+            {/* Catégories de navigation, chargées côté serveur */}
+            <CategoriesProvider initialCategories={safeCategories}>
+              {/* Produits de la home, chargés côté serveur */}
+              <ProductsProvider initialProducts={safeHomeProducts}>
+                {/* Le Fournisseur de données (Panier) */}
+                <CartProvider>
+                  {/* Le contenu de la page (Accueil, Produit...) */}
+                  {children}
 
-              {/* LE PANNEAU LATÉRAL (Il doit être ici pour s'afficher par-dessus le reste) */}
-              <SideCart />
-            </CartProvider>
+                  {/* LE PANNEAU LATÉRAL (Il doit être ici pour s'afficher par-dessus le reste) */}
+                  <SideCart />
+                </CartProvider>
+              </ProductsProvider>
+            </CategoriesProvider>
           </SettingsProvider>
         </AuthProvider>
       </body>
