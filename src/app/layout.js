@@ -146,6 +146,26 @@ function generateCustomStylesCss(customStyles) {
         color: ${styles.header?.userMenuTextColor || "#1F2933"} !important;
       }
 
+      /* Dropdown de recherche du header */
+      header .search-dropdown-panel {
+        background-color: ${
+          styles.header?.searchDropdownBgColor || "#FFFFFF"
+        } !important;
+        color: ${
+          styles.header?.searchDropdownTextColor ||
+          styles.header?.textColor ||
+          "#1F2933"
+        } !important;
+      }
+
+      header .search-dropdown-panel * {
+        color: ${
+          styles.header?.searchDropdownTextColor ||
+          styles.header?.textColor ||
+          "#1F2933"
+        } !important;
+      }
+
       /* Bandeau promo du header */
       header .bg-\\[\\#5d6e64\\] {
         background-color: ${

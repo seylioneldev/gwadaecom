@@ -6,10 +6,10 @@ import { useCart } from "../../context/CartContext"; // Pour le compteur du pani
 import { useAuth } from "../../context/AuthContext"; // Pour l'authentification
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation"; // Pour la redirection URL
-import { products } from "../../data/products"; // Source de données pour les suggestions
 import { useSettings } from "@/context/SettingsContext"; // Récupère les paramètres du site (Context temps réel)
 import { useNavCategories } from "@/context/CategoriesContext"; // Catégories de navigation (menu principal)
 import { useIsMobile } from "@/hooks/useMediaQuery"; // Hook pour détecter mobile sans bug d'hydration
+import { useProducts } from "@/hooks/useProducts"; // Produits réels depuis Firestore pour les suggestions
 
 export default function Header() {
   const { totalItems, setIsCartOpen } = useCart();
@@ -23,6 +23,15 @@ export default function Header() {
 
   // Détection mobile sans bug d'hydration
   const isMobile = useIsMobile();
+
+  // Styles du header (dont fond du dropdown de recherche)
+  const headerStyles = settings?.customStyles?.header || {};
+  const searchDropdownBgColor = headerStyles.searchDropdownBgColor || "#ffffff";
+  const searchDropdownTextColor =
+    headerStyles.searchDropdownTextColor || "#1F2933";
+
+  // Récupération des produits depuis Firestore (pour l'autocomplétion)
+  const { products, loading: productsLoading } = useProducts();
 
   // ==========================================================
   // 1. GESTION DES ÉTATS (STATE)
@@ -49,22 +58,26 @@ export default function Header() {
   // Se déclenche à chaque fois que 'searchTerm' change
   // ==========================================================
   useEffect(() => {
-    if (searchTerm.trim().length > 1) {
+    if (
+      searchTerm.trim().length > 0 &&
+      !productsLoading &&
+      products.length > 0
+    ) {
       // On filtre les produits qui contiennent le texte tapé
       const filteredSuggestions = products
         .filter((product) =>
-          product.name.toLowerCase().includes(searchTerm.toLowerCase())
+          (product.name || "").toLowerCase().includes(searchTerm.toLowerCase())
         )
         .slice(0, 5); // On ne garde que les 5 premiers
 
       setSuggestions(filteredSuggestions);
       setIsSuggestionsOpen(filteredSuggestions.length > 0);
     } else {
-      // Si moins de 2 lettres, on vide les suggestions
+      // Si aucun terme ou pas encore de produits, on vide les suggestions
       setSuggestions([]);
       setIsSuggestionsOpen(false);
     }
-  }, [searchTerm]);
+  }, [searchTerm, products, productsLoading]);
 
   // ==========================================================
   // 3. GESTION CLIC EN DEHORS (UX)
@@ -77,8 +90,8 @@ export default function Header() {
         !searchContainerRef.current.contains(event.target)
       ) {
         setIsSuggestionsOpen(false);
-        // Sur mobile, si le champ est vide et qu'on clique ailleurs, on le referme pour gagner de la place
-        if (isMobile && searchTerm === "") {
+        // Si le champ est vide et qu'on clique ailleurs, on le referme pour gagner de la place
+        if (searchTerm === "") {
           setIsMobileSearchOpen(false);
         }
       }
@@ -196,13 +209,25 @@ export default function Header() {
             >
               {/* Barre de recherche animée */}
               {/* Sur mobile : s'agrandit au clic grâce aux classes conditionnelles */}
-              <div className="flex items-center border border-white/50 px-3 py-1.5 gap-2 bg-[#6B7A6E] z-10 rounded-full md:rounded-none">
+              <div
+                className={`
+                  flex items-center gap-2 z-10 rounded-full md:rounded-none transition-all duration-200
+                  ${
+                    isMobileSearchOpen
+                      ? "border border-white/60 px-3 py-1.5 bg-[#6B7A6E]"
+                      : "px-0 py-0 bg-transparent border-transparent"
+                  }
+                `}
+              >
                 <Search
                   size={14}
-                  className="cursor-pointer hover:text-gray-200"
+                  className="text-white cursor-pointer hover:text-gray-200"
                   onClick={(e) => {
-                    handleMobileSearchToggle(); // Ouvre sur mobile
-                    if (isMobileSearchOpen || !isMobile) handleSearch(e); // Cherche si déjà ouvert ou sur PC
+                    if (!isMobileSearchOpen) {
+                      handleMobileSearchToggle(); // Ouvre sur mobile
+                    } else {
+                      handleSearch(e); // Cherche si déjà ouvert ou sur PC
+                    }
                   }}
                 />
                 <input
@@ -213,8 +238,11 @@ export default function Header() {
                   // Classes conditionnelles pour l'animation de largeur (w-0 -> w-32)
                   className={`
                     bg-transparent border-none outline-none text-xs text-white placeholder-white/70 transition-all duration-300
-                    ${isMobileSearchOpen ? "w-32 px-1" : "w-0 px-0"}
-                    md:w-24 md:px-1 md:focus:w-32
+                    ${
+                      isMobileSearchOpen
+                        ? "w-32 px-1 md:w-40 md:px-2"
+                        : "w-0 px-0 md:w-0 md:px-0"
+                    }
                   `}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -223,8 +251,7 @@ export default function Header() {
                   onBlur={() => {
                     // Petite tempo pour ne pas fermer si on clique sur une suggestion
                     setTimeout(() => {
-                      if (isMobile && searchTerm === "")
-                        setIsMobileSearchOpen(false);
+                      if (searchTerm === "") setIsMobileSearchOpen(false);
                     }, 200);
                   }}
                 />
@@ -232,7 +259,10 @@ export default function Header() {
 
               {/* Panneau des Suggestions (Liste déroulante) */}
               {isSuggestionsOpen && (
-                <div className="absolute top-full left-0 mt-2 w-full min-w-[200px] bg-white shadow-lg rounded-b-md overflow-hidden z-20">
+                <div
+                  className="search-dropdown-panel absolute top-full left-0 mt-2 w-full min-w-[200px] shadow-lg rounded-b-md overflow-hidden z-20"
+                  style={{ backgroundColor: searchDropdownBgColor }}
+                >
                   <ul>
                     {suggestions.map((product) => (
                       <li key={product.id}>
@@ -246,15 +276,34 @@ export default function Header() {
                           className="flex items-center gap-3 p-3 hover:bg-gray-100 transition text-gray-700 border-b border-gray-50 last:border-0"
                         >
                           {/* Miniature image */}
-                          <div
-                            className={`w-10 h-12 ${product.image} bg-cover bg-center flex-shrink-0`}
-                          ></div>
+                          <div className="w-10 h-12 flex-shrink-0 overflow-hidden rounded-sm bg-gray-100">
+                            {product.imageUrl?.startsWith("http") ||
+                            product.image?.startsWith("http") ? (
+                              <img
+                                src={product.imageUrl || product.image}
+                                alt={product.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div
+                                className={`w-full h-full ${
+                                  product.image || "bg-gray-200"
+                                }`}
+                              ></div>
+                            )}
+                          </div>
                           <div className="flex flex-col">
-                            <span className="text-xs font-serif font-bold">
+                            <span
+                              className="text-xs font-serif font-bold"
+                              style={{ color: searchDropdownTextColor }}
+                            >
                               {product.name}
                             </span>
-                            <span className="text-[10px] text-gray-500">
-                              ${product.price}
+                            <span
+                              className="text-[10px] text-gray-500"
+                              style={{ color: searchDropdownTextColor }}
+                            >
+                              {product.price} €
                             </span>
                           </div>
                         </Link>

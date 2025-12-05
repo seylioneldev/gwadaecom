@@ -224,6 +224,8 @@ const cmsConfig = {
         promoBarTextColor: "#FFFFFF",
         userMenuBgColor: "#FFFFFF",
         userMenuTextColor: "#1F2933",
+        searchDropdownBgColor: "#FFFFFF",
+        searchDropdownTextColor: "#1F2933",
       },
 
       // Footer

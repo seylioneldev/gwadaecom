@@ -1597,6 +1597,41 @@ export default function AdminSettingsPage() {
 
                 <div>
                   <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
+                    Recherche - texte du dropdown
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      name="customStyles.header.searchDropdownTextColor"
+                      value={
+                        formData.customStyles?.header
+                          ?.searchDropdownTextColor || "#1F2933"
+                      }
+                      onChange={handleChange}
+                      className="w-16 h-10 border border-gray-300 rounded cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={
+                        formData.customStyles?.header
+                          ?.searchDropdownTextColor || "#1F2933"
+                      }
+                      onChange={(e) =>
+                        handleChange({
+                          target: {
+                            name: "customStyles.header.searchDropdownTextColor",
+                            value: e.target.value,
+                          },
+                        })
+                      }
+                      className="flex-1 border border-gray-300 px-4 py-2 text-sm font-mono"
+                      placeholder="#1F2933"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
                     Bandeau promo - fond
                   </label>
                   <div className="flex gap-2">
@@ -1731,6 +1766,41 @@ export default function AdminSettingsPage() {
                       }
                       className="flex-1 border border-gray-300 px-4 py-2 text-sm font-mono"
                       placeholder="#1F2933"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
+                    Recherche - fond du dropdown
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      name="customStyles.header.searchDropdownBgColor"
+                      value={
+                        formData.customStyles?.header?.searchDropdownBgColor ||
+                        "#FFFFFF"
+                      }
+                      onChange={handleChange}
+                      className="w-16 h-10 border border-gray-300 rounded cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={
+                        formData.customStyles?.header?.searchDropdownBgColor ||
+                        "#FFFFFF"
+                      }
+                      onChange={(e) =>
+                        handleChange({
+                          target: {
+                            name: "customStyles.header.searchDropdownBgColor",
+                            value: e.target.value,
+                          },
+                        })
+                      }
+                      className="flex-1 border border-gray-300 px-4 py-2 text-sm font-mono"
+                      placeholder="#FFFFFF"
                     />
                   </div>
                 </div>
