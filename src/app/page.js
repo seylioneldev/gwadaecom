@@ -425,6 +425,7 @@ function NewsletterBlock({
             type="email"
             className="flex-1 border-2 border-white/30 bg-white/10 backdrop-blur-sm px-4 py-3 text-sm text-white placeholder-white/60 focus:border-[#D4AF37] focus:outline-none transition-all"
             placeholder={placeholder}
+            suppressHydrationWarning
           />
           <button className="px-8 py-3 bg-[#D4AF37] text-[#1A1A1A] text-xs uppercase tracking-[0.2em] font-semibold hover:bg-[#C19B2B] hover:shadow-lg transition-all">
             {ctaLabel}

@@ -191,21 +191,28 @@ export default function ProductGrid() {
                           ></div>
                         )}
 
-                        {product.label && (
-                          <span className="absolute top-3 left-3 bg-[#D4AF37] text-[#1A1A1A] text-[9px] px-3 py-1.5 uppercase tracking-[0.15em] font-bold z-10 shadow-sm">
-                            {product.label}
-                          </span>
-                        )}
+                        {/* Badges en haut - Organisation verticale pour éviter chevauchement */}
+                        <div className="absolute top-3 left-3 right-3 z-10 flex flex-col gap-2">
+                          {/* Badge NOUVEAUTÉ/LIMITÉ en haut à gauche */}
+                          {product.label && (
+                            <div className="flex justify-start">
+                              <span className="bg-[#D4AF37] text-[#1A1A1A] text-[9px] px-3 py-1.5 uppercase tracking-[0.15em] font-bold shadow-sm">
+                                {product.label}
+                              </span>
+                            </div>
+                          )}
 
-                        <div className="absolute top-3 right-3 z-10">
-                          <span
-                            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[8px] uppercase tracking-[0.15em] font-semibold border shadow-sm backdrop-blur-sm ${stockStatus.containerClass}`}
-                          >
+                          {/* Badge STOCK en haut à droite */}
+                          <div className="flex justify-end">
                             <span
-                              className={`w-1 h-1 rounded-full ${stockStatus.dotClass}`}
-                            ></span>
-                            {stockStatus.label}
-                          </span>
+                              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[8px] uppercase tracking-[0.15em] font-semibold border shadow-sm backdrop-blur-sm ${stockStatus.containerClass}`}
+                            >
+                              <span
+                                className={`w-1 h-1 rounded-full ${stockStatus.dotClass}`}
+                              ></span>
+                              {stockStatus.label}
+                            </span>
+                          </div>
                         </div>
 
                         <div
