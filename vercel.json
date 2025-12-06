@@ -1,0 +1,22 @@
+{
+  "buildCommand": "npm run build",
+  "framework": "nextjs",
+  "installCommand": "npm install",
+  "functions": {
+    "src/app/api/webhooks/stripe/route.js": {
+      "maxDuration": 30
+    },
+    "src/app/api/create-payment-intent/route.js": {
+      "maxDuration": 30
+    },
+    "src/app/api/send-order-confirmation/route.js": {
+      "maxDuration": 30
+    },
+    "src/app/api/send-welcome-email/route.js": {
+      "maxDuration": 30
+    },
+    "src/app/api/send-email/route.js": {
+      "maxDuration": 30
+    }
+  }
+}
