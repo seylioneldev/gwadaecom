@@ -2,6 +2,7 @@
   "name": "gwadaecom",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -11,7 +12,9 @@
     "test:ui": "playwright test --ui",
     "test:headed": "playwright test --headed",
     "test:debug": "playwright test --debug",
-    "test:report": "playwright show-report"
+    "test:report": "playwright show-report",
+    "update-theme": "node scripts/update-theme-settings.js",
+    "check-settings": "node scripts/check-settings.js"
   },
   "dependencies": {
     "@stripe/react-stripe-js": "^5.4.1",

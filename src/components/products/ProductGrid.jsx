@@ -191,28 +191,26 @@ export default function ProductGrid() {
                           ></div>
                         )}
 
-                        {/* Badges en haut - Organisation verticale pour éviter chevauchement */}
-                        <div className="absolute top-3 left-3 right-3 z-10 flex flex-col gap-2">
-                          {/* Badge NOUVEAUTÉ/LIMITÉ en haut à gauche */}
-                          {product.label && (
-                            <div className="flex justify-start">
-                              <span className="bg-[#D4AF37] text-[#1A1A1A] text-[9px] px-3 py-1.5 uppercase tracking-[0.15em] font-bold shadow-sm">
-                                {product.label}
-                              </span>
-                            </div>
+                        {/* Badges en haut - Même ligne avec espacement dynamique */}
+                        <div className="absolute top-2 left-2 right-2 z-10 flex items-start justify-between gap-1">
+                          {/* Badge NOUVEAUTÉ/LIMITÉ à gauche */}
+                          {product.label ? (
+                            <span className="bg-[#D4AF37] text-[#1A1A1A] text-[7px] md:text-[8px] px-1.5 md:px-2 py-1 uppercase tracking-[0.1em] font-bold shadow-sm whitespace-nowrap">
+                              {product.label}
+                            </span>
+                          ) : (
+                            <span></span>
                           )}
 
-                          {/* Badge STOCK en haut à droite */}
-                          <div className="flex justify-end">
+                          {/* Badge STOCK à droite */}
+                          <span
+                            className={`inline-flex items-center gap-1 rounded-full px-1.5 md:px-2 py-0.5 md:py-1 text-[7px] md:text-[8px] uppercase tracking-[0.1em] font-semibold border shadow-sm backdrop-blur-sm whitespace-nowrap ${stockStatus.containerClass}`}
+                          >
                             <span
-                              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[8px] uppercase tracking-[0.15em] font-semibold border shadow-sm backdrop-blur-sm ${stockStatus.containerClass}`}
-                            >
-                              <span
-                                className={`w-1 h-1 rounded-full ${stockStatus.dotClass}`}
-                              ></span>
-                              {stockStatus.label}
-                            </span>
-                          </div>
+                              className={`w-1 h-1 rounded-full ${stockStatus.dotClass}`}
+                            ></span>
+                            {stockStatus.label}
+                          </span>
                         </div>
 
                         <div
