@@ -14,7 +14,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Package, FolderTree, Settings, ShoppingBag, BarChart3, FileText, TrendingUp, Users, Truck, ShoppingCart, FileCheck, Shield, LogOut } from 'lucide-react';
+import { Package, FolderTree, Settings, ShoppingBag, BarChart3, FileText, TrendingUp, Users, Truck, ShoppingCart, FileCheck, Shield, LogOut, Wrench } from 'lucide-react';
 import { useProducts } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
 import { useAuth } from '@/context/AuthContext';
@@ -272,6 +272,19 @@ export default function AdminDashboard() {
               <h3 className="text-xl font-serif text-gray-800 mb-2">Utilisateurs</h3>
               <p className="text-sm text-gray-500">
                 Gérez les comptes utilisateurs et les rôles (admin/client)
+              </p>
+            </div>
+          </Link>
+
+          {/* Carte : Système & Maintenance */}
+          <Link href="/admin/system" className="group">
+            <div className="bg-gradient-to-br from-gray-700 to-gray-900 p-8 rounded-lg shadow-md hover:shadow-xl transition border-2 border-transparent">
+              <div className="w-16 h-16 bg-white/20 rounded-lg flex items-center justify-center mb-4 group-hover:bg-white/30 transition">
+                <Wrench className="text-white" size={32} />
+              </div>
+              <h3 className="text-xl font-serif text-white mb-2">Système & Maintenance</h3>
+              <p className="text-sm text-white/80">
+                Health check, mises à jour, logs et gestion système
               </p>
             </div>
           </Link>

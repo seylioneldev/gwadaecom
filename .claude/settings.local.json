@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run update-theme:*)",
+      "Bash(npm run check-settings:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfeat: design premium 2025 et amélioration UX mobile\n\nNouveaux blocs homepage:\n- Ajout bloc Image avec layout 2 colonnes\n- Ajout bloc Témoignages avec système de notation étoiles\n- Configuration complète dans /admin/settings\n\nDesign moderne 2025:\n- Cartes produits: aspect-ratio 3/4 (plus élégant)\n- Animations fluides: zoom hover + shadow progressive\n- Couleurs premium: Or #D4AF37 + Noir #1A1A1A\n- Badges or brillants pour \"NOUVEAUTÉ\"\n- Effets modernes: backdrop-blur sur boutons hover\n\nAméliorations UX:\n- Prix format européen (29,99 € au lieu de $29.99)\n- Grille produits: 2 colonnes sur mobile (au lieu de 1)\n- Header: titre \"Perles des Îles\" parfaitement centré\n- Hero: bouton CTA pleine largeur sur mobile\n- Espacement optimisé: gap-4 mobile, gap-8 desktop\n\nModifications techniques:\n- ProductGrid: grid-cols-2 sur mobile\n- Header: grid 3 colonnes pour centrage parfait\n- Hero: bouton inline-block w-full responsive\n- Price: support symbole € et format virgule\n- Textes en français (Voir les détails, etc.)\n\n🤖 Generated with Claude Code\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push:*)",
+      "Bash(git commit:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(npx playwright test:*)",
+      "Bash(timeout 60 tail:*)",
+      "Bash(npm run dev:*)",
+      "Bash(timeout 30 bash -c 'until curl -s http://localhost:3000 > /dev/null; do sleep 1; done; echo \"\"Server is ready\"\"')",
+      "Bash(timeout 10 bash:*)",
+      "Bash(node scripts/copy-env-for-vercel.js:*)",
+      "Bash(git reset:*)",
+      "Bash(npm install)",
+      "Bash(npm view:*)",
+      "Bash(timeout 120 bash:*)",
+      "Bash(git checkout:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
