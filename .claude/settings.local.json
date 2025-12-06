@@ -21,7 +21,8 @@
       "Bash(npm install)",
       "Bash(npm view:*)",
       "Bash(timeout 120 bash:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(git rm:*)"
     ],
     "deny": [],
     "ask": []

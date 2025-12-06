@@ -1,36 +1,150 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 🛍️ CMS E-commerce Next.js
 
-## Getting Started
+**Solution e-commerce complète et prête à l'emploi**
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## ✨ Fonctionnalités
+
+### Interface Client
+- ✅ Catalogue de produits responsive
+- ✅ Panier d'achat
+- ✅ Paiement sécurisé Stripe
+- ✅ Authentification utilisateur
+- ✅ Suivi de commandes
+- ✅ Emails transactionnels
+
+### Interface Admin (`/admin`)
+- ✅ Gestion des produits et catégories
+- ✅ Tableau de bord statistiques
+- ✅ Gestion des commandes
+- ✅ Paramètres du site
+- ✅ Gestion utilisateurs
+- ✅ Monitoring système
+
+---
+
+## 🚀 Installation Rapide
+
+### Prérequis
+
+- Node.js 18+
+- Compte Firebase
+- Compte Stripe (mode test)
+- Compte Vercel
+
+### Étapes
+
+1. **Cloner le projet**
+   ```bash
+   git clone -b share-bones https://github.com/VOTRE-REPO/cms-ecommerce.git
+   cd cms-ecommerce
+   npm install
+   ```
+
+2. **Configurer les variables d'environnement**
+
+   Créez `.env.local` avec vos clés :
+   ```env
+   # Firebase
+   NEXT_PUBLIC_FIREBASE_API_KEY=...
+   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
+   NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
+
+   # Stripe
+   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+   STRIPE_SECRET_KEY=sk_test_...
+   STRIPE_WEBHOOK_SECRET=whsec_...
+
+   # Email
+   GMAIL_USER=...
+   GMAIL_APP_PASSWORD=...
+   ```
+
+3. **Lancer en local**
+   ```bash
+   npm run dev
+   ```
+
+4. **Déployer sur Vercel**
+   - Connectez votre repository GitHub
+   - Configurez les variables d'environnement
+   - Déployez !
+
+---
+
+## 📚 Documentation Complète
+
+**Guide d'installation détaillé** : [INSTALLATION-CLIENT.md](INSTALLATION-CLIENT.md)
+- Installation pas à pas (4h)
+- Configuration Firebase, Stripe, Vercel
+- Personnalisation
+- Formation
+
+**Autres guides** :
+- [DEPLOIEMENT-VERCEL.md](DEPLOIEMENT-VERCEL.md) - Déploiement Vercel
+- [WORKFLOW-DEV.md](WORKFLOW-DEV.md) - Workflow développement
+- [CMS_README.md](CMS_README.md) - Documentation technique
+
+---
+
+## 🛠️ Technologies
+
+- **Framework** : Next.js 16 (App Router)
+- **Base de données** : Firebase Firestore
+- **Authentification** : Firebase Auth
+- **Paiements** : Stripe
+- **Hébergement** : Vercel
+- **Emails** : Gmail SMTP ou Resend
+- **Styling** : Tailwind CSS
+
+---
+
+## 🎨 Personnalisation
+
+### Changer les couleurs
+
+Éditez `src/app/globals.css` :
+```css
+:root {
+  --color-primary: #votre-couleur;
+  --color-secondary: #votre-couleur;
+}
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Remplacer le logo
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+Placez votre logo dans `public/logo.png` (200x50px recommandé)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Configurer le site
 
-## Learn More
+Allez sur `/admin/settings` après le premier déploiement
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📞 Support
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Pour toute question :
+- 📧 Email : support@votre-email.com
+- 📚 Documentation : [INSTALLATION-CLIENT.md](INSTALLATION-CLIENT.md)
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## ⚠️ Mode Test
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Par défaut, Stripe est en MODE TEST** :
+- Utilisez les clés `pk_test_*` et `sk_test_*`
+- Testez avec la carte : `4242 4242 4242 4242`
+- Aucun paiement réel ne sera effectué
+
+---
+
+## 📄 Licence
+
+Ce CMS est fourni dans le cadre d'un contrat de licence.
+Contactez votre fournisseur pour plus d'informations.
+
+---
+
+**Version** : 1.0
+**Branche** : share-bones
