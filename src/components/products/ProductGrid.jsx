@@ -122,16 +122,16 @@ export default function ProductGrid() {
 
       <div className="relative z-10">
         {/* En-tête de section */}
-        <div className="text-center mb-12">
-          <h2 className="text-2xl md:text-3xl font-serif tracking-widest text-[#5d6e64] mb-2">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-4xl font-serif tracking-wider text-[#D4AF37] mb-3">
             {newArrivalsTitle}
           </h2>
           {newArrivalsSubtitle && (
-            <p className="text-xs md:text-sm text-gray-500 mb-4">
+            <p className="text-sm md:text-base text-gray-600 mb-6 font-light tracking-wide">
               {newArrivalsSubtitle}
             </p>
           )}
-          <div className="w-16 h-0.5 bg-[#5d6e64] mx-auto opacity-50"></div>
+          <div className="w-20 h-px bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent mx-auto"></div>
         </div>
 
         {/* Message de chargement */}
@@ -153,7 +153,7 @@ export default function ProductGrid() {
         {/* Grille responsive - Affichée uniquement si les produits sont chargés */}
         {!loading && !error && (
           <>
-            <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-12">
+            <div className="max-w-7xl mx-auto grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
               {products.length === 0 ? (
                 <div className="col-span-full text-center py-20">
                   <p className="text-gray-500 text-sm">
@@ -173,14 +173,14 @@ export default function ProductGrid() {
                   const CardInner = (
                     <>
                       {/* Zone Image */}
-                      <div className="aspect-[4/5] w-full relative overflow-hidden">
+                      <div className="aspect-[3/4] w-full relative overflow-hidden rounded-sm group-hover:shadow-2xl transition-all duration-500">
                         {/* Si c'est une URL d'image */}
                         {product.imageUrl?.startsWith("http") ||
                         product.image?.startsWith("http") ? (
                           <img
                             src={product.imageUrl || product.image}
                             alt={product.name}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                           />
                         ) : (
                           /* Si c'est une couleur Tailwind */
@@ -192,47 +192,47 @@ export default function ProductGrid() {
                         )}
 
                         {product.label && (
-                          <span className="absolute top-4 left-4 bg-white/90 text-[10px] px-2 py-1 uppercase tracking-widest font-semibold z-10">
+                          <span className="absolute top-3 left-3 bg-[#D4AF37] text-[#1A1A1A] text-[9px] px-3 py-1.5 uppercase tracking-[0.15em] font-bold z-10 shadow-sm">
                             {product.label}
                           </span>
                         )}
 
-                        <div className="absolute top-4 right-4 z-10">
+                        <div className="absolute top-3 right-3 z-10">
                           <span
-                            className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-[9px] uppercase tracking-[0.2em] border ${stockStatus.containerClass}`}
+                            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[8px] uppercase tracking-[0.15em] font-semibold border shadow-sm backdrop-blur-sm ${stockStatus.containerClass}`}
                           >
                             <span
-                              className={`w-1.5 h-1.5 rounded-full ${stockStatus.dotClass}`}
+                              className={`w-1 h-1 rounded-full ${stockStatus.dotClass}`}
                             ></span>
                             {stockStatus.label}
                           </span>
                         </div>
 
                         <div
-                          className={`absolute bottom-0 left-0 w-full text-center py-3 translate-y-full group-hover:translate-y-0 transition duration-300 flex items-center justify-center gap-2 text-xs uppercase tracking-widest z-10 ${
+                          className={`absolute bottom-0 left-0 w-full text-center py-3.5 translate-y-full group-hover:translate-y-0 transition-all duration-500 flex items-center justify-center gap-2 text-[10px] uppercase tracking-[0.2em] font-semibold z-10 backdrop-blur-md ${
                             isOutOfStock
-                              ? "bg-gray-900 text-white"
-                              : "bg-[#5d6e64] text-white"
+                              ? "bg-gray-900/90 text-white"
+                              : "bg-[#D4AF37]/95 text-[#1A1A1A]"
                           }`}
                         >
                           {isOutOfStock ? (
                             <>Rupture de stock</>
                           ) : (
                             <>
-                              <ShoppingBag size={14} /> View Details
+                              <ShoppingBag size={13} strokeWidth={2.5} /> Voir les détails
                             </>
                           )}
                         </div>
                       </div>
 
                       {/* Zone Texte */}
-                      <div className="text-center mt-4 space-y-2">
-                        <h3 className="font-serif text-lg text-gray-700 group-hover:text-[#5d6e64] transition">
+                      <div className="text-center mt-5 space-y-2 px-2">
+                        <h3 className="font-serif text-base text-gray-800 group-hover:text-[#D4AF37] transition-colors duration-300 leading-snug">
                           {product.name}
                         </h3>
                         <Price
                           amount={product.price}
-                          className="text-xs text-gray-500 tracking-wider"
+                          className="text-sm font-semibold text-[#1A1A1A] tracking-wide"
                         />
                       </div>
                     </>
@@ -262,9 +262,9 @@ export default function ProductGrid() {
               )}
             </div>
 
-            <div className="text-center mt-16">
-              <button className="border border-[#5d6e64] text-[#5d6e64] px-8 py-3 text-xs uppercase tracking-[0.2em] hover:bg-[#5d6e64] hover:text-white transition duration-300">
-                View All Products
+            <div className="text-center mt-20">
+              <button className="border-2 border-[#D4AF37] text-[#1A1A1A] px-10 py-3.5 text-xs uppercase tracking-[0.25em] font-semibold hover:bg-[#D4AF37] hover:text-[#1A1A1A] hover:shadow-lg transition-all duration-300 rounded-sm">
+                Voir tous les produits
               </button>
             </div>
           </>

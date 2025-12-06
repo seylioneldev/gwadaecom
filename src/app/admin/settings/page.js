@@ -168,6 +168,8 @@ export default function AdminSettingsPage() {
     { id: "story", type: "story", enabled: true },
     { id: "newsletter", type: "newsletter", enabled: true },
     { id: "productGrid", type: "productGrid", enabled: true },
+    { id: "imageBlock", type: "imageBlock", enabled: true },
+    { id: "testimonials", type: "testimonials", enabled: true },
   ];
 
   const normalizeHomepageLayout = (savedLayout) => {
@@ -219,6 +221,8 @@ export default function AdminSettingsPage() {
     story: 4,
     newsletter: 5,
     productGrid: 6,
+    imageBlock: 7,
+    testimonials: 8,
   };
 
   const handleHomepageLayoutUpdate = (newLayout) => {
@@ -1019,6 +1023,222 @@ export default function AdminSettingsPage() {
                   </div>
                 </div>
               </div>
+
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
+                  <span className="inline-flex items-center gap-2">
+                    {homepageIndexByType.imageBlock && (
+                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-600 text-white text-[10px] font-semibold">
+                        {homepageIndexByType.imageBlock}
+                      </span>
+                    )}
+                    <span>Bloc image - fond</span>
+                  </span>
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="color"
+                    name="customStyles.homepageBlocks.imageBlockBgColor"
+                    value={
+                      formData.customStyles?.homepageBlocks
+                        ?.imageBlockBgColor || "#ffffff"
+                    }
+                    onChange={handleChange}
+                    className="w-16 h-10 border border-gray-300 rounded cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={
+                      formData.customStyles?.homepageBlocks
+                        ?.imageBlockBgColor || "#ffffff"
+                    }
+                    onChange={(e) =>
+                      handleChange({
+                        target: {
+                          name: "customStyles.homepageBlocks.imageBlockBgColor",
+                          value: e.target.value,
+                        },
+                      })
+                    }
+                    className="flex-1 border border-gray-300 px-4 py-2 text-sm font-mono"
+                    placeholder="#ffffff"
+                  />
+                </div>
+                <div className="mt-3 space-y-2">
+                  <label className="block text-xs uppercase tracking-wider text-gray-600">
+                    Image de fond (URL)
+                  </label>
+                  <input
+                    type="text"
+                    name="customStyles.homepageBlocks.imageBlockBgImageUrl"
+                    value={
+                      formData.customStyles?.homepageBlocks
+                        ?.imageBlockBgImageUrl || ""
+                    }
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 px-4 py-2 text-sm font-mono"
+                    placeholder="https://.../image-block.webp"
+                  />
+
+                  <label className="block text-xs uppercase tracking-wider text-gray-600">
+                    Flou du fond
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="24"
+                    step="1"
+                    name="customStyles.homepageBlocks.imageBlockBgBlur"
+                    value={
+                      formData.customStyles?.homepageBlocks?.imageBlockBgBlur ??
+                      0
+                    }
+                    onChange={handleChange}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-[11px] text-gray-500">
+                    <span>0 px</span>
+                    <span>
+                      {(formData.customStyles?.homepageBlocks
+                        ?.imageBlockBgBlur ?? 0) + " px"}
+                    </span>
+                    <span>24 px</span>
+                  </div>
+
+                  <label className="block text-xs uppercase tracking-wider text-gray-600">
+                    Voile noir
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="80"
+                    step="5"
+                    name="customStyles.homepageBlocks.imageBlockBgDarken"
+                    value={
+                      formData.customStyles?.homepageBlocks
+                        ?.imageBlockBgDarken ?? 0
+                    }
+                    onChange={handleChange}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-[11px] text-gray-500">
+                    <span>0%</span>
+                    <span>
+                      {(formData.customStyles?.homepageBlocks
+                        ?.imageBlockBgDarken ?? 0) + "%"}
+                    </span>
+                    <span>80%</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
+                  <span className="inline-flex items-center gap-2">
+                    {homepageIndexByType.testimonials && (
+                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-600 text-white text-[10px] font-semibold">
+                        {homepageIndexByType.testimonials}
+                      </span>
+                    )}
+                    <span>Bloc témoignages - fond</span>
+                  </span>
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="color"
+                    name="customStyles.homepageBlocks.testimonialsBgColor"
+                    value={
+                      formData.customStyles?.homepageBlocks
+                        ?.testimonialsBgColor || "#f9fafb"
+                    }
+                    onChange={handleChange}
+                    className="w-16 h-10 border border-gray-300 rounded cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={
+                      formData.customStyles?.homepageBlocks
+                        ?.testimonialsBgColor || "#f9fafb"
+                    }
+                    onChange={(e) =>
+                      handleChange({
+                        target: {
+                          name: "customStyles.homepageBlocks.testimonialsBgColor",
+                          value: e.target.value,
+                        },
+                      })
+                    }
+                    className="flex-1 border border-gray-300 px-4 py-2 text-sm font-mono"
+                    placeholder="#f9fafb"
+                  />
+                </div>
+                <div className="mt-3 space-y-2">
+                  <label className="block text-xs uppercase tracking-wider text-gray-600">
+                    Image de fond (URL)
+                  </label>
+                  <input
+                    type="text"
+                    name="customStyles.homepageBlocks.testimonialsBgImageUrl"
+                    value={
+                      formData.customStyles?.homepageBlocks
+                        ?.testimonialsBgImageUrl || ""
+                    }
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 px-4 py-2 text-sm font-mono"
+                    placeholder="https://.../testimonials.webp"
+                  />
+
+                  <label className="block text-xs uppercase tracking-wider text-gray-600">
+                    Flou du fond
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="24"
+                    step="1"
+                    name="customStyles.homepageBlocks.testimonialsBgBlur"
+                    value={
+                      formData.customStyles?.homepageBlocks
+                        ?.testimonialsBgBlur ?? 0
+                    }
+                    onChange={handleChange}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-[11px] text-gray-500">
+                    <span>0 px</span>
+                    <span>
+                      {(formData.customStyles?.homepageBlocks
+                        ?.testimonialsBgBlur ?? 0) + " px"}
+                    </span>
+                    <span>24 px</span>
+                  </div>
+
+                  <label className="block text-xs uppercase tracking-wider text-gray-600">
+                    Voile noir
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="80"
+                    step="5"
+                    name="customStyles.homepageBlocks.testimonialsBgDarken"
+                    value={
+                      formData.customStyles?.homepageBlocks
+                        ?.testimonialsBgDarken ?? 0
+                    }
+                    onChange={handleChange}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-[11px] text-gray-500">
+                    <span>0%</span>
+                    <span>
+                      {(formData.customStyles?.homepageBlocks
+                        ?.testimonialsBgDarken ?? 0) + "%"}
+                    </span>
+                    <span>80%</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1277,6 +1497,10 @@ export default function AdminSettingsPage() {
                           ? "Bloc histoire"
                           : block.type === "newsletter"
                           ? "Bloc newsletter"
+                          : block.type === "imageBlock"
+                          ? "Bloc image"
+                          : block.type === "testimonials"
+                          ? "Bloc témoignages"
                           : block.type}
                       </span>
                     </div>
@@ -1409,6 +1633,87 @@ export default function AdminSettingsPage() {
                       className="w-full border border-gray-300 px-4 py-2 text-sm"
                       placeholder="Texte sous le titre (optionnel)"
                     />
+                  </div>
+                </div>
+              </div>
+
+              {/* Accueil - Bloc Image */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-700 mb-4">
+                  Accueil - Bloc Image
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2">
+                    <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
+                      URL de l'image
+                    </label>
+                    <input
+                      type="text"
+                      name="homepage.imageBlockImageUrl"
+                      value={formData.homepage?.imageBlockImageUrl || ""}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 px-4 py-2 text-sm font-mono"
+                      placeholder="https://.../mon-image.jpg"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
+                      Titre
+                    </label>
+                    <input
+                      type="text"
+                      name="homepage.imageBlockTitle"
+                      value={formData.homepage?.imageBlockTitle || ""}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 px-4 py-2 text-sm"
+                      placeholder="Nos créations artisanales"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
+                      Sous-titre
+                    </label>
+                    <input
+                      type="text"
+                      name="homepage.imageBlockSubtitle"
+                      value={formData.homepage?.imageBlockSubtitle || ""}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 px-4 py-2 text-sm"
+                      placeholder="Découvrez l'authenticité de nos produits faits main"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Accueil - Bloc Témoignages */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-700 mb-4">
+                  Accueil - Bloc Témoignages
+                </h3>
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
+                      Titre de la section
+                    </label>
+                    <input
+                      type="text"
+                      name="homepage.testimonialsTitle"
+                      value={formData.homepage?.testimonialsTitle || ""}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 px-4 py-2 text-sm"
+                      placeholder="Ils nous font confiance"
+                    />
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded border border-gray-200">
+                    <p className="text-xs text-gray-600 mb-2">
+                      ℹ️ Pour modifier les témoignages, utilisez les paramètres avancés (JSON) :
+                      <code className="bg-gray-200 px-1 rounded text-[11px]">homepage.testimonialsItems</code>
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Format : <code className="bg-gray-200 px-1 rounded text-[11px]">[{`{ name: "...", text: "...", rating: 5 }`}]</code>
+                    </p>
                   </div>
                 </div>
               </div>

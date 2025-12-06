@@ -136,7 +136,7 @@ export default function Hero() {
           {/* BOUTON D'ACTION - À remplacer par <Link> si tu veux naviguer */}
           <Link
             href={heroCtaLink}
-            className="border border-[#5d6e64] text-[#5d6e64] px-8 py-3 text-[10px] md:text-xs uppercase tracking-[0.2em] hover:bg-[#5d6e64] hover:text-white transition duration-300 cursor-pointer"
+            className="inline-block w-full md:w-auto border-2 border-[#D4AF37] text-[#1A1A1A] px-8 py-3.5 text-xs uppercase tracking-[0.25em] font-semibold hover:bg-[#D4AF37] hover:text-[#1A1A1A] hover:shadow-lg transition-all duration-300 cursor-pointer"
           >
             {heroCtaLabel}
           </Link>

@@ -33,11 +33,15 @@ export default function Price({ amount, className = "" }) {
     const numPrice = typeof price === 'string' ? parseFloat(price) : price;
 
     switch (curr) {
+      case "€":
       case "EUR":
-        return `${numPrice.toFixed(2)}€`;
+        // Format européen : 29,99 €
+        return `${numPrice.toFixed(2).replace('.', ',')} €`;
       case "GBP":
+      case "£":
         return `£${numPrice.toFixed(2)}`;
       case "USD":
+      case "$":
       default:
         return `$${numPrice.toFixed(2)}`;
     }

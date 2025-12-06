@@ -186,11 +186,16 @@ export default function Header() {
       {/* --- ZONE PRINCIPALE --- */}
       {/* Le fond principal du header est géré par DynamicStyles via <header>. */}
       <div className="text-white py-3 md:py-6 px-4 md:px-8">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          {/* Logo */}
+        <div className="max-w-7xl mx-auto grid grid-cols-3 items-center">
+          {/* Espace gauche (vide pour équilibrer) */}
+          <div className="flex justify-start">
+            {/* Réservé pour futurs éléments gauche si nécessaire */}
+          </div>
+
+          {/* Logo - Centré */}
           <Link
             href="/"
-            className="text-xl md:text-5xl font-serif tracking-widest text-center flex-1 cursor-pointer hover:opacity-90"
+            className="text-xl md:text-5xl font-serif tracking-widest text-center cursor-pointer hover:opacity-90 transition-opacity"
           >
             {settings?.siteName ? (
               settings.siteName.split(" et ").length === 2 ? (
@@ -208,7 +213,7 @@ export default function Header() {
           </Link>
 
           {/* --- ZONE ICÔNES & RECHERCHE --- */}
-          <div className="flex items-center gap-3 md:gap-6">
+          <div className="flex items-center justify-end gap-3 md:gap-6">
             {/* Conteneur Recherche (Relatif pour positionner les suggestions) */}
             <div
               ref={searchContainerRef}
