@@ -2,17 +2,26 @@
 
 import { Instagram, Facebook, Mail, Twitter } from "lucide-react";
 import { useSettings } from "@/context/SettingsContext";
+import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 
 export default function Footer() {
   const { settings } = useSettings();
+  const { isAdmin } = useAuth();
 
   return (
     // ==========================================================
     // 1. BLOC CONTENEUR (Arrière-plan et marges)
     // Ce bloc définit le style général du pied de page
     // ==========================================================
-    <footer className="bg-white text-gray-600 py-16 border-t border-gray-200 mt-10">
+    <footer className="relative bg-white text-gray-600 py-16 border-t border-gray-200 mt-10">
+      {isAdmin && (
+        <div className="absolute top-2 left-2 z-40">
+          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-red-600 text-white text-xs font-semibold shadow">
+            7
+          </span>
+        </div>
+      )}
       <div className="max-w-4xl mx-auto px-6 text-center">
         {/* ========================================================== */}
         {/* 2. CERCLE LOGO (Structure statique pour l'image/texte)   */}

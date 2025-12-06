@@ -107,7 +107,9 @@ export default function AdminSettingsPage() {
    * SAUVEGARDER LES PARAMÈTRES
    */
   const handleSave = async (e) => {
-    e.preventDefault();
+    if (e && typeof e.preventDefault === "function") {
+      e.preventDefault();
+    }
 
     try {
       setIsSaving(true);
@@ -211,6 +213,14 @@ export default function AdminSettingsPage() {
 
   const homepageLayout = normalizeHomepageLayout(formData.homepage?.layout);
 
+  const homepageIndexByType = {
+    hero: 2,
+    infoStrip: 3,
+    story: 4,
+    newsletter: 5,
+    productGrid: 6,
+  };
+
   const handleHomepageLayoutUpdate = (newLayout) => {
     setFormData((prev) => ({
       ...prev,
@@ -292,7 +302,7 @@ export default function AdminSettingsPage() {
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto">
         {/* En-tête */}
-        <div className="flex justify-between items-start mb-8">
+        <div className="flex justify-between items-start mb-8 sticky top-0 z-20 bg-gray-50 py-4">
           <div className="flex items-center gap-4">
             <Link
               href="/admin"
@@ -434,7 +444,14 @@ export default function AdminSettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
-                  Bannière Hero - fond
+                  <span className="inline-flex items-center gap-2">
+                    {homepageIndexByType.hero && (
+                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-600 text-white text-[10px] font-semibold">
+                        {homepageIndexByType.hero}
+                      </span>
+                    )}
+                    <span>Bannière Hero - fond</span>
+                  </span>
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -638,7 +655,14 @@ export default function AdminSettingsPage() {
 
               <div>
                 <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
-                  Section Nouveautés / Produits - fond
+                  <span className="inline-flex items-center gap-2">
+                    {homepageIndexByType.productGrid && (
+                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-600 text-white text-[10px] font-semibold">
+                        {homepageIndexByType.productGrid}
+                      </span>
+                    )}
+                    <span>Section Nouveautés / Produits - fond</span>
+                  </span>
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -740,7 +764,14 @@ export default function AdminSettingsPage() {
 
               <div>
                 <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
-                  Bandeau d'informations - fond
+                  <span className="inline-flex items-center gap-2">
+                    {homepageIndexByType.infoStrip && (
+                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-600 text-white text-[10px] font-semibold">
+                        {homepageIndexByType.infoStrip}
+                      </span>
+                    )}
+                    <span>Bandeau d'informations - fond</span>
+                  </span>
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -841,7 +872,14 @@ export default function AdminSettingsPage() {
 
               <div>
                 <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
-                  Bloc histoire - fond
+                  <span className="inline-flex items-center gap-2">
+                    {homepageIndexByType.story && (
+                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-600 text-white text-[10px] font-semibold">
+                        {homepageIndexByType.story}
+                      </span>
+                    )}
+                    <span>Bloc histoire - fond</span>
+                  </span>
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -876,7 +914,14 @@ export default function AdminSettingsPage() {
 
               <div>
                 <label className="block text-xs uppercase tracking-wider text-gray-600 mb-2">
-                  Bloc newsletter - fond
+                  <span className="inline-flex items-center gap-2">
+                    {homepageIndexByType.newsletter && (
+                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-600 text-white text-[10px] font-semibold">
+                        {homepageIndexByType.newsletter}
+                      </span>
+                    )}
+                    <span>Bloc newsletter - fond</span>
+                  </span>
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -1218,8 +1263,8 @@ export default function AdminSettingsPage() {
                     className="flex items-center justify-between bg-gray-50 border border-dashed border-gray-300 rounded px-4 py-3 cursor-move"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="text-xs text-gray-400">
-                        #{index + 1}
+                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-red-600 text-white text-xs font-semibold">
+                        {index + 1}
                       </span>
                       <span className="text-sm text-gray-700">
                         {block.type === "hero"
@@ -1524,7 +1569,12 @@ export default function AdminSettingsPage() {
             {/* Header */}
             <div className="mb-6">
               <h3 className="text-sm font-semibold text-gray-700 mb-4">
-                Header
+                <span className="inline-flex items-center gap-2">
+                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-600 text-white text-[10px] font-semibold">
+                    1
+                  </span>
+                  <span>Header</span>
+                </span>
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -1810,7 +1860,12 @@ export default function AdminSettingsPage() {
             {/* Footer */}
             <div className="mb-6">
               <h3 className="text-sm font-semibold text-gray-700 mb-4">
-                Footer
+                <span className="inline-flex items-center gap-2">
+                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-600 text-white text-[10px] font-semibold">
+                    7
+                  </span>
+                  <span>Footer</span>
+                </span>
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -1977,6 +2032,10 @@ export default function AdminSettingsPage() {
                     <option value="sans-serif">
                       Sans-Serif (Arial, Helvetica)
                     </option>
+                    <option value={'"Playfair Display", serif'}>
+                      Playfair Display (titres élégants)
+                    </option>
+                    <option value={'"Lato", sans-serif'}>Lato (titres)</option>
                     <option value="monospace">Monospace (Courier)</option>
                     <option value="cursive">Cursive (Comic Sans)</option>
                   </select>
@@ -1998,6 +2057,10 @@ export default function AdminSettingsPage() {
                     <option value="sans-serif">
                       Sans-Serif (Arial, Helvetica)
                     </option>
+                    <option value={'"Playfair Display", serif'}>
+                      Playfair Display (texte)
+                    </option>
+                    <option value={'"Lato", sans-serif'}>Lato (texte)</option>
                     <option value="monospace">Monospace (Courier)</option>
                     <option value="cursive">Cursive (Comic Sans)</option>
                   </select>
@@ -2142,6 +2205,25 @@ export default function AdminSettingsPage() {
             </li>
           </ul>
         </div>
+      </div>
+      <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-3">
+        <button
+          onClick={handleReset}
+          disabled={isSaving}
+          className="bg-gray-400 text-white px-6 py-3 text-sm uppercase tracking-wider hover:bg-gray-500 transition flex items-center gap-2 disabled:opacity-50 shadow-lg rounded-full"
+        >
+          <RotateCcw size={16} />
+          Réinitialiser
+        </button>
+
+        <button
+          onClick={handleSave}
+          disabled={isSaving}
+          className="bg-[#5d6e64] text-white px-6 py-3 text-sm uppercase tracking-wider hover:bg-[#4a5850] transition flex items-center gap-2 disabled:opacity-50 shadow-lg rounded-full"
+        >
+          <Save size={16} />
+          {isSaving ? "Sauvegarde..." : "Sauvegarder"}
+        </button>
       </div>
     </div>
   );

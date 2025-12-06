@@ -13,7 +13,7 @@ import { useProducts } from "@/hooks/useProducts"; // Produits réels depuis Fir
 
 export default function Header() {
   const { totalItems, setIsCartOpen } = useCart();
-  const { user, signOut } = useAuth(); // Récupération de l'utilisateur et de la fonction de déconnexion
+  const { user, signOut, isAdmin } = useAuth(); // Récupération de l'utilisateur, du rôle admin et de la fonction de déconnexion
 
   // Récupération des catégories depuis Firestore
   const { categories, loading: categoriesLoading } = useNavCategories();
@@ -161,7 +161,14 @@ export default function Header() {
   };
 
   return (
-    <header className="w-full font-sans text-gray-800 sticky top-0 z-30 bg-white shadow-sm">
+    <header className="relative w-full font-sans text-gray-800 sticky top-0 z-30 bg-white shadow-sm">
+      {isAdmin && (
+        <div className="absolute top-2 left-2 z-40">
+          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-red-600 text-white text-xs font-semibold shadow">
+            1
+          </span>
+        </div>
+      )}
       {/* --- BANDEAU SUPÉRIEUR (Promo) --- */}
       <div className="hidden md:flex bg-[#5d6e64] text-white text-xs py-2 px-4 justify-between items-center">
         <div className="tracking-widest italic">

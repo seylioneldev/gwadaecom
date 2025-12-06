@@ -7,7 +7,7 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 
 function getStockStatus(stock) {
-  if (typeof stock !== "number" || Number.isNaN(stock) || stock < 0) {
+  if (typeof stock !== "number" || Number.isNaN(stock)) {
     return {
       label: "En stock",
       containerClass: "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -15,7 +15,8 @@ function getStockStatus(stock) {
     };
   }
 
-  if (stock === 0) {
+  // Dès que le stock est à 1 ou 0, on considère le produit en rupture
+  if (stock <= 1) {
     return {
       label: "Rupture",
       containerClass: "bg-gray-900 text-white border-gray-900",
@@ -68,7 +69,8 @@ export default function CategoryClient({ categorySlug, products }) {
             const hasNumericStock =
               typeof product.stock === "number" && !Number.isNaN(product.stock);
             const stockValue = hasNumericStock ? product.stock : null;
-            const isOutOfStock = stockValue !== null && stockValue <= 0;
+            // On rend le produit indisponible dès que le stock est à 1 ou 0
+            const isOutOfStock = stockValue !== null && stockValue <= 1;
             const stockStatus = getStockStatus(stockValue);
 
             const CardInner = (

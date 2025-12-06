@@ -13,9 +13,11 @@ import Footer from "../components/layout/Footer"; // Le pied de page
 import ProductGrid from "../components/products/ProductGrid"; // La grille de produits
 import AdminFloatingButton from "../components/AdminFloatingButton"; // Bouton d'accès admin (visible uniquement pour le propriétaire)
 import { useSettings } from "@/context/SettingsContext";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Home() {
   const { settings } = useSettings();
+  const { isAdmin } = useAuth();
 
   const defaultLayout = [
     { id: "hero", type: "hero", enabled: true },
@@ -104,25 +106,47 @@ export default function Home() {
   const newsletterPlaceholder =
     settings?.homepage?.newsletterPlaceholder || "Votre email";
 
-  const renderBlock = (block) => {
+  const renderBlock = (block, index) => {
     if (block.enabled === false) {
       return null;
     }
 
     const key = block.id || block.type;
 
+    const debugNumberMap = {
+      hero: 2,
+      infoStrip: 3,
+      story: 4,
+      newsletter: 5,
+      productGrid: 6,
+    };
+
+    const debugNumber = debugNumberMap[block.type];
+
+    const wrapWithDebug = (node) => (
+      <section key={key} className="relative">
+        {isAdmin && debugNumber != null && (
+          <div className="absolute top-2 left-2 z-30">
+            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-red-600 text-white text-xs font-semibold shadow">
+              {debugNumber}
+            </span>
+          </div>
+        )}
+        {node}
+      </section>
+    );
+
     if (block.type === "hero") {
-      return <Hero key={key} />;
+      return wrapWithDebug(<Hero />);
     }
 
     if (block.type === "productGrid") {
-      return <ProductGrid key={key} />;
+      return wrapWithDebug(<ProductGrid />);
     }
 
     if (block.type === "infoStrip") {
-      return (
+      return wrapWithDebug(
         <InfoStrip
-          key={key}
           text={infoStripText}
           bgColor={infoStripBgColor}
           bgImageUrl={infoStripBgImageUrl}
@@ -133,9 +157,8 @@ export default function Home() {
     }
 
     if (block.type === "story") {
-      return (
+      return wrapWithDebug(
         <StorySection
-          key={key}
           title={storyTitle}
           text={storyText}
           bgColor={storyBgColor}
@@ -147,9 +170,8 @@ export default function Home() {
     }
 
     if (block.type === "newsletter") {
-      return (
+      return wrapWithDebug(
         <NewsletterBlock
-          key={key}
           title={newsletterTitle}
           subtitle={newsletterSubtitle}
           ctaLabel={newsletterCtaLabel}
@@ -175,7 +197,7 @@ export default function Home() {
 
       {/* 2. Bannière - Affiche le composant Hero */}
       {/* 3. Contenu principal - Affiche le composant ProductGrid */}
-      {layout.map((block) => renderBlock(block))}
+      {layout.map((block, index) => renderBlock(block, index))}
 
       {/* 4. Bas de page - Affiche le composant Footer */}
       <Footer />
