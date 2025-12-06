@@ -153,7 +153,7 @@ export default function ProductGrid() {
         {/* Grille responsive - Affichée uniquement si les produits sont chargés */}
         {!loading && !error && (
           <>
-            <div className="max-w-7xl mx-auto grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
+            <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
               {products.length === 0 ? (
                 <div className="col-span-full text-center py-20">
                   <p className="text-gray-500 text-sm">
@@ -226,13 +226,13 @@ export default function ProductGrid() {
                       </div>
 
                       {/* Zone Texte */}
-                      <div className="text-center mt-5 space-y-2 px-2">
-                        <h3 className="font-serif text-base text-gray-800 group-hover:text-[#D4AF37] transition-colors duration-300 leading-snug">
+                      <div className="text-center mt-3 space-y-1 px-1">
+                        <h3 className="font-serif text-sm md:text-base text-gray-800 group-hover:text-[#D4AF37] transition-colors duration-300 leading-tight line-clamp-2">
                           {product.name}
                         </h3>
                         <Price
                           amount={product.price}
-                          className="text-sm font-semibold text-[#1A1A1A] tracking-wide"
+                          className="text-xs md:text-sm font-semibold text-[#1A1A1A] tracking-wide"
                         />
                       </div>
                     </>

@@ -284,7 +284,7 @@ function InfoStrip({ text, bgColor, bgImageUrl, bgBlur, bgDarken }) {
 
   return (
     <section
-      className="relative overflow-hidden py-4 px-4 md:px-8 text-xs text-center tracking-[0.2em] text-gray-600 uppercase"
+      className="relative overflow-hidden py-4 px-4 md:px-8 text-xs text-center tracking-[0.2em] text-white uppercase"
       style={!hasImage ? { backgroundColor: bgColor } : undefined}
     >
       {hasImage && (
@@ -313,7 +313,7 @@ function InfoStrip({ text, bgColor, bgImageUrl, bgBlur, bgDarken }) {
         </>
       )}
 
-      <div className="relative z-10">{text}</div>
+      <div className="relative z-10 text-white">{text}</div>
     </section>
   );
 }
@@ -414,19 +414,19 @@ function NewsletterBlock({
       )}
 
       <div className="relative z-10">
-        <h2 className="text-xl md:text-2xl font-serif mb-3 tracking-widest text-[#5d6e64]">
+        <h2 className="text-xl md:text-2xl font-serif mb-3 tracking-widest text-white">
           {title}
         </h2>
-        <p className="max-w-xl mx-auto text-sm md:text-base text-gray-600 mb-4">
+        <p className="max-w-xl mx-auto text-sm md:text-base text-white/90 mb-6">
           {subtitle}
         </p>
         <div className="flex flex-col sm:flex-row justify-center gap-3 max-w-md mx-auto">
           <input
             type="email"
-            className="flex-1 border border-gray-300 px-4 py-2 text-sm"
+            className="flex-1 border-2 border-white/30 bg-white/10 backdrop-blur-sm px-4 py-3 text-sm text-white placeholder-white/60 focus:border-[#D4AF37] focus:outline-none transition-all"
             placeholder={placeholder}
           />
-          <button className="px-6 py-2 bg-[#5d6e64] text-white text-xs uppercase tracking-[0.2em] hover:bg-[#4a5850] transition">
+          <button className="px-8 py-3 bg-[#D4AF37] text-[#1A1A1A] text-xs uppercase tracking-[0.2em] font-semibold hover:bg-[#C19B2B] hover:shadow-lg transition-all">
             {ctaLabel}
           </button>
         </div>
